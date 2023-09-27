@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from repository.queries.queries_post import UserRemote  # Import the User class
+from repository.queries.queries import UserRemote  # Import the User class
 
 # Create an engine and session
 engine = create_engine('postgresql://cwfvbvxl:jtsNDRjbVqGeBgYcYvxGps3LLlX_t-P5@berry.db.elephantsql.com:5432/cwfvbvxl')

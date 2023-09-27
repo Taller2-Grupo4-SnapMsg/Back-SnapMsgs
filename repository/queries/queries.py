@@ -1,261 +1,173 @@
-# queries.py
-"""
-Module dedicated to the queries that the repository might need.
-"""
-from sqlalchemy.exc import IntegrityError
-from repository.tables.tables import User
-from repository.tables.tables import Following
+# We connect to the database using the ORM defined in tables.py
+from operator import and_, desc
+import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-#from repository.errors import UsernameAlreadyExists, EmailAlreadyExists
-#from repository.errors import RelationAlreadyExists
+from repository.tables.tables import LocalBase, Posts, Like
 
+# Creating engines
+engine_posts = create_engine(os.environ.get("DB_URI"))
 
-def get_user_by_id(session, user_id):
+# Creating the tables in the database
+LocalBase.metadata.create_all(engine_posts)
+
+# Session is the handle of the database
+Session = sessionmaker(bind=engine_posts)
+session = Session()
+TIMEOUT = 60
+
+# ----- CREATE ------
+
+    #id = Column(Integer, primary_key=True)
+    #user_id = Column(Integer, nullable=False)
+    #user = relationship(UserRemote, backref='posts')
+
+    #posted_at = Column(DateTime, default=datetime.datetime.utcnow)
+    #content = Column(String(800), unique=False, nullable=True)
+    #image = Column(String(100), unique=False, nullable=True)
+
+def create_post(session, user_id, posted_at, content, image):
     """
-    Searches for a user by its id.
-    """
-    return session.query(User).filter(User.id == user_id).first()
 
-
-def get_user_by_username(session, username):
     """
-    Searches for a user by its username.
-    """
-    return session.query(User).filter(User.username == username).first()
-
-
-def get_user_by_mail(session, mail):
-    """
-    Searches for a user by its mail.
-    """
-    return session.query(User).filter(User.email == mail).first()
-
-
-def create_user(session, email, password, username, data):
-    """
-    Inserts a new user to the users table.
-    :param: session: the session to use
-    :param: username: the username of the user
-    :param: surname: the surname of the user
-    :param: name: the name of the user
-    :param: password: the password of the user (already hashed)
-    :param: email: the email of the user
-    :param: date_of_birth: the date of birth of the user
-    :returns: the user created or None if it fails
-    """
-    user = User(
-        username=username,
-        surname=data["surname"],
-        name=data["name"],
-        password=password,
-        email=email,
-        date_of_birth=data["date_of_birth"],
-        bio=data["bio"],
-        avatar=data["avatar"],
-        admin=False,
+    post = Posts(
+        user_id=user_id,
+        posted_at=posted_at,
+        content=content,
+        image=image,
     )
-    try:
-        session.add(user)
-        session.commit()
-        return user
-    except IntegrityError as error:
-        session.rollback()
-        if "username" in str(error.orig):
-            raise UsernameAlreadyExists() from error
-        # if it's not the username, it's the email, there is no other unique fields
-        raise EmailAlreadyExists() from error
 
+    session.add(post)
+    session.commit()
+    return post
 
-def update_user_password(session, user_id, new_password):
+def create_like(session, id_post, user_id):
     """
-    Changes the information of the user with new_data
-    :param: session: the session to use
-    :param: user_id: the id of the user to change
-    :param: new_data: the new data to change
-    :returns: the user updated or None if it fails
+    
     """
-    user = session.query(User).filter(User.id == user_id).first()
-    if user:
-        setattr(user, "password", new_password)
-        session.commit()
-        return user
-    return None
+    like = Like(id_post, user_id)
+    session.add(like)
+    session.commit()
 
 
-def delete_user(session, user_id):
+# ------------- GET ----------------
+
+
+# --  Posts --
+def get_posts():
     """
-    Deletes the user with the given id.
-    :param: session: the session to use
-    :param: user_id: the id of the user to delete
-    :returns: True if it found and deleted the user, false if it didn't
+    Returns all posts, no filter
+    The posts are ordered from newest to oldest
     """
-    user = session.query(User).filter(User.id == user_id).first()
-    if user:
-        session.delete(user)
-        session.commit()
-        return True
-    return False
+    return session.query(Posts).order_by(desc(Posts.posted_at)).all()
 
-
-# to do: maybe delete this?
-def get_id_by_username(session, username):
+def get_post_by_id(post_id):
     """
-    Queries the database for the id of the user with the given username.
+    Searches the specific post based on id
+    
+    The return value is a Post.
     """
-    return session.query(User).filter(User.username == username).first().id
+    return session.query(Posts).filter(Posts.id == post_id).first()
 
 
-def update_user_admin(session, user_id, new_admin_status):
+def get_posts_by_user_id(user_id):
     """
-    Changes the admin status of the user with the given id.
+    Searches all posts from that user
+    
+    The return value is a list of Posts.
+    The posts are ordered from newest to oldest
     """
-    user = session.query(User).filter(User.id == user_id).first()
-    if user:
-        setattr(user, "admin", new_admin_status)
-        session.commit()
-        return user
-    return None
+    return session.query(Posts).filter(Posts.user_id == user_id
+    ).order_by(desc(Posts.posted_at)).all()
 
 
-def create_follow(session, username, username_to_follow):
+def get_posts_by_user_and_date(user_id, date):
     """
-    Creates a follow relationship between two users.
+    Searches for posts made by the user on the specific date
+    
+    The return value is a list of Posts
+    The posts are ordered from newest to oldest
     """
-    user = get_user_by_username(session, username)
-    user_to_follow = get_user_by_username(session, username_to_follow)
-    if user and user_to_follow:
-        try:
-            following = Following(user.id, user_to_follow.id)
-            session.add(following)
-            session.commit()
-        except IntegrityError as error:
-            session.rollback()
-            raise RelationAlreadyExists() from error
-        return following
-    return None
+    return session.query(Posts).filter(and_(Posts.user_id == user_id, Posts.posted_at == date
+    )).order_by(desc(Posts.posted_at)).all()
 
 
-def get_followers(session, user_id):
+def get_posts_by_user_between_dates(user_id, start_date, end_date):
     """
-    Returns a list of the followers of the user with the given username.
+    Searches the posts made by the user on a specific time frame
+
+    The return value is a list of Posts.
+    The posts are ordered from newest to oldest
     """
-    users = session.query(Following).filter(Following.following_id == user_id).all()
-    return [
-        session.query(User).filter(User.id == user.user_id).first() for user in users
-    ]
+    return session.query(Posts).filter(
+        and_(Posts.user_id == user_id, Posts.posted_at.between(start_date, end_date))
+    ).order_by(desc(Posts.posted_at)).all()
 
 
-def get_following(session, user_id):
+def get_newest_post_by_user(user_id):
     """
-    Returns a list of the users that the user with the given username is following.
+    Searches the newest post made by that user
+    
+    The return value is a Post.
     """
-    users = session.query(Following).filter(Following.user_id == user_id).all()
-    return [
-        session.query(User).filter(User.id == user.following_id).first()
-        for user in users
-    ]
+    return session.query(Posts).filter(Posts.user_id == user_id
+    ).order_by(desc(Posts.posted_at)).first()
 
 
-def get_following_relations(session):
+def get_x_newest_posts_by_user(user_id, amount):
     """
-    Returns a list of all the following relations.
+    Searches the x amount of newest posts made by that user
+    
+    The return value is a list of Posts.
     """
-    return session.query(Following).all()
+    return session.query(Posts).filter(Posts.user_id == user_id
+    ).order_by(desc(Posts.posted_at)).limit(amount).all()
 
 
-def get_following_count(session, user_id):
+def get_x_newest_posts(amount):
     """
-    Returns the number of users that the user with the given username is following.
+    Searches the x amount of newest posts made by that user
+    
+    The return value is a list of Posts.
     """
-    return session.query(Following).filter(Following.user_id == user_id).count()
+    return session.query(Posts).order_by(desc(Posts.posted_at)).limit(amount).all()
+
+# --  Likes --
+
+# get de todos los likes para debbuguimg
+# get de todos los likes que cierto usuario realizó
+# get de todos los likes que cierto post tuvo
 
 
-def get_followers_count(session, user_id):
-    """
-    Returns the number of followers of the user with the given username.
-    """
-    return session.query(Following).filter(Following.following_id == user_id).count()
+# ---------Remove----------
 
-
-def remove_follow(session, user_id, user_id_to_unfollow):
+def remove_like(session, like_id):
     """
     Removes the folowing relation between the two users.
     """
-    following = (
-        session.query(Following)
-        .filter(Following.user_id == user_id)
-        .filter(Following.following_id == user_id_to_unfollow)
+    like = (
+        session.query(Like)
+        .filter(Like.like_id == like_id)
         .first()
     )
-    if following:
-        session.delete(following)
+    if like:
+        session.delete(like)
         session.commit()
         return
     raise KeyError("The relation doesn't exist")
 
-
-def update_user_bio(session, user_id, new_bio):
+def remove_post(session, id_post):
     """
-    Changes the bio of the user with the given id.
+    Removes the folowing relation between the two users.
     """
-    user = session.query(User).filter(User.id == user_id).first()
-    if user:
-        setattr(user, "bio", new_bio)
+    like = (
+        session.query(Like)
+        .filter(Like.id_post == id_post)
+        .first()
+    )
+    if like:
+        session.delete(like)
         session.commit()
-        return user
-    return None
-
-
-def update_user_name(session, user_id, new_name):
-    """
-    Changes the name of the user with the given id.
-    """
-    user = session.query(User).filter(User.id == user_id).first()
-    if user:
-        setattr(user, "name", new_name)
-        session.commit()
-        return user
-    return None
-
-
-def update_user_date_of_birth(session, user_id, new_date_of_birth):
-    """
-    Changes the date_of_birth of the user with the given id.
-    """
-    user = session.query(User).filter(User.id == user_id).first()
-    if user:
-        setattr(user, "date_of_birth", new_date_of_birth)
-        session.commit()
-        return user
-    return None
-
-
-def update_user_last_name(session, user_id, new_last_name):
-    """
-    Changes the last name of the user with the given id.
-    """
-    user = session.query(User).filter(User.id == user_id).first()
-    if user:
-        setattr(user, "surname", new_last_name)
-        session.commit()
-        return user
-    return None
-
-
-def update_user_avatar(session, user_id, new_avatar):
-    """
-    Changes the avatar of the user with the given id.
-    """
-    user = session.query(User).filter(User.id == user_id).first()
-    if user:
-        setattr(user, "avatar", new_avatar)
-        session.commit()
-        return user
-    return None
-
-
-def get_all_users(session):
-    """
-    Query mostly for testing, it retrieves all the users of the database.
-    """
-    return session.query(User).all()
+        return
+    raise KeyError("The relation doesn't exist")
