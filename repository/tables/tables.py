@@ -5,23 +5,16 @@ This module represents the tables on the database of the users' microservice
 """
 
 import datetime
-from sqlalchemy import Column, Integer, Table
-from sqlalchemy import String, DateTime
-from sqlalchemy import ForeignKey
-from sqlalchemy import UniqueConstraint
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import relationship
-
-import os
-from sqlalchemy import create_engine
-from sqlalchemy import MetaData
-
-Base = declarative_base()
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.ext.automap import automap_base
+LocalBase = declarative_base()
+RemoteBase = automap_base()
 
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-instance-attributes
-class Posts(Base):
+class Posts(LocalBase):
     """
     Class that represents the user class on the database.
     """
@@ -50,23 +43,14 @@ class Posts(Base):
         self.content = content
         self.image = image
 
-# Create the engine for the 'users' database
-engine_users = create_engine(os.environ.get("DB_USERS_URI"))
 
-# Crea una instancia de MetaData
-metadata_users = MetaData()
-
-# Enlaza la MetaData al motor de la base de datos después de crearla
-metadata_users.bind = engine_users
-
-class Likes(Base):
+class Likes(LocalBase):
     """
     Class that represents the following relation on the data base.
     """
 
     __tablename__ = "likes"
 
-    
     # Obtain metadata from repo_users
     # engine_users = create_engine(os.environ.get("DB_USERS_URI"))
     # metadata_repo_users = MetaData(bind=engine_users)
@@ -86,11 +70,9 @@ class Likes(Base):
     )
     
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-
+    
     # Establish the relationship to the users table in the other database
-    #user = relationship('User', back_populates='likes', foreign_keys=[user_id], bind=engine_users)
-    users = Table('users', metadata_users, autoload=True)
-
+    user = relationship('UserRemote') # Use a string to represent the related class -- we are avoiding circular imports with this
     _table_args__ = (UniqueConstraint("user_id", "id_post"),)  # a user can't like a post twice
 
     # pylint: disable=too-many-arguments
