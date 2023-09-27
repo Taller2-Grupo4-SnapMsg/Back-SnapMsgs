@@ -7,12 +7,9 @@ from repository.tables.tables import LocalBase, Posts
 
 # Creating engines
 engine_posts = create_engine(os.environ.get("DB_URI"))
-# engine_users = create_engine(os.environ.get("DB_USERS_URI"))
 
 # Creating the tables in the database
 LocalBase.metadata.create_all(engine_posts)
-# RemoteBase.prepare(engine_users, reflect=True)
-# UserRemote = RemoteBase.classes.users
 
 # Session is the handle of the database
 Session = sessionmaker(bind=engine_posts)
