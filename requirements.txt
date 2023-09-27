@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pydantic
+pytest
+coverage
+requests
+PyJWT==2.2.0
+passlib[bcrypt]==1.7.4
+SQLAlchemy
+psycopg2
+alembic
