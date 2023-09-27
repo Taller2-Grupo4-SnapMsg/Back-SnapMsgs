@@ -1,16 +1,23 @@
-from logging.config import fileConfig
-import os
+# pylint: skip-file
+# env.py
 
-from sqlalchemy.dialects.postgresql.base import PGDialect
+"""
+This module is the enviroment config for the migrations.
+"""
+
+import os
+from logging.config import fileConfig
+from alembic import context
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from alembic import context
 
 from repository.tables.tables import LocalBase
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
 config.set_main_option("sqlalchemy.url", os.environ.get("DB_URI"))
 
 # Interpret the config file for Python logging.
@@ -18,10 +25,11 @@ config.set_main_option("sqlalchemy.url", os.environ.get("DB_URI"))
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
+# target_metadata = mymodel.LocalBase.metadata
 target_metadata = LocalBase.metadata
 
 # other values from the config, defined by the needs of env.py,
@@ -54,32 +62,25 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+def run_migrations_online() -> None:
+    """Run migrations in 'online' mode.
 
-# Configure the PostgreSQL dialect
-def run_migrations_online():
-    configuration = context.config.get_section(context.config.config_ini_section)
-    configuration['sqlalchemy.url'] = os.environ.get("DB_URI")
+    In this scenario we need to create an Engine
+    and associate a connection with the context.
 
-    # Manually create a PGDialect instance
-    dialect = PGDialect()
-    dialect.initialize(context.config)
-
+    """
     connectable = engine_from_config(
-        configuration,
-        prefix='sqlalchemy.',
+        config.get_section(config.config_ini_section, {}),
+        prefix="sqlalchemy.",
         poolclass=pool.NullPool,
-        dialect=dialect
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            render_as_batch=True,
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

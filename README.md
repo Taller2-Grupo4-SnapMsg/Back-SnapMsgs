@@ -7,7 +7,7 @@ Código de backend para los tweets (snapmsgs) y todo lo relacionado a ellos (lik
 
 #### Exportar las URIs
 
-`export DB_URI=postgres://exoiymmb:4HyrnUG6vFsTwmhIG_B_N6j2NdyKMt5s@motty.db.elephantsql.com:5432/exoiymmb`
+`export DB_URI=postgresql://exoiymmb:4HyrnUG6vFsTwmhIG_B_N6j2NdyKMt5s@motty.db.elephantsql.com:5432/exoiymmb`
 
 `export DB_USERS_URI="postgresql://cwfvbvxl:jtsNDRjbVqGeBgYcYvxGps3LLlX_t-P5@berry.db.elephantsql.com:5432/cwfvbvxl"`
 
@@ -15,7 +15,11 @@ Código de backend para los tweets (snapmsgs) y todo lo relacionado a ellos (lik
 # Para levantar una nueva tabla
 
 ```
-alembic revision --autogenerate -m "motivo de la migración"
+alembic -c repository/alembic.ini revision --autogenerate -m "mi_comentario"
+```
+
+```
+alembic -c repository/alembic.ini  upgrade head
 ```
 
 
