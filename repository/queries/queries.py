@@ -1,10 +1,10 @@
 # We connect to the database using the ORM defined in tables.py
-from operator import and_, desc
+from operator import and_
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
 
-from repository.tables.tables import LocalBase, Posts, Like
+from repository.tables.tables import LocalBase, Posts, Likes
 
 # Creating engines
 engine_posts = create_engine(os.environ.get("DB_URI"))
@@ -28,7 +28,7 @@ TIMEOUT = 60
 # image = Column(String(100), unique=False, nullable=True)
 
 
-def create_post(session, user_id, posted_at, content, image):
+def create_post(user_id, posted_at, content, image):
     """ """
     post = Posts(
         user_id=user_id,
@@ -42,9 +42,9 @@ def create_post(session, user_id, posted_at, content, image):
     return post
 
 
-def create_like(session, id_post, user_id):
+def create_like(id_post, user_id):
     """ """
-    like = Like(id_post, user_id)
+    like = Likes(id_post, user_id)
     session.add(like)
     session.commit()
 
@@ -56,6 +56,8 @@ def create_like(session, id_post, user_id):
 def get_posts():
     """
     Returns all posts, no filter
+
+    The return value is a list of Posts.
     The posts are ordered from newest to oldest
     """
     return session.query(Posts).order_by(desc(Posts.posted_at)).all()
@@ -167,11 +169,11 @@ def get_x_newest_posts(amount):
 # ---------Remove----------
 
 
-def remove_like(session, like_id):
+def remove_like(like_id):
     """
     Removes the folowing relation between the two users.
     """
-    like = session.query(Like).filter(Like.like_id == like_id).first()
+    like = session.query(Likes).filter(Likes.like_id == like_id).first()
     if like:
         session.delete(like)
         session.commit()
@@ -179,13 +181,21 @@ def remove_like(session, like_id):
     raise KeyError("The relation doesn't exist")
 
 
-def remove_post(session, id_post):
+def remove_post(id_post):
     """
     Removes the folowing relation between the two users.
     """
-    like = session.query(Like).filter(Like.id_post == id_post).first()
-    if like:
-        session.delete(like)
+    post = session.query(Posts).filter(Posts.id == id_post).first()
+    if post:
+        session.delete(post)
         session.commit()
         return
     raise KeyError("The relation doesn't exist")
+
+def remove_posts():
+    """
+    Removes all posts.
+    """
+    session.query(Posts).delete()
+    session.commit()
+

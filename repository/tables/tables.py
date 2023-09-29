@@ -5,19 +5,10 @@ This module represents the tables on the database of the users' microservice
 """
 
 import datetime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy.ext.automap import automap_base
-import os
-from sqlalchemy import create_engine
+from sqlalchemy import Column, Integer, String, DateTime, UniqueConstraint
+from sqlalchemy.orm import declarative_base
 
 LocalBase = declarative_base()
-
-RemoteBase = automap_base()
-engine_users = create_engine(os.environ.get("DB_USERS_URI"))
-RemoteBase.prepare(engine_users, reflect=True)
-UserRemote = RemoteBase.classes.users
-
 
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-instance-attributes
@@ -30,7 +21,6 @@ class Posts(LocalBase):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False)
-    user = relationship(UserRemote, backref="posts")
 
     posted_at = Column(DateTime, default=datetime.datetime.utcnow)
     content = Column(
@@ -68,13 +58,11 @@ class Likes(LocalBase):
 
     id_post = Column(
         Integer,
-        ForeignKey("posts.id", ondelete="CASCADE"),
         nullable=False,
         primary_key=True,
     )
 
     user_id = Column(Integer, nullable=False)
-    user = relationship(UserRemote, backref="posts")
 
     _table_args__ = (
         UniqueConstraint("user_id", "id_post"),
