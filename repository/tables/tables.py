@@ -25,25 +25,23 @@ class Posts(LocalBase):
     """
     Class that represents the user class on the database.
     """
-    
+
     __tablename__ = "posts"
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False)
-    user = relationship(UserRemote, backref='posts')
+    user = relationship(UserRemote, backref="posts")
 
     posted_at = Column(DateTime, default=datetime.datetime.utcnow)
-    content = Column(String(800), unique=False, nullable=True) #verificar si 800 caracteres es mucho para un tweet
-    image = Column(String(100), unique=False, nullable=True) #verificar que image y content no sean NULL a la vez
-    
+    content = Column(
+        String(800), unique=False, nullable=True
+    )  # verificar si 800 caracteres es mucho para un tweet
+    image = Column(
+        String(100), unique=False, nullable=True
+    )  # verificar que image y content no sean NULL a la vez
+
     # pylint: disable=too-many-arguments
-    def __init__(
-        self,
-        user_id,
-        posted_at,
-        content,
-        image
-    ):
+    def __init__(self, user_id, posted_at, content, image):
         self.user_id = user_id
         self.posted_at = posted_at
         self.content = content
@@ -67,7 +65,7 @@ class Likes(LocalBase):
         nullable=False,
         primary_key=True,
     )
-    
+
     id_post = Column(
         Integer,
         ForeignKey("posts.id", ondelete="CASCADE"),
@@ -76,9 +74,11 @@ class Likes(LocalBase):
     )
 
     user_id = Column(Integer, nullable=False)
-    user = relationship(UserRemote, backref='posts')
-    
-    _table_args__ = (UniqueConstraint("user_id", "id_post"),)  # a user can't like a post twice
+    user = relationship(UserRemote, backref="posts")
+
+    _table_args__ = (
+        UniqueConstraint("user_id", "id_post"),
+    )  # a user can't like a post twice
 
     # pylint: disable=too-many-arguments
     def __init__(self, id_post, user_id):

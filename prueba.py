@@ -3,7 +3,9 @@ from sqlalchemy.orm import sessionmaker
 from repository.queries.queries import UserRemote  # Import the User class
 
 # Create an engine and session
-engine = create_engine('postgresql://cwfvbvxl:jtsNDRjbVqGeBgYcYvxGps3LLlX_t-P5@berry.db.elephantsql.com:5432/cwfvbvxl')
+engine = create_engine(
+    "postgresql://cwfvbvxl:jtsNDRjbVqGeBgYcYvxGps3LLlX_t-P5@berry.db.elephantsql.com:5432/cwfvbvxl"
+)
 Session = sessionmaker(bind=engine)
 session = Session()
 
