@@ -1,0 +1,57 @@
+name: Code Coverage Check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  Coverage-Check:
+    runs-on: ubuntu-latest
+    # Postgres instance for testing:
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: admin123
+          POSTGRES_DB: test-back-users
+        ports:
+          - 5432:5432
+        options: --health-cmd "pg_isready -U testuser" --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+    - name: Wait for PostgreSQL to be ready
+      run: |
+        until nc -z -v -w30 localhost 5432; do
+          echo "Waiting for PostgreSQL to start..."
+          sleep 5
+        done
+
+    - name: Run Tests with Coverage
+      run: |
+        export DB_URI="postgresql://admin:admin123@localhost:5432/test-back-users"
+        coverage run -m pytest tests/user_tests.py
+
+    - name: Generate Coverage Report
+      run: |
+        coverage report -m
+
+    - name: Check Coverage
+      run: |
+        COVERAGE_THRESHOLD="80"
+        LAST_COVERAGE=$(coverage report -m | grep -oP '\d+%' | tail -n 1)
+        if [[ "$LAST_COVERAGE" < "$COVERAGE_THRESHOLD" ]]; then
+          echo "Code coverage is less than $COVERAGE_THRESHOLD%"
+          exit 1
+        fi

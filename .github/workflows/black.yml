@@ -1,0 +1,10 @@
+name: Black Formatting Lint
+
+on: [push, pull_request]
+
+jobs:
+  Black-Lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: psf/black@stable
