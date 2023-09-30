@@ -19,20 +19,12 @@ TIMEOUT = 60
 
 # ----- CREATE ------
 
-# id = Column(Integer, primary_key=True)
-# user_id = Column(Integer, nullable=False)
-# user = relationship(UserRemote, backref='posts')
-
-# posted_at = Column(DateTime, default=datetime.datetime.utcnow)
-# content = Column(String(800), unique=False, nullable=True)
-# image = Column(String(100), unique=False, nullable=True)
-
-
-def create_post(user_id, posted_at, content, image):
-    """ """
+def create_post(user_id, content, image):
+    """ 
+    Create a post made by the user_id, with that content and image
+    """
     post = Posts(
         user_id=user_id,
-        posted_at=posted_at,
         content=content,
         image=image,
     )
@@ -169,9 +161,9 @@ def get_x_newest_posts(amount):
 # ---------Remove----------
 
 
-def remove_like(like_id):
+def delete_like(like_id):
     """
-    Removes the folowing relation between the two users.
+    Deletes the folowing relation between the two users.
     """
     like = session.query(Likes).filter(Likes.like_id == like_id).first()
     if like:
@@ -181,9 +173,9 @@ def remove_like(like_id):
     raise KeyError("The relation doesn't exist")
 
 
-def remove_post(id_post):
+def delete_post(id_post):
     """
-    Removes the folowing relation between the two users.
+    Deletes the folowing relation between the two users.
     """
     post = session.query(Posts).filter(Posts.id == id_post).first()
     if post:
@@ -192,9 +184,9 @@ def remove_post(id_post):
         return
     raise KeyError("The relation doesn't exist")
 
-def remove_posts():
+def delete_posts():
     """
-    Removes all posts.
+    Deletes all posts.
     """
     session.query(Posts).delete()
     session.commit()

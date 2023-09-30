@@ -31,9 +31,8 @@ class Posts(LocalBase):
     )  # verificar que image y content no sean NULL a la vez
 
     # pylint: disable=too-many-arguments
-    def __init__(self, user_id, posted_at, content, image):
+    def __init__(self, user_id, content, image):
         self.user_id = user_id
-        self.posted_at = posted_at
         self.content = content
         self.image = image
 
