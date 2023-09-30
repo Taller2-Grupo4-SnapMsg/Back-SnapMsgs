@@ -44,23 +44,19 @@ class Likes(LocalBase):
 
     __tablename__ = "likes"
 
-    # Obtain metadata from repo_users
-    # engine_users = create_engine(os.environ.get("DB_USERS_URI"))
-    # metadata_repo_users = MetaData(bind=engine_users)
-    # metadata_repo_users.reflect()
-
-    id = Column(
-        Integer,
-        primary_key=True,
-        autoincrement=True,  # Asegúrate de tener esto para el autoincremento
-    )
-
     id_post = Column(
         Integer,
         nullable=False,
+        primary_key=True
     )
 
-    user_id = Column(Integer, nullable=False)
+    user_id = Column(
+        Integer, 
+        nullable=False,
+        primary_key=True
+    )
+
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     _table_args__ = (
         UniqueConstraint("user_id", "id_post"),
