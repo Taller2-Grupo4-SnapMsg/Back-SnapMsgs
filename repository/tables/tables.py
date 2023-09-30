@@ -51,14 +51,13 @@ class Likes(LocalBase):
 
     id = Column(
         Integer,
-        nullable=False,
         primary_key=True,
+        autoincrement=True,  # Asegúrate de tener esto para el autoincremento
     )
 
     id_post = Column(
         Integer,
         nullable=False,
-        primary_key=True,
     )
 
     user_id = Column(Integer, nullable=False)

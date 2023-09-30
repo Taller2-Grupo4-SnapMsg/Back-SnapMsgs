@@ -3,6 +3,7 @@ from operator import and_
 import os
 from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
+from repository.errors import *
 
 from repository.tables.tables import LocalBase, Posts, Likes
 
@@ -36,6 +37,7 @@ def create_post(user_id, content, image):
 
 def create_like(id_post, user_id):
     """ """
+    print("entra a pegarle a la bdd")
     like = Likes(id_post, user_id)
     session.add(like)
     session.commit()
@@ -153,9 +155,37 @@ def get_x_newest_posts(amount):
 
 # --  Likes --
 
-# get de todos los likes para debbuguimg
-# get de todos los likes que cierto usuario realizó
-# get de todos los likes que cierto post tuvo
+def get_likes_for_a_post(post_id):
+    """
+    Retrieve all the likes for a specific post.
+
+    If the post does not exist, raises a PostNotFound exception.
+    """
+    post = session.query(Posts).filter(Posts.id == post_id).first()
+    if not post:
+        raise PostNotFound()
+    
+    likes = session.query(Likes).filter(Likes.id_post == post_id).all()
+    return likes
+
+def get_all_the_likes():
+    """
+    Retrieve all likes in the system.
+    """
+    return session.query(Likes).all()
+
+def get_all_the_likes_of_a_user(user_id):
+    """
+    Retrieve all likes given by a specific user.
+
+    If the user does not exist, raises a UserNotFound exception.
+    """
+    user = session.query(Likes).filter(Likes.user_id == user_id).first()
+    if not user:
+        raise UserNotFound()
+
+    likes = session.query(Likes).filter(Likes.user_id == user_id).all()
+    return likes
 
 
 # ---------Remove----------
@@ -170,7 +200,7 @@ def delete_like(like_id):
         session.delete(like)
         session.commit()
         return
-    raise KeyError("The relation doesn't exist")
+    raise LikeNotFound()
 
 
 def delete_post(id_post):
@@ -182,12 +212,20 @@ def delete_post(id_post):
         session.delete(post)
         session.commit()
         return
-    raise KeyError("The relation doesn't exist")
+    
+    raise UserNotFound()
 
 def delete_posts():
     """
     Deletes all posts.
     """
     session.query(Posts).delete()
+    session.commit()
+
+def delete_likes():
+    """
+    Deletes all likes.
+    """
+    session.query(Likes).delete()
     session.commit()
 

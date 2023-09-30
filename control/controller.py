@@ -7,6 +7,8 @@ from repository.queries.queries import *
 
 from datetime import datetime
 POST_NOT_FOUND = 404
+USER_NOT_FOUND = 404
+LIKE_NOT_FOUND = 404
 BAD_REQUEST = 400
 
 app = FastAPI()
@@ -198,7 +200,8 @@ async def api_get_x_newest_posts_by_user(id: int, x: int):
         :param x: amount of posts to search
     
     Returns:
-        All x posts made by that user. If user made less than x posts, all the posts will be returned.
+        All x posts made by that user. If user made less 
+        than x posts, all the posts will be returned.
     
     Raises:
         
@@ -209,6 +212,7 @@ async def api_get_x_newest_posts_by_user(id: int, x: int):
     posts = get_x_newest_posts_by_user(id, x)
     return generate_response_posts(posts)
 
+
 @app.get("/posts/amount/{x}")
 async def api_get_x_newest_posts(x: int):
     """
@@ -218,7 +222,8 @@ async def api_get_x_newest_posts(x: int):
         :param x: amount of posts to search
     
     Returns:
-        All x posts made in general. If there are less than x posts created, all the posts will be returned.
+        All x posts made in general. If there are less 
+        than x posts created, all the posts will be returned.
     
     Raises:
         
@@ -229,6 +234,7 @@ async def api_get_x_newest_posts(x: int):
     posts = get_x_newest_posts(x)
     return generate_response_posts(posts)
 
+    
 # ------- DELETE ---------
 
 @app.delete("/post/{id}")
@@ -240,7 +246,8 @@ async def api_delete_post(id: int):
         :param x: amount of posts to search
     
     Returns:
-        All x posts made in general. If there are less than x posts created, all the posts will be returned.
+        All x posts made in general. If there are less than x posts 
+        created, all the posts will be returned.
     
     Raises:
         -
@@ -250,3 +257,153 @@ async def api_delete_post(id: int):
         return {"message": "Post deleted successfully"}
     except KeyError:
         raise HTTPException(status_code=POST_NOT_FOUND, detail="Post doesnt exist")
+    
+
+# -------- Likes ---------
+
+# -------- Post -----------
+
+# Define a Pydantic model for the request body
+class LikeCreateRequest(BaseModel):
+    """
+    This class is a Pydantic model for the request body.
+    """
+    user_id: int
+    post_id: int
+
+    # I disable it since it's a pydantic configuration
+    # pylint: disable=too-few-public-methods
+    class Config:
+        """
+        This is a pydantic configuration so I can cast
+        orm_objects into pydantic models.
+        """
+
+        orm_mode = True
+        from_attributes = True
+
+def generate_like(like):
+    """
+    This function casts the orm_object into a pydantic model.
+    (from data base object to json)
+    """
+    return LikeCreateRequest(
+        user_id=like.user_id,
+        post_id=like.post_id
+    )
+
+@app.post("/like")
+async def api_create_like(like: LikeCreateRequest):
+    """
+    Creates a new like
+
+    Args:
+        like (Like): The like to create.
+    
+    Returns:
+        Like: The like that was created.
+    
+    Raises:
+        -
+    """
+    #deberia chequear si existen
+    print("entra al controller")
+    create_like(like.post_id, like.user_id)
+    
+    return {"message": "Like created successfully"}
+
+# -------- Get -----------
+
+
+@app.get("/like/{post_id}")
+def get_likes(post_id: int):
+    """
+    Retrieve the user IDs of users who liked a specific post.
+
+    Given a `post_id`, this function returns a list of user IDs 
+    representing users who liked the post.
+
+    Args:
+        post_id (int): The ID of the post to retrieve likes for.
+
+    Returns:
+        List[int]: A list of user IDs representing users who liked the post.
+
+    Raises:
+        HTTPException: If the specified post does not exist, an 
+        HTTPException with a 404 status code is raised.
+    """
+    try:
+        likes_list = get_likes_for_a_post(post_id)
+        user_ids = [like.user_id for like in likes_list]
+        return user_ids
+    except PostNotFound as error:
+        raise HTTPException(status_code=POST_NOT_FOUND, detail=str(error)) from error
+    
+@app.get("/likes")
+def get_all_likes():
+    """
+    Retrieve all likes in the system.
+
+    This function returns a list of all likes recorded in the system.
+
+    Returns:
+        List[Dict[str, int]]: A list of dictionaries, each containing 
+        'user_id' and 'post_id' representing a like.
+
+    Raises:
+        No exceptions raised.
+    """
+    all_likes = get_all_the_likes()
+    likes_data = [{'user_id': like.user_id, 'post_id': like.id_post} for like in all_likes]
+    return likes_data
+    
+@app.get("/like/{user_id}")
+def get_likes(user_id: int):
+    """
+    Retrieve the post IDs that a specific user has liked.
+
+    Given a `user_id`, this function returns a list of post IDs representing 
+    the posts that the user has liked.
+
+    Args:
+        user_id (int): The ID of the user to retrieve liked posts for.
+
+    Returns:
+        List[int]: A list of post IDs representing posts liked by the user.
+
+    Raises:
+        HTTPException: If the specified user does not exist, an HTTPException 
+        with a 404 status code is raised.
+    """
+    try:
+        liked_posts = get_all_the_likes_of_a_user(user_id)
+        post_ids = [like.id_post for like in liked_posts]
+        return post_ids
+    except UserNotFound as error:
+        raise HTTPException(status_code=USER_NOT_FOUND, detail=str(error)) from error
+    
+
+# -------- Delete -----------
+
+    
+@app.delete("/like/{like_id}")
+async def api_delete_like(like_id: int):
+    """
+    Deletes a like by its ID.
+
+    Args:
+        like_id (int): The ID of the like to be deleted.
+
+    Returns:
+        dict: A message indicating the successful deletion of the like.
+
+    Raises:
+        HTTPException: If the specified like does not exist, an 
+        HTTPException with a 404 status code is raised.
+    """
+    try:
+        delete_like(like_id)
+        return {"message": "Like deleted successfully"}
+    except KeyError:
+        raise HTTPException(status_code=LIKE_NOT_FOUND, detail="Like doesn't exist")
