@@ -1,10 +1,11 @@
-# We connect to the database using the ORM defined in tables.py
+"""
+Archivo con algunas pruebas de la base de datos
+"""
 from operator import and_
 import os
 from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
-from repository.errors import *
-
+from repository.errors import PostNotFound, LikeNotFound, UserNotFound
 from repository.tables.tables import LocalBase, Posts, Likes
 
 # Creating engines
@@ -36,7 +37,9 @@ def create_post(user_id, content, image):
 
 
 def create_like(id_post, user_id):
-    """ """
+    """
+    Create a like
+    """
     print("entra a pegarle a la bdd")
     like = Likes(id_post, user_id)
     session.add(like)
@@ -163,7 +166,6 @@ def get_likes_for_a_post(post_id):
     post = session.query(Posts).filter(Posts.id == post_id).first()
     if not post:
         raise PostNotFound()
-    
     likes = session.query(Likes).filter(Likes.id_post == post_id).all()
     return likes
 
@@ -202,7 +204,8 @@ def delete_like(user_id, post_id):
     """
     Deletes the folowing relation between the two users.
     """
-    like = session.query(Likes).filter(Likes.user_id == user_id and Likes.id_post == post_id).first()
+    like = session.query(Likes).filter(Likes.user_id == user_id and\
+                                    Likes.id_post == post_id).first()
     if like:
         session.delete(like)
         session.commit()
@@ -219,7 +222,6 @@ def delete_post(id_post):
         session.delete(post)
         session.commit()
         return
-    
     raise UserNotFound()
 
 def delete_posts_by_user(user_id):
@@ -231,7 +233,6 @@ def delete_posts_by_user(user_id):
         session.delete(post)
         session.commit()
         return
-    
     raise UserNotFound()
 
 
@@ -248,4 +249,3 @@ def delete_likes():
     """
     session.query(Likes).delete()
     session.commit()
-

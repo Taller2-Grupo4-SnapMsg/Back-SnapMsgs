@@ -23,8 +23,10 @@ class Posts(LocalBase):
     user_id = Column(Integer, nullable=False)
 
     posted_at = Column(DateTime, default=datetime.datetime.utcnow)
-    content = Column( String(800), unique=False, nullable=True)  # verificar si 800 caracteres es mucho para un tweet
-    image = Column(String(100), unique=False, nullable=True)  # verificar que image y content no sean NULL a la vez
+    # verificar si 800 caracteres es mucho para un tweet
+    content = Column( String(800), unique=False, nullable=True)
+    # verificar que image y content no sean NULL a la vez
+    image = Column(String(100), unique=False, nullable=True)
 
     # pylint: disable=too-many-arguments
     def __init__(self, user_id, content, image):
@@ -36,7 +38,6 @@ class Posts(LocalBase):
 # id_post = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=False)
 # user_id = Column(Integer, nullable=False)
 # created_at = Column(DateTime, default=datetime.datetime.utcnow)
-
 # _table_args__ = (
 #     PrimaryKeyConstraint('id_post', 'user_id'),
 # )
@@ -48,16 +49,16 @@ class Likes(LocalBase):
 
     __tablename__ = "likes"
 
-    id_post = Column(Integer, 
-                     ForeignKey("posts.id", ondelete="CASCADE"), 
-                     nullable=False, 
+    id_post = Column(Integer,
+                     ForeignKey("posts.id", ondelete="CASCADE"),
+                     nullable=False,
                      primary_key=True)
     user_id = Column(Integer, nullable=False, primary_key=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     _table_args__ = (
         UniqueConstraint("user_id", "id_post"),
-    ) 
+    )
 
     # pylint: disable=too-many-arguments
     def __init__(self, id_post, user_id):

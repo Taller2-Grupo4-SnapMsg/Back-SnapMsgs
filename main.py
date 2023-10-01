@@ -1,25 +1,25 @@
-from repository.queries.queries import *
-from datetime import datetime
+"""
+Archivo con algunas pruebas de la base de datos
+"""
+from repository.queries.queries import create_post, get_posts, get_post_by_id
 
-user_id = 58
-posted_at = datetime.utcnow()
-content = "primer postttt"
-image= "jjdjdjd"
-create_post(user_id, posted_at, content, image)
+USER_ID = 58
+CONTENT = "primer postttt"
+IMAGE = "jjdjdjd"
+create_post(USER_ID, CONTENT, IMAGE)
 
-posted_at = datetime.utcnow()
-content = "otro postttt!"
-image= "jjdjdjdasdada"
-create_post(user_id, posted_at, content, image)
+CONTENT = "otro postttt!"
+IMAGE = "jjdjdjdasdada"
+create_post(USER_ID, CONTENT, IMAGE)
 
-# se deberían mostrar dos posts por terminal
 posts = get_posts()
 for post in posts:
-   print(f"User_ID: {post.user_id}, Posted at: {post.posted_at}, Content: {post.content}")
+    print(f"User_ID: {post.user_id}, Posted at: {post.posted_at}, Content: {post.content}")
 
-#se debería mostrar el segundo post
 post = get_post_by_id(10)
-if (post):
+if post:
     print(f"User_ID: {post.user_id}, Posted at: {post.posted_at}, Content: {post.content}")
 else:
-    print("no lo levanta")
+    print("No se encontró el post")
+
+

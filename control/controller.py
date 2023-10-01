@@ -1,14 +1,14 @@
 """
     Fast API
 """
+from time import strptime
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException
-# pylint: disable=C0114, W0401
-from repository.tables.tables import *
-# pylint: disable=C0114, W0401
-from repository.queries.queries import *
 from pydantic import BaseModel
-from datetime import datetime
+# pylint: disable=C0114, W0401, W0614
+from repository.tables.tables import *
+# pylint: disable=C0114, W0401, W0614
+from repository.queries.queries import *
 
 POST_NOT_FOUND = 404
 USER_NOT_FOUND = 404
@@ -231,14 +231,14 @@ async def api_get_posts_by_user_and_date(id: int, date: str):
     """
     try:
         # está comparando YYYY-MM-DD contra YYYY-MM-DD HH-MM-SS que hay en la bdd
-        datetime_date = datetime.strptime(date, "%Y-%m-%d")
+        datetime_date = strptime(date, "%Y-%m-%d")
 
         post = get_posts_by_user_and_date(id, datetime_date)
         print(post)
         return generate_response_posts(post)
     except ValueError as error:
         raise HTTPException(status_code=BAD_REQUEST, detail="Invalid\
-                            date format. Expected format: YYYY-MM-DD")
+                            date format. Expected format: YYYY-MM-DD") from error
 
 @app.get("/posts/user/{id}/amount{x}")
 async def api_get_x_newest_posts_by_user(id: int, x: int):
@@ -395,8 +395,8 @@ async def api_delete_post(id: int):
     try:
         delete_post(id)
         return {"message": "Post deleted successfully"}
-    except KeyError:
-        raise HTTPException(status_code=POST_NOT_FOUND, detail="Post doesnt exist")
+    except KeyError as error:
+        raise HTTPException(status_code=POST_NOT_FOUND, detail="Post doesnt exist") from error
 
 
 @app.delete("/likes/user/{user_id}/post/{post_id}")
@@ -417,6 +417,6 @@ async def api_delete_like(user_id: int, post_id: int):
     try:
         delete_like(user_id, post_id)
         return {"message": "Like deleted successfully"}
-    except KeyError:
-        raise HTTPException(status_code=LIKE_NOT_FOUND, detail="Like doesn't exist")
+    except KeyError as error:
+        raise HTTPException(status_code=LIKE_NOT_FOUND, detail="Like doesn't exist") from error
  

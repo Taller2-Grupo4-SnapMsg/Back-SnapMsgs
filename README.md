@@ -29,3 +29,8 @@ pip install -r requirements.txt
 ```
 pip3 install -r requirements.txt
 ```
+
+# Para correr pylint
+```
+find . -type f -name "*.py" | xargs pylint
+```
