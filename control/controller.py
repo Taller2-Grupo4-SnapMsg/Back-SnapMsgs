@@ -314,9 +314,27 @@ async def api_create_like(like: LikeCreateRequest):
 
 # -------- Get -----------
 
+@app.get("/likes")
+def get_all_likes():
+    """
+    Retrieve all likes in the system.
+
+    This function returns a list of all likes recorded in the system.
+
+    Returns:
+        List[Dict[str, int]]: A list of dictionaries, each containing 
+        'user_id' and 'post_id' representing a like.
+
+    Raises:
+        No exceptions raised.
+    """
+    all_likes = get_all_the_likes()
+    likes_data = [{'user_id': like.user_id, 'post_id': like.id_post} for like in all_likes]
+    return likes_data
+
 
 @app.get("/like/{post_id}")
-def get_likes(post_id: int):
+def get_the_number_of_likes(post_id: int):
     """
     Retrieve the user IDs of users who liked a specific post.
 
@@ -340,26 +358,31 @@ def get_likes(post_id: int):
     except PostNotFound as error:
         raise HTTPException(status_code=POST_NOT_FOUND, detail=str(error)) from error
     
-@app.get("/likes")
-def get_all_likes():
+@app.get("/like/{post_id}/count")
+def get_number_of_likes(post_id: int):
     """
-    Retrieve all likes in the system.
+    Get the number of likes for a specific post.
 
-    This function returns a list of all likes recorded in the system.
+    Args:
+        post_id (int): The ID of the post for which you want to get 
+        the like count.
 
     Returns:
-        List[Dict[str, int]]: A list of dictionaries, each containing 
-        'user_id' and 'post_id' representing a like.
+        int: The number of likes for the specified post.
 
     Raises:
-        No exceptions raised.
+        HTTPException: If the post with the specified ID is not found, 
+        it will raise an HTTP 404 error.
     """
-    all_likes = get_all_the_likes()
-    likes_data = [{'user_id': like.user_id, 'post_id': like.id_post} for like in all_likes]
-    return likes_data
+    try:
+        likes = get_likes_count(post_id)
+        return likes
+    except PostNotFound as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
     
-@app.get("/like/{user_id}")
-def get_likes(user_id: int):
+# Daba error si le ponia la misma ruta que con post_id  
+@app.get("/like/user/{user_id}")
+def get_likes_user(user_id: int):
     """
     Retrieve the post IDs that a specific user has liked.
 
@@ -383,7 +406,7 @@ def get_likes(user_id: int):
     except UserNotFound as error:
         raise HTTPException(status_code=USER_NOT_FOUND, detail=str(error)) from error
     
-
+    
 # -------- Delete -----------
 
     

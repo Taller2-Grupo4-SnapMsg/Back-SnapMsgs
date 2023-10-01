@@ -179,13 +179,21 @@ def get_all_the_likes_of_a_user(user_id):
 
     If the user does not exist, raises a UserNotFound exception.
     """
-    user = session.query(Likes).filter(Likes.user_id == user_id).first()
-    if not user:
-        raise UserNotFound()
+    #user = session.query(Likes).filter(Likes.user_id == user_id).first()
+    #if not user:
+    #    raise UserNotFound()
 
     likes = session.query(Likes).filter(Likes.user_id == user_id).all()
     return likes
 
+def get_likes_count(post_id):
+    """
+    Returns the number of likes.
+    """
+    post = session.query(Posts).filter(Posts.id == post_id).first()
+    if not post:
+        raise PostNotFound()
+    return session.query(Likes).filter(Likes.id_post == post_id).count()
 
 # ---------Remove----------
 
