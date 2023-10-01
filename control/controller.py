@@ -1,11 +1,15 @@
+"""
+    Fast API
+"""
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException
+# pylint: disable=C0114, W0401
 from repository.tables.tables import *
+# pylint: disable=C0114, W0401
+from repository.queries.queries import *
 from pydantic import BaseModel
-
-from repository.queries.queries import * 
-
 from datetime import datetime
+
 POST_NOT_FOUND = 404
 USER_NOT_FOUND = 404
 LIKE_NOT_FOUND = 404
@@ -80,7 +84,6 @@ class PostCreateRequest(BaseModel):
     user_id: int
     content: str
     image: str
-    
 
 @app.post("/posts")
 async def api_create_post(post: PostCreateRequest):
@@ -97,171 +100,7 @@ async def api_create_post(post: PostCreateRequest):
         -
     """
     create_post(post.user_id, post.content, post.image)
-    
     return {"message": "Post created successfully"}
-
-
-
-
-# ------------- GET ----------------
-
-@app.get("/posts")
-async def api_get_posts():
-    """
-    Gets all the posts ever created.
-    Use with caution!
-
-    Args:
-        -
-    
-    Returns:
-        List of Posts
-    
-    Raises:
-        -
-    """
-
-    posts = get_posts()
-    return generate_response_posts(posts)
-
-@app.get("/posts/{id}")
-async def api_get_post_by_id(id: int):
-    """
-    Gets the post with the id passed
-    Args:
-        :param id: Id of the post
-    
-    Returns:
-        The post with that Id
-    
-    Raises:
-        HTTPEXCEPTION with code 404 if post not found
-    """
-    post = get_post_by_id(id)
-    if post is None:
-        raise HTTPException(status_code=POST_NOT_FOUND, detail="Post not found")
-    return generate_post(post)
-
-#Acá no hacemos diferencia entre si encontramos o no al usuario, directamente
-#devolvemos el vector vacío o el vector con elemento
-#deberíamos verificar algo más?
-@app.get("/posts/user/{id}")
-async def api_get_posts_by_user_id(id: int):
-    """
-    Gets all posts made by that user
-    Use with caution!
-
-    Args:
-        :param id: Id of the user
-    
-    Returns:
-        All posts made by that user
-    
-    Raises:
-        
-    """
-    posts = get_posts_by_user_id(id)
-    return generate_response_posts(posts)
-
-
-#TODO
-@app.get("/posts/user/{id}/date/{date}")
-async def api_get_posts_by_user_and_date(id: int, date: str):
-    """
-    Gets all posts made by that user that date
-
-    Args:
-        :param id: Id of the user
-        :param date: Specific date as a string with format "YYYY-MM-DD"
-    
-    Returns:
-        All posts made by that user that date
-    
-    Raises:
-        ValueError: if invalid date format
-    """
-    try:
-        # está comparando YYYY-MM-DD contra YYYY-MM-DD HH-MM-SS que hay en la bdd
-        datetime_date = datetime.strptime(date, "%Y-%m-%d")
-
-        post = get_posts_by_user_and_date(id, datetime_date)
-        print(post)
-        return generate_response_posts(post)
-    except ValueError:
-        raise HTTPException(status_code=BAD_REQUEST, detail="Invalid date format. Expected format: YYYY-MM-DD")
-    
-@app.get("/posts/user/{id}/amount{x}")
-async def api_get_x_newest_posts_by_user(id: int, x: int):
-    """
-    Gets x amount of newest posts made by that user
-
-    Args:
-        :param id: Id of the user
-        :param x: amount of posts to search
-    
-    Returns:
-        All x posts made by that user. If user made less 
-        than x posts, all the posts will be returned.
-    
-    Raises:
-        
-    """
-    if (x <= 0):
-        raise HTTPException(status_code=BAD_REQUEST, detail="Amount must be greater than 0")
-    
-    posts = get_x_newest_posts_by_user(id, x)
-    return generate_response_posts(posts)
-
-
-@app.get("/posts/amount/{x}")
-async def api_get_x_newest_posts(x: int):
-    """
-    Gets x amount of newest posts made in general
-
-    Args:
-        :param x: amount of posts to search
-    
-    Returns:
-        All x posts made in general. If there are less 
-        than x posts created, all the posts will be returned.
-    
-    Raises:
-        
-    """
-    if (x <= 0):
-        raise HTTPException(status_code=BAD_REQUEST, detail="Amount must be greater than 0")
-    
-    posts = get_x_newest_posts(x)
-    return generate_response_posts(posts)
-
-    
-# ------- DELETE ---------
-
-@app.delete("/post/{id}")
-async def api_delete_post(id: int):
-    """
-    Gets x amount of newest posts made in general
-
-    Args:
-        :param x: amount of posts to search
-    
-    Returns:
-        All x posts made in general. If there are less than x posts 
-        created, all the posts will be returned.
-    
-    Raises:
-        -
-    """
-    try:
-        delete_post(id)
-        return {"message": "Post deleted successfully"}
-    except KeyError:
-        raise HTTPException(status_code=POST_NOT_FOUND, detail="Post doesnt exist")
-    
-
-# -------- Likes ---------
-
-# -------- Post -----------
 
 # Define a Pydantic model for the request body
 class LikeCreateRequest(BaseModel):
@@ -307,12 +146,142 @@ async def api_create_like(like: LikeCreateRequest):
         -
     """
     #deberia chequear si existen
-    print("entra al controller")
     create_like(like.post_id, like.user_id)
-    
     return {"message": "Like created successfully"}
 
-# -------- Get -----------
+
+# ------------- GET ----------------
+
+@app.get("/posts")
+async def api_get_posts():
+    """
+    Gets all the posts ever created.
+    Use with caution!
+
+    Args:
+        -
+    
+    Returns:
+        List of Posts
+    
+    Raises:
+        -
+    """
+
+    posts = get_posts()
+    return generate_response_posts(posts)
+
+# pylint: disable=C0103, W0622
+@app.get("/posts/{id}")
+async def api_get_post_by_id(id: int):
+    """
+    Gets the post with the id passed
+    Args:
+        :param id: Id of the post
+    
+    Returns:
+        The post with that Id
+    
+    Raises:
+        HTTPEXCEPTION with code 404 if post not found
+    """
+    # pylint: disable=C0103, W0622
+    post = get_post_by_id(id)
+    if post is None:
+        raise HTTPException(status_code=POST_NOT_FOUND, detail="Post not found")
+    return generate_post(post)
+
+#Acá no hacemos diferencia entre si encontramos o no al usuario, directamente
+#devolvemos el vector vacío o el vector con elemento
+#deberíamos verificar algo más?
+@app.get("/posts/user/{id}")
+async def api_get_posts_by_user_id(id: int):
+    """
+    Gets all posts made by that user
+    Use with caution!
+
+    Args:
+        :param id: Id of the user
+    
+    Returns:
+        All posts made by that user
+    
+    Raises:
+        
+    """
+    posts = get_posts_by_user_id(id)
+    return generate_response_posts(posts)
+
+# pylint: disable=W0511
+# TODO
+@app.get("/posts/user/{id}/date/{date}")
+async def api_get_posts_by_user_and_date(id: int, date: str):
+    """
+    Gets all posts made by that user that date
+
+    Args:
+        :param id: Id of the user
+        :param date: Specific date as a string with format "YYYY-MM-DD"
+    
+    Returns:
+        All posts made by that user that date
+    
+    Raises:
+        ValueError: if invalid date format
+    """
+    try:
+        # está comparando YYYY-MM-DD contra YYYY-MM-DD HH-MM-SS que hay en la bdd
+        datetime_date = datetime.strptime(date, "%Y-%m-%d")
+
+        post = get_posts_by_user_and_date(id, datetime_date)
+        print(post)
+        return generate_response_posts(post)
+    except ValueError as error:
+        raise HTTPException(status_code=BAD_REQUEST, detail="Invalid\
+                            date format. Expected format: YYYY-MM-DD")
+
+@app.get("/posts/user/{id}/amount{x}")
+async def api_get_x_newest_posts_by_user(id: int, x: int):
+    """
+    Gets x amount of newest posts made by that user
+
+    Args:
+        :param id: Id of the user
+        :param x: amount of posts to search
+    
+    Returns:
+        All x posts made by that user. If user made less 
+        than x posts, all the posts will be returned.
+    
+    Raises:
+        
+    """
+    if x <= 0:
+        raise HTTPException(status_code=BAD_REQUEST, detail="Amount must be greater than 0")
+    posts = get_x_newest_posts_by_user(id, x)
+    return generate_response_posts(posts)
+
+
+@app.get("/posts/amount/{x}")
+async def api_get_x_newest_posts(x: int):
+    """
+    Gets x amount of newest posts made in general
+
+    Args:
+        :param x: amount of posts to search
+    
+    Returns:
+        All x posts made in general. If there are less 
+        than x posts created, all the posts will be returned.
+    
+    Raises:
+        
+    """
+    if x <= 0:
+        raise HTTPException(status_code=BAD_REQUEST, detail="Amount must be greater than 0")
+    posts = get_x_newest_posts(x)
+    return generate_response_posts(posts)
+
 
 @app.get("/likes")
 def get_all_likes():
@@ -333,7 +302,7 @@ def get_all_likes():
     return likes_data
 
 
-@app.get("/like/{post_id}")
+@app.get("/likes/post/{post_id}")
 def get_the_number_of_likes(post_id: int):
     """
     Retrieve the user IDs of users who liked a specific post.
@@ -357,8 +326,8 @@ def get_the_number_of_likes(post_id: int):
         return user_ids
     except PostNotFound as error:
         raise HTTPException(status_code=POST_NOT_FOUND, detail=str(error)) from error
-    
-@app.get("/like/{post_id}/count")
+
+@app.get("/likes/post/{post_id}/count")
 def get_number_of_likes(post_id: int):
     """
     Get the number of likes for a specific post.
@@ -379,9 +348,9 @@ def get_number_of_likes(post_id: int):
         return likes
     except PostNotFound as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
-    
-# Daba error si le ponia la misma ruta que con post_id  
-@app.get("/like/user/{user_id}")
+
+
+@app.get("/likes/user/{user_id}")
 def get_likes_user(user_id: int):
     """
     Retrieve the post IDs that a specific user has liked.
@@ -405,15 +374,35 @@ def get_likes_user(user_id: int):
         return post_ids
     except UserNotFound as error:
         raise HTTPException(status_code=USER_NOT_FOUND, detail=str(error)) from error
-    
-    
-# -------- Delete -----------
 
-    
-@app.delete("/like/{like_id}")
-async def api_delete_like(like_id: int):
+# ------- DELETE ---------
+
+@app.delete("/post/{id}")
+async def api_delete_post(id: int):
     """
-    Deletes a like by its ID.
+    Gets x amount of newest posts made in general
+
+    Args:
+        :param x: amount of posts to search
+    
+    Returns:
+        All x posts made in general. If there are less than x posts 
+        created, all the posts will be returned.
+    
+    Raises:
+        -
+    """
+    try:
+        delete_post(id)
+        return {"message": "Post deleted successfully"}
+    except KeyError:
+        raise HTTPException(status_code=POST_NOT_FOUND, detail="Post doesnt exist")
+
+
+@app.delete("/likes/user/{user_id}/post/{post_id}")
+async def api_delete_like(user_id: int, post_id: int):
+    """
+    Deletes a like by user_id and post_id.
 
     Args:
         like_id (int): The ID of the like to be deleted.
@@ -426,7 +415,8 @@ async def api_delete_like(like_id: int):
         HTTPException with a 404 status code is raised.
     """
     try:
-        delete_like(like_id)
+        delete_like(user_id, post_id)
         return {"message": "Like deleted successfully"}
     except KeyError:
         raise HTTPException(status_code=LIKE_NOT_FOUND, detail="Like doesn't exist")
+ 

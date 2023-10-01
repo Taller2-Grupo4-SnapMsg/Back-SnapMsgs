@@ -5,7 +5,7 @@ This module represents the tables on the database of the users' microservice
 """
 
 import datetime
-from sqlalchemy import Column, Integer, String, DateTime, UniqueConstraint
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, UniqueConstraint
 from sqlalchemy.orm import declarative_base
 
 LocalBase = declarative_base()
@@ -23,12 +23,8 @@ class Posts(LocalBase):
     user_id = Column(Integer, nullable=False)
 
     posted_at = Column(DateTime, default=datetime.datetime.utcnow)
-    content = Column(
-        String(800), unique=False, nullable=True
-    )  # verificar si 800 caracteres es mucho para un tweet
-    image = Column(
-        String(100), unique=False, nullable=True
-    )  # verificar que image y content no sean NULL a la vez
+    content = Column( String(800), unique=False, nullable=True)  # verificar si 800 caracteres es mucho para un tweet
+    image = Column(String(100), unique=False, nullable=True)  # verificar que image y content no sean NULL a la vez
 
     # pylint: disable=too-many-arguments
     def __init__(self, user_id, content, image):
@@ -37,6 +33,14 @@ class Posts(LocalBase):
         self.image = image
 
 
+# id_post = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=False)
+# user_id = Column(Integer, nullable=False)
+# created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+# _table_args__ = (
+#     PrimaryKeyConstraint('id_post', 'user_id'),
+# )
+
 class Likes(LocalBase):
     """
     Class that represents the following relation on the data base.
@@ -44,23 +48,16 @@ class Likes(LocalBase):
 
     __tablename__ = "likes"
 
-    id_post = Column(
-        Integer,
-        nullable=False,
-        primary_key=True
-    )
-
-    user_id = Column(
-        Integer, 
-        nullable=False,
-        primary_key=True
-    )
-
+    id_post = Column(Integer, 
+                     ForeignKey("posts.id", ondelete="CASCADE"), 
+                     nullable=False, 
+                     primary_key=True)
+    user_id = Column(Integer, nullable=False, primary_key=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     _table_args__ = (
         UniqueConstraint("user_id", "id_post"),
-    )  # a user can't like a post twice
+    ) 
 
     # pylint: disable=too-many-arguments
     def __init__(self, id_post, user_id):

@@ -198,16 +198,16 @@ def get_likes_count(post_id):
 # ---------Remove----------
 
 
-# def delete_like(like_id):
-#     """
-#     Deletes the folowing relation between the two users.
-#     """
-#     like = session.query(Likes).filter(Likes.like_id == like_id).first()
-#     if like:
-#         session.delete(like)
-#         session.commit()
-#         return
-#     raise LikeNotFound()
+def delete_like(user_id, post_id):
+    """
+    Deletes the folowing relation between the two users.
+    """
+    like = session.query(Likes).filter(Likes.user_id == user_id and Likes.id_post == post_id).first()
+    if like:
+        session.delete(like)
+        session.commit()
+        return
+    raise LikeNotFound()
 
 
 def delete_post(id_post):
@@ -221,6 +221,19 @@ def delete_post(id_post):
         return
     
     raise UserNotFound()
+
+def delete_posts_by_user(user_id):
+    """
+    Deletes the posts made by that user
+    """
+    post = session.query(Posts).filter(Posts.user_id == user_id).all()
+    if post:
+        session.delete(post)
+        session.commit()
+        return
+    
+    raise UserNotFound()
+
 
 def delete_posts():
     """
