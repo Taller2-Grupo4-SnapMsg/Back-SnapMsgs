@@ -31,6 +31,7 @@ class UserNotFound(Exception):
     def __init__(self):
         super().__init__("User not found")
 
+
 class LikeNotFound(Exception):
     """
     Exception raised when like not found.

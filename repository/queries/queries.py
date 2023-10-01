@@ -21,8 +21,9 @@ TIMEOUT = 60
 
 # ----- CREATE ------
 
+
 def create_post(user_id, content, image):
-    """ 
+    """
     Create a post made by the user_id, with that content and image
     """
     post = Posts(
@@ -45,6 +46,7 @@ def create_like(id_post, user_id):
     session.add(like)
     session.commit()
 
+
 # ------------- GET ----------------
 
 
@@ -65,7 +67,10 @@ def get_post_by_id(post_id):
 
     The return value is a Post.
     """
-    return session.query(Posts).filter(Posts.id == post_id).first()
+    post = session.query(Posts).filter(Posts.id == post_id).first()
+    if not post:
+        return PostNotFound
+    return post
 
 
 def get_posts_by_user_id(user_id):
@@ -75,12 +80,15 @@ def get_posts_by_user_id(user_id):
     The return value is a list of Posts.
     The posts are ordered from newest to oldest
     """
-    return (
+    posts = (
         session.query(Posts)
         .filter(Posts.user_id == user_id)
         .order_by(desc(Posts.posted_at))
         .all()
     )
+    if not posts:
+        raise UserNotFound
+    return posts
 
 
 def get_posts_by_user_and_date(user_id, date):
@@ -157,6 +165,7 @@ def get_x_newest_posts(amount):
 
 # --  Likes --
 
+
 def get_likes_for_a_post(post_id):
     """
     Retrieve all the likes for a specific post.
@@ -169,11 +178,13 @@ def get_likes_for_a_post(post_id):
     likes = session.query(Likes).filter(Likes.id_post == post_id).all()
     return likes
 
+
 def get_all_the_likes():
     """
     Retrieve all likes in the system.
     """
     return session.query(Likes).all()
+
 
 def get_all_the_likes_of_a_user(user_id):
     """
@@ -181,12 +192,13 @@ def get_all_the_likes_of_a_user(user_id):
 
     If the user does not exist, raises a UserNotFound exception.
     """
-    #user = session.query(Likes).filter(Likes.user_id == user_id).first()
-    #if not user:
+    # user = session.query(Likes).filter(Likes.user_id == user_id).first()
+    # if not user:
     #    raise UserNotFound()
 
     likes = session.query(Likes).filter(Likes.user_id == user_id).all()
     return likes
+
 
 def get_likes_count(post_id):
     """
@@ -197,6 +209,7 @@ def get_likes_count(post_id):
         raise PostNotFound()
     return session.query(Likes).filter(Likes.id_post == post_id).count()
 
+
 # ---------Remove----------
 
 
@@ -204,8 +217,11 @@ def delete_like(user_id, post_id):
     """
     Deletes the folowing relation between the two users.
     """
-    like = session.query(Likes).filter(Likes.user_id == user_id and\
-                                    Likes.id_post == post_id).first()
+    like = (
+        session.query(Likes)
+        .filter(Likes.user_id == user_id and Likes.id_post == post_id)
+        .first()
+    )
     if like:
         session.delete(like)
         session.commit()
@@ -223,6 +239,7 @@ def delete_post(id_post):
         session.commit()
         return
     raise UserNotFound()
+
 
 def delete_posts_by_user(user_id):
     """
@@ -242,6 +259,7 @@ def delete_posts():
     """
     session.query(Posts).delete()
     session.commit()
+
 
 def delete_likes():
     """

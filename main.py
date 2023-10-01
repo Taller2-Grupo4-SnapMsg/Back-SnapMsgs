@@ -14,12 +14,14 @@ create_post(USER_ID, CONTENT, IMAGE)
 
 posts = get_posts()
 for post in posts:
-    print(f"User_ID: {post.user_id}, Posted at: {post.posted_at}, Content: {post.content}")
+    print(
+        f"User_ID: {post.user_id}, Posted at: {post.posted_at}, Content: {post.content}"
+    )
 
 post = get_post_by_id(10)
 if post:
-    print(f"User_ID: {post.user_id}, Posted at: {post.posted_at}, Content: {post.content}")
+    print(
+        f"User_ID: {post.user_id}, Posted at: {post.posted_at}, Content: {post.content}"
+    )
 else:
     print("No se encontró el post")
-
-
