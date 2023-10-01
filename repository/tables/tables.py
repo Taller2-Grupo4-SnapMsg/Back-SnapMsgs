@@ -5,18 +5,10 @@ This module represents the tables on the database of the users' microservice
 """
 
 import datetime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy.ext.automap import automap_base
-import os
-from sqlalchemy import create_engine
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, UniqueConstraint
+from sqlalchemy.orm import declarative_base
 
 LocalBase = declarative_base()
-
-RemoteBase = automap_base()
-engine_users = create_engine(os.environ.get("DB_USERS_URI"))
-RemoteBase.prepare(engine_users, reflect=True)
-UserRemote = RemoteBase.classes.users
 
 
 # pylint: disable=too-few-public-methods
@@ -30,22 +22,26 @@ class Posts(LocalBase):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False)
-    user = relationship(UserRemote, backref="posts")
 
     posted_at = Column(DateTime, default=datetime.datetime.utcnow)
-    content = Column(
-        String(800), unique=False, nullable=True
-    )  # verificar si 800 caracteres es mucho para un tweet
-    image = Column(
-        String(100), unique=False, nullable=True
-    )  # verificar que image y content no sean NULL a la vez
+    # verificar si 800 caracteres es mucho para un tweet
+    content = Column(String(800), unique=False, nullable=True)
+    # verificar que image y content no sean NULL a la vez
+    image = Column(String(100), unique=False, nullable=True)
 
     # pylint: disable=too-many-arguments
-    def __init__(self, user_id, posted_at, content, image):
+    def __init__(self, user_id, content, image):
         self.user_id = user_id
-        self.posted_at = posted_at
         self.content = content
         self.image = image
+
+
+# id_post = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=False)
+# user_id = Column(Integer, nullable=False)
+# created_at = Column(DateTime, default=datetime.datetime.utcnow)
+# _table_args__ = (
+#     PrimaryKeyConstraint('id_post', 'user_id'),
+# )
 
 
 class Likes(LocalBase):
@@ -55,30 +51,16 @@ class Likes(LocalBase):
 
     __tablename__ = "likes"
 
-    # Obtain metadata from repo_users
-    # engine_users = create_engine(os.environ.get("DB_USERS_URI"))
-    # metadata_repo_users = MetaData(bind=engine_users)
-    # metadata_repo_users.reflect()
-
-    id = Column(
-        Integer,
-        nullable=False,
-        primary_key=True,
-    )
-
     id_post = Column(
         Integer,
         ForeignKey("posts.id", ondelete="CASCADE"),
         nullable=False,
         primary_key=True,
     )
+    user_id = Column(Integer, nullable=False, primary_key=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
-    user_id = Column(Integer, nullable=False)
-    user = relationship(UserRemote, backref="posts")
-
-    _table_args__ = (
-        UniqueConstraint("user_id", "id_post"),
-    )  # a user can't like a post twice
+    _table_args__ = (UniqueConstraint("user_id", "id_post"),)
 
     # pylint: disable=too-many-arguments
     def __init__(self, id_post, user_id):

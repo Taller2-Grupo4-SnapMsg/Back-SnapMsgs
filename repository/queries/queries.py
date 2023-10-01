@@ -1,10 +1,12 @@
-# We connect to the database using the ORM defined in tables.py
-from operator import and_, desc
+"""
+Archivo con algunas pruebas de la base de datos
+"""
+from operator import and_
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
-
-from repository.tables.tables import LocalBase, Posts, Like
+from repository.errors import PostNotFound, LikeNotFound, UserNotFound
+from repository.tables.tables import LocalBase, Posts, Likes
 
 # Creating engines
 engine_posts = create_engine(os.environ.get("DB_URI"))
@@ -19,20 +21,13 @@ TIMEOUT = 60
 
 # ----- CREATE ------
 
-# id = Column(Integer, primary_key=True)
-# user_id = Column(Integer, nullable=False)
-# user = relationship(UserRemote, backref='posts')
 
-# posted_at = Column(DateTime, default=datetime.datetime.utcnow)
-# content = Column(String(800), unique=False, nullable=True)
-# image = Column(String(100), unique=False, nullable=True)
-
-
-def create_post(session, user_id, posted_at, content, image):
-    """ """
+def create_post(user_id, content, image):
+    """
+    Create a post made by the user_id, with that content and image
+    """
     post = Posts(
         user_id=user_id,
-        posted_at=posted_at,
         content=content,
         image=image,
     )
@@ -42,9 +37,12 @@ def create_post(session, user_id, posted_at, content, image):
     return post
 
 
-def create_like(session, id_post, user_id):
-    """ """
-    like = Like(id_post, user_id)
+def create_like(id_post, user_id):
+    """
+    Create a like
+    """
+    print("entra a pegarle a la bdd")
+    like = Likes(id_post, user_id)
     session.add(like)
     session.commit()
 
@@ -56,6 +54,8 @@ def create_like(session, id_post, user_id):
 def get_posts():
     """
     Returns all posts, no filter
+
+    The return value is a list of Posts.
     The posts are ordered from newest to oldest
     """
     return session.query(Posts).order_by(desc(Posts.posted_at)).all()
@@ -67,7 +67,10 @@ def get_post_by_id(post_id):
 
     The return value is a Post.
     """
-    return session.query(Posts).filter(Posts.id == post_id).first()
+    post = session.query(Posts).filter(Posts.id == post_id).first()
+    if not post:
+        return PostNotFound
+    return post
 
 
 def get_posts_by_user_id(user_id):
@@ -77,12 +80,15 @@ def get_posts_by_user_id(user_id):
     The return value is a list of Posts.
     The posts are ordered from newest to oldest
     """
-    return (
+    posts = (
         session.query(Posts)
         .filter(Posts.user_id == user_id)
         .order_by(desc(Posts.posted_at))
         .all()
     )
+    if not posts:
+        raise UserNotFound
+    return posts
 
 
 def get_posts_by_user_and_date(user_id, date):
@@ -159,33 +165,105 @@ def get_x_newest_posts(amount):
 
 # --  Likes --
 
-# get de todos los likes para debbuguimg
-# get de todos los likes que cierto usuario realizó
-# get de todos los likes que cierto post tuvo
+
+def get_likes_for_a_post(post_id):
+    """
+    Retrieve all the likes for a specific post.
+
+    If the post does not exist, raises a PostNotFound exception.
+    """
+    post = session.query(Posts).filter(Posts.id == post_id).first()
+    if not post:
+        raise PostNotFound()
+    likes = session.query(Likes).filter(Likes.id_post == post_id).all()
+    return likes
+
+
+def get_all_the_likes():
+    """
+    Retrieve all likes in the system.
+    """
+    return session.query(Likes).all()
+
+
+def get_all_the_likes_of_a_user(user_id):
+    """
+    Retrieve all likes given by a specific user.
+
+    If the user does not exist, raises a UserNotFound exception.
+    """
+    # user = session.query(Likes).filter(Likes.user_id == user_id).first()
+    # if not user:
+    #    raise UserNotFound()
+
+    likes = session.query(Likes).filter(Likes.user_id == user_id).all()
+    return likes
+
+
+def get_likes_count(post_id):
+    """
+    Returns the number of likes.
+    """
+    post = session.query(Posts).filter(Posts.id == post_id).first()
+    if not post:
+        raise PostNotFound()
+    return session.query(Likes).filter(Likes.id_post == post_id).count()
 
 
 # ---------Remove----------
 
 
-def remove_like(session, like_id):
+def delete_like(user_id, post_id):
     """
-    Removes the folowing relation between the two users.
+    Deletes the folowing relation between the two users.
     """
-    like = session.query(Like).filter(Like.like_id == like_id).first()
+    like = (
+        session.query(Likes)
+        .filter(Likes.user_id == user_id and Likes.id_post == post_id)
+        .first()
+    )
     if like:
         session.delete(like)
         session.commit()
         return
-    raise KeyError("The relation doesn't exist")
+    raise LikeNotFound()
 
 
-def remove_post(session, id_post):
+def delete_post(id_post):
     """
-    Removes the folowing relation between the two users.
+    Deletes the folowing relation between the two users.
     """
-    like = session.query(Like).filter(Like.id_post == id_post).first()
-    if like:
-        session.delete(like)
+    post = session.query(Posts).filter(Posts.id == id_post).first()
+    if post:
+        session.delete(post)
         session.commit()
         return
-    raise KeyError("The relation doesn't exist")
+    raise UserNotFound()
+
+
+def delete_posts_by_user(user_id):
+    """
+    Deletes the posts made by that user
+    """
+    post = session.query(Posts).filter(Posts.user_id == user_id).all()
+    if post:
+        session.delete(post)
+        session.commit()
+        return
+    raise UserNotFound()
+
+
+def delete_posts():
+    """
+    Deletes all posts.
+    """
+    session.query(Posts).delete()
+    session.commit()
+
+
+def delete_likes():
+    """
+    Deletes all likes.
+    """
+    session.query(Likes).delete()
+    session.commit()

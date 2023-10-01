@@ -7,8 +7,6 @@ Código de backend para los tweets (snapmsgs) y todo lo relacionado a ellos (lik
 
 `export DB_URI=postgresql://exoiymmb:4HyrnUG6vFsTwmhIG_B_N6j2NdyKMt5s@motty.db.elephantsql.com:5432/exoiymmb`
 
-`export DB_USERS_URI="postgresql://cwfvbvxl:jtsNDRjbVqGeBgYcYvxGps3LLlX_t-P5@berry.db.elephantsql.com:5432/cwfvbvxl"`
-
 
 # Para levantar una nueva tabla
 
@@ -30,4 +28,9 @@ pip install -r requirements.txt
 
 ```
 pip3 install -r requirements.txt
+```
+
+# Para correr pylint
+```
+find . -type f -name "*.py" | xargs pylint
 ```
