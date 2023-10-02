@@ -3,13 +3,12 @@ This is the test module.
 """
 import pytest
 
-# pylint: disable=C0114, W0401, W0614
+# pylint: disable=C0114, W0401, W0614, E0401, E0602, C0116
 from repository.queries.queries import *
 
-# pylint: disable=C0114, W0401, W0614
-from repository.errors import *
 
 NON_EXISTANT_USER_ID = -2
+NON_EXISTANT_POST_ID = -2
 
 USER_ID = -1
 CONTENT1 = "the incredibly original content -- fisrt content"
@@ -50,9 +49,18 @@ def test_posts():
     delete_test_posts_from_db(post1.id)
     delete_test_posts_from_db(post2.id)
 
+    with pytest.raises(PostNotFound):
+        get_post_by_id(post1.id)
+
+    with pytest.raises(PostNotFound):
+        get_post_by_id(post2.id)
+
+
+# ---------------- GET ----------------
+
 
 # pylint: disable=W0621
-def test_get_post_by_id(test_posts):
+def test_get_post_by_id_with_valid_id_works(test_posts):
     """
     Test function for get_post_by_id
     """
@@ -61,8 +69,16 @@ def test_get_post_by_id(test_posts):
     assert get_post_by_id(post2.id) == post2
 
 
+def test_get_post_by_id_with_invalid_id_raises_exception():
+    """
+    Test function for get_post_by_id
+    """
+    with pytest.raises(PostNotFound):
+        get_post_by_id(NON_EXISTANT_POST_ID)
+
+
 # pylint: disable=W0621
-def test_get_posts_by_user_id(test_posts):
+def test_get_posts_by_user_id_with_valid_id_works(test_posts):
     """
     Test function for get_post_by_id
     """
@@ -80,3 +96,61 @@ def test_get_posts_by_user_id_with_invalid_id_raises_exception():
     """
     with pytest.raises(UserNotFound):
         get_posts_by_user_id(NON_EXISTANT_USER_ID)
+
+
+# pylint: disable=W0621
+def test_get_newest_post_by_valid_user_works(test_posts):
+    post1, post2 = test_posts
+    retrieved_post = get_newest_post_by_user(USER_ID)
+    assert retrieved_post == post2
+    assert retrieved_post != post1
+
+
+def test_get_newest_post_by_invalid_user_raises_exception():
+    with pytest.raises(PostNotFound):
+        get_newest_post_by_user(NON_EXISTANT_USER_ID)
+
+
+# pylint: disable=W0621
+def test_get_less_newest_post_than_available_by_valid_user_works(test_posts):
+    post1, post2 = test_posts
+    retrieved_post = get_x_newest_posts_by_user(USER_ID, 1)
+    assert retrieved_post
+    assert len(retrieved_post) == 1
+    assert retrieved_post[0] == post2
+    assert retrieved_post[0] != post1
+
+
+# pylint: disable=W0621
+def test_get_more_newest_post_than_available_by_valid_user_works(test_posts):
+    post1, post2 = test_posts
+    retrieved_post = get_x_newest_posts_by_user(USER_ID, 10)
+    assert retrieved_post
+    assert len(retrieved_post) == 2
+    assert retrieved_post[0] == post2
+    assert retrieved_post[1] == post1
+
+
+# pylint: disable=W0621
+def test_get_equal_newest_post_than_available_by_valid_user_works(test_posts):
+    post1, post2 = test_posts
+    retrieved_post = get_x_newest_posts_by_user(USER_ID, 2)
+    assert retrieved_post
+    assert len(retrieved_post) == 2
+    assert retrieved_post[0] == post2
+    assert retrieved_post[1] == post1
+
+
+def test_get_negative_amount_of_newest_post_by_valid_user_raises_exception():
+    with pytest.raises(NegativeOrZeroAmount):
+        get_x_newest_posts_by_user(USER_ID, -2)
+
+
+def test_get_zero_newests_post_by_valid_user_raises_exception():
+    with pytest.raises(NegativeOrZeroAmount):
+        get_x_newest_posts_by_user(USER_ID, 0)
+
+
+def test_get_x_newest_posts_by_invalid_user_raises_exception():
+    with pytest.raises(UserNotFound):
+        get_x_newest_posts_by_user(NON_EXISTANT_USER_ID, 10)

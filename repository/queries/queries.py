@@ -5,7 +5,16 @@ from operator import and_
 import os
 from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
-from repository.errors import PostNotFound, LikeNotFound, UserNotFound
+
+# pylint: disable=C0114, W0401, W0614, E0401
+from repository.errors import (
+    PostNotFound,
+    LikeNotFound,
+    UserNotFound,
+    NegativeOrZeroAmount,
+)
+
+# pylint: disable=C0114, W0401, W0614, E0401
 from repository.tables.tables import LocalBase, Posts, Likes
 
 # Creating engines
@@ -61,6 +70,7 @@ def get_posts():
     return session.query(Posts).order_by(desc(Posts.posted_at)).all()
 
 
+# listo
 def get_post_by_id(post_id):
     """
     Searches the specific post based on id
@@ -69,10 +79,11 @@ def get_post_by_id(post_id):
     """
     post = session.query(Posts).filter(Posts.id == post_id).first()
     if not post:
-        return PostNotFound
+        raise PostNotFound
     return post
 
 
+# listo
 def get_posts_by_user_id(user_id):
     """
     Searches all posts from that user
@@ -125,33 +136,44 @@ def get_posts_by_user_between_dates(user_id, start_date, end_date):
     )
 
 
+# listo
 def get_newest_post_by_user(user_id):
     """
     Searches the newest post made by that user
 
     The return value is a Post.
     """
-    return (
+    post = (
         session.query(Posts)
         .filter(Posts.user_id == user_id)
         .order_by(desc(Posts.posted_at))
         .first()
     )
+    if not post:
+        raise PostNotFound
+    return post
 
 
+# listo
 def get_x_newest_posts_by_user(user_id, amount):
     """
     Searches the x amount of newest posts made by that user
 
     The return value is a list of Posts.
     """
-    return (
+    if amount <= 0:
+        raise NegativeOrZeroAmount
+
+    posts = (
         session.query(Posts)
         .filter(Posts.user_id == user_id)
         .order_by(desc(Posts.posted_at))
         .limit(amount)
         .all()
     )
+    if not posts:
+        raise UserNotFound
+    return posts
 
 
 def get_x_newest_posts(amount):
@@ -160,6 +182,9 @@ def get_x_newest_posts(amount):
 
     The return value is a list of Posts.
     """
+    if amount <= 0:
+        raise NegativeOrZeroAmount
+
     return session.query(Posts).order_by(desc(Posts.posted_at)).limit(amount).all()
 
 

@@ -14,6 +14,15 @@ class DatabaseTimeout(Exception):
         super().__init__("Database timeout")
 
 
+class NegativeOrZeroAmount(Exception):
+    """
+    Exception raised when amount is equal or less than 0
+    """
+
+    def __init__(self):
+        super().__init__("Invalid amount. Equal or less than zero.")
+
+
 class PostNotFound(Exception):
     """
     Exception raised when post not found.
