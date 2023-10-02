@@ -8,17 +8,6 @@ jobs:
   Coverage-Check:
     runs-on: ubuntu-latest
     # Postgres instance for testing:
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_USER: admin
-          POSTGRES_PASSWORD: admin123
-          POSTGRES_DB: test-back-users
-        ports:
-          - 5432:5432
-        options: --health-cmd "pg_isready -U testuser" --health-interval 10s --health-timeout 5s --health-retries 5
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -31,17 +20,11 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
-    - name: Wait for PostgreSQL to be ready
-      run: |
-        until nc -z -v -w30 localhost 5432; do
-          echo "Waiting for PostgreSQL to start..."
-          sleep 5
-        done
 
     - name: Run Tests with Coverage
       run: |
-        export DB_URI="postgresql://admin:admin123@localhost:5432/test-back-users"
-        coverage run -m pytest tests/user_tests.py
+        export DB_URI="postgresql://exoiymmb:4HyrnUG6vFsTwmhIG_B_N6j2NdyKMt5s@motty.db.elephantsql.com:5432/exoiymmb"
+        coverage run -m pytest tests/test_posts.py
 
     - name: Generate Coverage Report
       run: |
