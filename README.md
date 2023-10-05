@@ -5,7 +5,7 @@ Código de backend para los tweets (snapmsgs) y todo lo relacionado a ellos (lik
 
 #### Exportar las URIs
 
-`export DB_URI=postgresql://exoiymmb:4HyrnUG6vFsTwmhIG_B_N6j2NdyKMt5s@motty.db.elephantsql.com:5432/exoiymmb`
+`export DB_URI=postgresql://cwfvbvxl:jtsNDRjbVqGeBgYcYvxGps3LLlX_t-P5@berry.db.elephantsql.com:5432/cwfvbvxl`
 
 
 # Para levantar una nueva tabla

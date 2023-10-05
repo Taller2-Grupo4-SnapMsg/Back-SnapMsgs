@@ -6,10 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-# pylint: disable=C0114, W0401, W0614
-from repository.tables.tables import *
-
-# pylint: disable=C0114, W0401, W0614
+# pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries import *
 
 POST_NOT_FOUND = 404
@@ -30,6 +27,20 @@ app.add_middleware(
 )
 
 
+class UserResponse(BaseModel):
+    """
+    This class is a Pydantic model for the User part of the response body.
+    This way, with the post in the response, the front already gets the information from
+    the corresponding User
+    """
+
+    id: int
+    username: str
+    firstname: str
+    lastname: str
+    profile_image: str
+
+
 class PostResponse(BaseModel):
     """
     This class is a Pydantic model for the response body.
@@ -37,6 +48,7 @@ class PostResponse(BaseModel):
 
     id: int
     user_id: int
+    # user: UserResponse
     posted_at: str
     content: str
     image: str
