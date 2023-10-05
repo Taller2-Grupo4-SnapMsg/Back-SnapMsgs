@@ -3,7 +3,8 @@
 """
 from time import strptime
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
+import httpx
 from pydantic import BaseModel
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
@@ -13,6 +14,8 @@ POST_NOT_FOUND = 404
 USER_NOT_FOUND = 404
 LIKE_NOT_FOUND = 404
 BAD_REQUEST = 400
+
+API_BASE_URL = "https://loginback-lg51.onrender.com"
 
 app = FastAPI()
 
@@ -34,11 +37,23 @@ class UserResponse(BaseModel):
     the corresponding User
     """
 
-    id: int
     username: str
-    firstname: str
-    lastname: str
-    profile_image: str
+    name: str
+    last_name: str
+    avatar: str
+
+
+def generate_user(user):
+    """
+    This function casts the orm_object into a pydantic model.
+    (from data base object to json)
+    """
+    return UserResponse(
+        username=user.get("username"),
+        name=user.get("name"),
+        last_name=user.get("last_name"),
+        avatar=user.get("avatar"),
+    )
 
 
 class PostResponse(BaseModel):
@@ -47,8 +62,7 @@ class PostResponse(BaseModel):
     """
 
     id: int
-    user_id: int
-    # user: UserResponse
+    user: UserResponse
     posted_at: str
     content: str
     image: str
@@ -65,14 +79,28 @@ class PostResponse(BaseModel):
         from_attributes = True
 
 
-def generate_post(post):
+def generate_post(post, user):
     """
     This function casts the orm_object into a pydantic model.
     (from data base object to json)
     """
     return PostResponse(
         id=post.id,
-        user_id=post.user_id,
+        user=generate_user(user),
+        posted_at=str(post.posted_at),
+        content=post.content,
+        image=post.image,
+    )
+
+
+def generate_post2(post):
+    """
+    This function casts the orm_object into a pydantic model.
+    (from data base object to json)
+    """
+    return PostResponse(
+        id=post.id,
+        # user=generate_user(user),
         posted_at=str(post.posted_at),
         content=post.content,
         image=post.image,
@@ -85,7 +113,7 @@ def generate_response_posts(posts):
     """
     response = []
     for post in posts:
-        response.append(generate_post(post))
+        response.append(generate_post2(post))
     return response
 
 
@@ -104,7 +132,7 @@ class PostCreateRequest(BaseModel):
 
 
 @app.post("/posts")
-async def api_create_post(post: PostCreateRequest):
+async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
     """
     Creates a new post
 
@@ -117,8 +145,30 @@ async def api_create_post(post: PostCreateRequest):
     Raises:
         -
     """
-    create_post(post.user_id, post.content, post.image)
-    return {"message": "Post created successfully"}
+
+    headers = {
+        "Content-Type": "application/json;charset=utf-8",
+        "accept": "application/json",
+        "token": token,
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            # Realiza una solicitud GET al endpoint de tu otro backend
+            # print("{API_BASE_URL}/user")
+            response = await client.get(
+                "https://loginback-lg51.onrender.com/user", headers=headers
+            )
+
+            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
+            if response.status_code == 200:
+                create_post(post.user_id, post.content, post.image)
+                return {"message": "Post created successfully"}
+
+            raise HTTPException(status_code=400, detail={"Unknown error"})
+        except httpx.HTTPError as error:
+            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
+            raise HTTPException(status_code=400, detail={str(error)}) from error
 
 
 # Define a Pydantic model for the request body
@@ -194,7 +244,7 @@ async def api_get_posts():
 
 # pylint: disable=C0103, W0622
 @app.get("/posts/{id}")
-async def api_get_post_by_id(id: int):
+async def api_get_post_by_id(id: int, token: str = Header(...)):
     """
     Gets the post with the id passed
     Args:
@@ -206,11 +256,36 @@ async def api_get_post_by_id(id: int):
     Raises:
         HTTPEXCEPTION with code 404 if post not found
     """
-    # pylint: disable=C0103, W0622
-    post = get_post_by_id(id)
-    if post is None:
-        raise HTTPException(status_code=POST_NOT_FOUND, detail="Post not found")
-    return generate_post(post)
+    headers = {
+        "Content-Type": "application/json;charset=utf-8",
+        "accept": "application/json",
+        "token": token,
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                "https://loginback-lg51.onrender.com/user", headers=headers
+            )
+            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
+            if response.status_code == 200:
+                user = response.json()
+                print("\n\n\n")
+                print(user)
+                print("\n\n\n")
+
+                # pylint: disable=C0103, W0622
+                post = get_post_by_id(id)
+                if post is None:
+                    raise HTTPException(
+                        status_code=POST_NOT_FOUND, detail="Post not found"
+                    )
+                return generate_post(post, user)
+
+            raise HTTPException(status_code=400, detail={"Unknown error"})
+        except httpx.HTTPError as error:
+            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
+            raise HTTPException(status_code=400, detail={str(error)}) from error
 
 
 # Acá no hacemos diferencia entre si encontramos o no al usuario, directamente

@@ -9,3 +9,4 @@ passlib[bcrypt]==1.7.4
 SQLAlchemy
 psycopg2
 alembic
+httpx
