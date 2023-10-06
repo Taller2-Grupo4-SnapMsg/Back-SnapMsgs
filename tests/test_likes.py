@@ -20,7 +20,8 @@ POST_ID2 = 2
 # def get_all_the_likes()
 # def delete_like(user_id, post_id)
 # def delete_likes()
-    
+
+
 def create_test_like_from_db():
     """
     Esta función crea los "likes" de prueba en la base de datos.
@@ -29,6 +30,7 @@ def create_test_like_from_db():
     like1 = create_like(POST_ID1, USER_ID1)
     like2 = create_like(POST_ID2, USER_ID2)
     return like1, like2
+
 
 def delete_test_likes_from_db(user_id: int, id_post: int):
     """
@@ -39,10 +41,12 @@ def delete_test_likes_from_db(user_id: int, id_post: int):
     except UserNotFound:
         return
 
+
 # ...
 
+
 @pytest.fixture(scope="module")
-def test_likes():
+def test_likes_db():
     """
     Fixture para los "likes" de prueba.
     """
@@ -51,14 +55,15 @@ def test_likes():
     delete_test_likes_from_db(USER_ID1, POST_ID1)
     delete_test_likes_from_db(USER_ID2, POST_ID2)
 
+
 # ...
+
 
 def test_get_like_for_a_post(test_likes):
     """
     Función de prueba para get_like_for_a_post
     """
     like1, _ = test_likes
-    users_liked = get_likes_from_post(POST_ID1)
+    users_liked = get_likes_from_post(like1.id_post)
     print(f"USERS_LIKED: {users_liked}")
     assert users_liked and (USER_ID1 in users_liked)
-

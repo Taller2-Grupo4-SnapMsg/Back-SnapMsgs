@@ -2,9 +2,10 @@
 Archivo con algunas pruebas de la base de datos
 """
 from operator import and_
-import os
-from sqlalchemy import create_engine, desc
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import desc
+
+# pylint: disable=C0114, W0401, W0614, E0602, E0401
+from repository.queries.common_setup import *
 
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.errors import (
@@ -17,18 +18,8 @@ from repository.errors import (
 from repository.tables.posts import Post
 
 # pylint: disable=C0114, W0401, W0614, E0401
-from repository.tables.users import Base, User
+from repository.tables.users import User
 
-# Creating engines
-engine_posts = create_engine(os.environ.get("DB_URI"))
-
-# Creating the tables in the database
-Base.metadata.create_all(engine_posts)
-
-# Session is the handle of the database
-Session = sessionmaker(bind=engine_posts)
-session = Session()
-TIMEOUT = 60
 
 # ----- CREATE ------
 

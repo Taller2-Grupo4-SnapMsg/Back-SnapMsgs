@@ -2,9 +2,10 @@
 """
 Archivo con algunas pruebas de la base de datos
 """
-import os
-from sqlalchemy import create_engine, desc
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import desc
+
+# pylint: disable=C0114, W0401, W0614, E0602, E0401
+from repository.queries.common_setup import *
 
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.errors import (
@@ -17,18 +18,7 @@ from repository.errors import (
 from repository.tables.posts import Post, Like
 
 # pylint: disable=C0114, W0401, W0614, E0401
-from repository.tables.users import Base, User
-
-# Creating engines
-engine_posts = create_engine(os.environ.get("DB_URI"))
-
-# Creating the tables in the database
-Base.metadata.create_all(engine_posts)
-
-# Session is the handle of the database
-Session = sessionmaker(bind=engine_posts)
-session = Session()
-TIMEOUT = 60
+from repository.tables.users import User
 
 # ----------- Post --------------
 
@@ -40,6 +30,7 @@ def create_like(id_post, user_id):
     like = Like(id_post, user_id)
     session.add(like)
     session.commit()
+    return like
 
 
 # ----------- Get --------------
@@ -53,8 +44,8 @@ def get_likes_from_post(post_id):
     """
     print(f"POST_ID: {post_id}")
     post = session.query(Post).filter(Post.id == post_id).first()
-    #if not post:
-    #    raise PostNotFound()
+    if not post:
+        raise PostNotFound()
 
     users = (
         session.query(User)
@@ -78,13 +69,13 @@ def get_the_number_of_likes(post_id):
 
 def get_user_likes(user_id):
     """
-    Retrieves posts liked by a specific user, sorted by most recent.
+    Retrieves posts liked by a specific user, with post and user information.
 
     Args:
         user_id (int): The ID of the user for whom to retrieve liked posts.
 
     Returns:
-        List[Post]: A list of posts liked by the user, sorted by most recent.
+        List[Tuple[Post, User]]: A list of tuples containing Post and User objects for liked posts.
 
     Raises:
         UserNotFound: If the specified user is not found.
@@ -95,8 +86,9 @@ def get_user_likes(user_id):
         raise UserNotFound()
 
     liked_posts = (
-        session.query(Post)
+        session.query(Post, User)
         .join(Like, Post.id == Like.id_post)
+        .join(User, Post.user_id == User.id)
         .filter(Like.user_id == user_id)
         .order_by(desc(Post.posted_at))
         .all()
