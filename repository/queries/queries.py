@@ -15,13 +15,16 @@ from repository.errors import (
 )
 
 # pylint: disable=C0114, W0401, W0614, E0401
-from repository.tables.tables import LocalBase, Posts, Likes
+from repository.tables.posts import Post, Like
+
+# pylint: disable=C0114, W0401, W0614, E0401
+from repository.tables.users import Base, User
 
 # Creating engines
 engine_posts = create_engine(os.environ.get("DB_URI"))
 
 # Creating the tables in the database
-LocalBase.metadata.create_all(engine_posts)
+Base.metadata.create_all(engine_posts)
 
 # Session is the handle of the database
 Session = sessionmaker(bind=engine_posts)
@@ -35,7 +38,7 @@ def create_post(user_id, content, image):
     """
     Create a post made by the user_id, with that content and image
     """
-    post = Posts(
+    post = Post(
         user_id=user_id,
         content=content,
         image=image,
@@ -51,7 +54,7 @@ def create_like(id_post, user_id):
     Create a like
     """
     print("entra a pegarle a la bdd")
-    like = Likes(id_post, user_id)
+    like = Like(id_post, user_id)
     session.add(like)
     session.commit()
 
@@ -60,14 +63,14 @@ def create_like(id_post, user_id):
 
 
 # --  Posts --
-def get_posts():
-    """
-    Returns all posts, no filter
+# def get_posts():
+#     """
+#     Returns all posts, no filter
 
-    The return value is a list of Posts.
-    The posts are ordered from newest to oldest
-    """
-    return session.query(Posts).order_by(desc(Posts.posted_at)).all()
+#     The return value is a list of Posts.
+#     The posts are ordered from newest to oldest
+#     """
+#     return session.query(Post).order_by(desc(Post.posted_at)).all()
 
 
 # listo
@@ -77,7 +80,7 @@ def get_post_by_id(post_id):
 
     The return value is a Post.
     """
-    post = session.query(Posts).filter(Posts.id == post_id).first()
+    post = session.query(Post).filter(Post.id == post_id).first()
     if not post:
         raise PostNotFound
     return post
@@ -92,9 +95,9 @@ def get_posts_by_user_id(user_id):
     The posts are ordered from newest to oldest
     """
     posts = (
-        session.query(Posts)
-        .filter(Posts.user_id == user_id)
-        .order_by(desc(Posts.posted_at))
+        session.query(Post)
+        .filter(Post.user_id == user_id)
+        .order_by(desc(Post.posted_at))
         .all()
     )
     if not posts:
@@ -110,9 +113,9 @@ def get_posts_by_user_and_date(user_id, date):
     The posts are ordered from newest to oldest
     """
     return (
-        session.query(Posts)
-        .filter(and_(Posts.user_id == user_id, Posts.posted_at == date))
-        .order_by(desc(Posts.posted_at))
+        session.query(Post)
+        .filter(and_(Post.user_id == user_id, Post.posted_at == date))
+        .order_by(desc(Post.posted_at))
         .all()
     )
 
@@ -125,13 +128,11 @@ def get_posts_by_user_between_dates(user_id, start_date, end_date):
     The posts are ordered from newest to oldest
     """
     return (
-        session.query(Posts)
+        session.query(Post)
         .filter(
-            and_(
-                Posts.user_id == user_id, Posts.posted_at.between(start_date, end_date)
-            )
+            and_(Post.user_id == user_id, Post.posted_at.between(start_date, end_date))
         )
-        .order_by(desc(Posts.posted_at))
+        .order_by(desc(Post.posted_at))
         .all()
     )
 
@@ -144,9 +145,9 @@ def get_newest_post_by_user(user_id):
     The return value is a Post.
     """
     post = (
-        session.query(Posts)
-        .filter(Posts.user_id == user_id)
-        .order_by(desc(Posts.posted_at))
+        session.query(Post)
+        .filter(Post.user_id == user_id)
+        .order_by(desc(Post.posted_at))
         .first()
     )
     if not post:
@@ -159,15 +160,15 @@ def get_x_newest_posts_by_user(user_id, amount):
     """
     Searches the x amount of newest posts made by that user
 
-    The return value is a list of Posts.
+    The return value is a list of Post.
     """
     if amount <= 0:
         raise NegativeOrZeroAmount
 
     posts = (
-        session.query(Posts)
-        .filter(Posts.user_id == user_id)
-        .order_by(desc(Posts.posted_at))
+        session.query(Post)
+        .filter(Post.user_id == user_id)
+        .order_by(desc(Post.posted_at))
         .limit(amount)
         .all()
     )
@@ -180,15 +181,15 @@ def get_x_newest_posts(amount):
     """
     Searches the x amount of newest posts made by that user
 
-    The return value is a list of Posts.
+    The return value is a list of Post.
     """
     if amount <= 0:
         raise NegativeOrZeroAmount
 
-    return session.query(Posts).order_by(desc(Posts.posted_at)).limit(amount).all()
+    return session.query(Post).order_by(desc(Post.posted_at)).limit(amount).all()
 
 
-# --  Likes --
+# --  Like --
 
 
 def get_likes_for_a_post(post_id):
@@ -197,10 +198,10 @@ def get_likes_for_a_post(post_id):
 
     If the post does not exist, raises a PostNotFound exception.
     """
-    post = session.query(Posts).filter(Posts.id == post_id).first()
+    post = session.query(Post).filter(Post.id == post_id).first()
     if not post:
         raise PostNotFound()
-    likes = session.query(Likes).filter(Likes.id_post == post_id).all()
+    likes = session.query(Like).filter(Like.id_post == post_id).all()
     return likes
 
 
@@ -208,7 +209,7 @@ def get_all_the_likes():
     """
     Retrieve all likes in the system.
     """
-    return session.query(Likes).all()
+    return session.query(Like).all()
 
 
 def get_all_the_likes_of_a_user(user_id):
@@ -217,11 +218,11 @@ def get_all_the_likes_of_a_user(user_id):
 
     If the user does not exist, raises a UserNotFound exception.
     """
-    # user = session.query(Likes).filter(Likes.user_id == user_id).first()
+    # user = session.query(Like).filter(Like.user_id == user_id).first()
     # if not user:
     #    raise UserNotFound()
 
-    likes = session.query(Likes).filter(Likes.user_id == user_id).all()
+    likes = session.query(Like).filter(Like.user_id == user_id).all()
     return likes
 
 
@@ -229,10 +230,10 @@ def get_likes_count(post_id):
     """
     Returns the number of likes.
     """
-    post = session.query(Posts).filter(Posts.id == post_id).first()
+    post = session.query(Post).filter(Post.id == post_id).first()
     if not post:
         raise PostNotFound()
-    return session.query(Likes).filter(Likes.id_post == post_id).count()
+    return session.query(Like).filter(Like.id_post == post_id).count()
 
 
 # ---------Remove----------
@@ -243,8 +244,8 @@ def delete_like(user_id, post_id):
     Deletes the folowing relation between the two users.
     """
     like = (
-        session.query(Likes)
-        .filter(Likes.user_id == user_id and Likes.id_post == post_id)
+        session.query(Like)
+        .filter(Like.user_id == user_id and Like.id_post == post_id)
         .first()
     )
     if like:
@@ -258,7 +259,7 @@ def delete_post(id_post):
     """
     Deletes the folowing relation between the two users.
     """
-    post = session.query(Posts).filter(Posts.id == id_post).first()
+    post = session.query(Post).filter(Post.id == id_post).first()
     if post:
         session.delete(post)
         session.commit()
@@ -270,7 +271,7 @@ def delete_posts_by_user(user_id):
     """
     Deletes the posts made by that user
     """
-    post = session.query(Posts).filter(Posts.user_id == user_id).all()
+    post = session.query(Post).filter(Post.user_id == user_id).all()
     if post:
         session.delete(post)
         session.commit()
@@ -282,7 +283,7 @@ def delete_posts():
     """
     Deletes all posts.
     """
-    session.query(Posts).delete()
+    session.query(Post).delete()
     session.commit()
 
 
@@ -290,5 +291,78 @@ def delete_likes():
     """
     Deletes all likes.
     """
-    session.query(Likes).delete()
+    session.query(Like).delete()
     session.commit()
+
+
+def get_posts():
+    """
+    Retrieves all posts in db with all the corresponding user info.
+
+
+
+    Raises:
+        PostNotFound: If a post is not found.
+    """
+
+    results = (
+        session.query(Post, User)
+        .join(User, Post.user_id == User.id)
+        .order_by(desc(Post.posted_at))
+        .all()
+    )
+
+    if not results:
+        raise PostNotFound()
+
+    return results
+
+
+# def get_posts_by_user_id(user_id):
+#     """
+#     Retrieves posts of a specific user along with user information.
+
+#     Args:
+#         user_id (int): The ID of the user whose Post to retrieve.
+#         n (int): Number of Post to retrieve.
+
+#     Raises:
+#         PostNotFound: If a post is not found.
+#     """
+
+#     results = (
+#         session.query(Post)
+#         .filter(Post.user_id == user_id)
+#         .order_by(desc(Post.posted_at)).all()
+#     )
+
+#     if not results:
+#         raise PostNotFound()
+
+#     return results
+
+
+# def get_recent_post_by_user(user_id, n):
+#     """
+#     Retrieves the n most recent Post of a specific user along with user information.
+
+#     Args:
+#         user_id (int): The ID of the user whose Post to retrieve.
+#         n (int): Number of Post to retrieve.
+
+#     Raises:
+#         PostNotFound: If a post is not found.
+#     """
+#     results = (
+#         session.query(Post, User)
+#         .join(User, Post.user_id == User.id)
+#         .filter(User.id == user_id)
+#         .order_by(desc(Post.posted_at))
+#         .limit(n)
+#         .all()
+#     )
+
+#     if not results:
+#         raise PostNotFound()
+
+#     return results

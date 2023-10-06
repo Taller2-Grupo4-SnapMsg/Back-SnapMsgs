@@ -1,7 +1,6 @@
 """
     Fast API
 """
-from time import strptime
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Header
 import httpx
@@ -43,19 +42,6 @@ class UserResponse(BaseModel):
     avatar: str
 
 
-def generate_user(user):
-    """
-    This function casts the orm_object into a pydantic model.
-    (from data base object to json)
-    """
-    return UserResponse(
-        username=user.get("username"),
-        name=user.get("name"),
-        last_name=user.get("last_name"),
-        avatar=user.get("avatar"),
-    )
-
-
 class PostResponse(BaseModel):
     """
     This class is a Pydantic model for the response body.
@@ -79,41 +65,73 @@ class PostResponse(BaseModel):
         from_attributes = True
 
 
-def generate_post(post, user):
+def generate_user_from_db(user):
+    """
+    This function casts the orm_object into a pydantic model.
+    (from data base object to json)
+    """
+    return UserResponse(
+        username=user.username,
+        name=user.name,
+        last_name=user.surname,
+        avatar=user.avatar,
+    )
+
+
+def generate_post_from_db(post, user):
     """
     This function casts the orm_object into a pydantic model.
     (from data base object to json)
     """
     return PostResponse(
         id=post.id,
-        user=generate_user(user),
+        user=generate_user_from_db(user),
         posted_at=str(post.posted_at),
         content=post.content,
         image=post.image,
     )
 
 
-def generate_post2(post):
+# pylint: disable=C0116
+def generate_response_posts_with_users_from_db(posts_and_users):
+    response = []
+    for pair in posts_and_users:
+        response.append(generate_post_from_db(pair[0], pair[1]))
+    return response
+
+
+def generate_user_from_back_user(user):
+    """
+    This function casts the orm_object into a pydantic model.
+    (from data base object to json)
+    """
+    return UserResponse(
+        username=user.get("username"),
+        name=user.get("name"),
+        last_name=user.get("last_name"),
+        avatar=user.get("avatar"),
+    )
+
+
+def generate_post_from_back_user(post, user):
     """
     This function casts the orm_object into a pydantic model.
     (from data base object to json)
     """
     return PostResponse(
         id=post.id,
-        # user=generate_user(user),
+        user=generate_user_from_back_user(user),
         posted_at=str(post.posted_at),
         content=post.content,
         image=post.image,
     )
 
 
-def generate_response_posts(posts):
-    """
-    This function casts the list of users into a list of pydantic models.
-    """
+# pylint: disable=C0116
+def generate_response_posts_with_user_from_back_user(posts, user):
     response = []
     for post in posts:
-        response.append(generate_post2(post))
+        response.append(generate_post_from_back_user(post, user))
     return response
 
 
@@ -155,7 +173,6 @@ async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
     async with httpx.AsyncClient() as client:
         try:
             # Realiza una solicitud GET al endpoint de tu otro backend
-            # print("{API_BASE_URL}/user")
             response = await client.get(
                 "https://loginback-lg51.onrender.com/user", headers=headers
             )
@@ -222,8 +239,8 @@ async def api_create_like(like: LikeCreateRequest):
 # ------------- GET ----------------
 
 
-@app.get("/posts")
-async def api_get_posts():
+@app.get("/posts")  # ANDA
+async def api_get_posts(token: str = Header(...)):
     """
     Gets all the posts ever created.
     Use with caution!
@@ -237,13 +254,30 @@ async def api_get_posts():
     Raises:
         -
     """
+    headers = {
+        "Content-Type": "application/json;charset=utf-8",
+        "accept": "application/json",
+        "token": token,
+    }
 
-    posts = get_posts()
-    return generate_response_posts(posts)
+    async with httpx.AsyncClient() as client:
+        try:
+            # Realiza una solicitud GET al endpoint de tu otro backend
+            response = await client.get(
+                "https://loginback-lg51.onrender.com/user", headers=headers
+            )
+            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
+            if response.status_code == 200:
+                posts_and_users = get_posts()
+                return generate_response_posts_with_users_from_db(posts_and_users)
+            raise HTTPException(status_code=400, detail={"Unknown error"})
+        except httpx.HTTPError as error:
+            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
+            raise HTTPException(status_code=400, detail={str(error)}) from error
 
 
 # pylint: disable=C0103, W0622
-@app.get("/posts/{id}")
+@app.get("/posts/{id}")  # ANDA
 async def api_get_post_by_id(id: int, token: str = Header(...)):
     """
     Gets the post with the id passed
@@ -270,17 +304,13 @@ async def api_get_post_by_id(id: int, token: str = Header(...)):
             # Verifica si la solicitud se completó con éxito (código de respuesta 200)
             if response.status_code == 200:
                 user = response.json()
-                print("\n\n\n")
-                print(user)
-                print("\n\n\n")
-
                 # pylint: disable=C0103, W0622
                 post = get_post_by_id(id)
                 if post is None:
                     raise HTTPException(
                         status_code=POST_NOT_FOUND, detail="Post not found"
                     )
-                return generate_post(post, user)
+                return generate_post_from_back_user(post, user)
 
             raise HTTPException(status_code=400, detail={"Unknown error"})
         except httpx.HTTPError as error:
@@ -288,67 +318,85 @@ async def api_get_post_by_id(id: int, token: str = Header(...)):
             raise HTTPException(status_code=400, detail={str(error)}) from error
 
 
-# Acá no hacemos diferencia entre si encontramos o no al usuario, directamente
-# devolvemos el vector vacío o el vector con elemento
-# deberíamos verificar algo más?
-@app.get("/posts/user/{id}")
-async def api_get_posts_by_user_id(id: int):
+# pylint: disable=C0103, W0622
+@app.get("/posts/user")
+async def api_get_posts_by_user(token: str = Header(...)):
     """
     Gets all posts made by that user
     Use with caution!
-
-    Args:
-        :param id: Id of the user
 
     Returns:
         All posts made by that user
 
     Raises:
-
+        -
     """
-    posts = get_posts_by_user_id(id)
-    return generate_response_posts(posts)
+    headers = {
+        "Content-Type": "application/json;charset=utf-8",
+        "accept": "application/json",
+        "token": token,
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            print(token)
+            response = await client.get(
+                "https://loginback-lg51.onrender.com/user", headers=headers
+            )
+            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
+            if response.status_code == 200:
+                user = response.json()
+                print(user)
+                return []
+                # posts = get_posts_by_user_id(int(user.get("id")))
+                # if posts is None:
+                #     raise HTTPException(
+                #         status_code=POST_NOT_FOUND, detail="Posts not found"
+                #     )
+                # return generate_response_posts_with_user_from_back_user(posts, user)
+            raise HTTPException(status_code=400, detail={"Unknown error"})
+        except httpx.HTTPError as error:
+            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
+            raise HTTPException(status_code=400, detail={str(error)}) from error
 
 
-# pylint: disable=W0511
-# TODO
-@app.get("/posts/user/{id}/date/{date}")
-async def api_get_posts_by_user_and_date(id: int, date: str):
+# # pylint: disable=W0511
+# # TODO
+# @app.get("/posts/user/{id}/date/{date}")
+# async def api_get_posts_by_user_and_date(id: int, date: str):
+#     """
+#     Gets all posts made by that user that date
+
+#     Args:
+#         :param id: Id of the user
+#         :param date: Specific date as a string with format "YYYY-MM-DD"
+
+#     Returns:
+#         All posts made by that user that date
+
+#     Raises:
+#         ValueError: if invalid date format
+#     """
+#     try:
+#         # está comparando YYYY-MM-DD contra YYYY-MM-DD HH-MM-SS que hay en la bdd
+#         datetime_date = strptime(date, "%Y-%m-%d")
+
+#         post = get_posts_by_user_and_date(id, datetime_date)
+#         return generate_response_posts(post)
+#     except ValueError as error:
+#         raise HTTPException(
+#             status_code=BAD_REQUEST,
+#             detail="Invalid\
+#                             date format. Expected format: YYYY-MM-DD",
+#         ) from error
+
+
+@app.get("/posts/user/amount/{x}")
+async def api_get_x_newest_posts_by_user(x: int, token: str = Header(...)):
     """
-    Gets all posts made by that user that date
+    Gets x amount of newest posts made by that user (the owner of the token)
 
     Args:
-        :param id: Id of the user
-        :param date: Specific date as a string with format "YYYY-MM-DD"
-
-    Returns:
-        All posts made by that user that date
-
-    Raises:
-        ValueError: if invalid date format
-    """
-    try:
-        # está comparando YYYY-MM-DD contra YYYY-MM-DD HH-MM-SS que hay en la bdd
-        datetime_date = strptime(date, "%Y-%m-%d")
-
-        post = get_posts_by_user_and_date(id, datetime_date)
-        print(post)
-        return generate_response_posts(post)
-    except ValueError as error:
-        raise HTTPException(
-            status_code=BAD_REQUEST,
-            detail="Invalid\
-                            date format. Expected format: YYYY-MM-DD",
-        ) from error
-
-
-@app.get("/posts/user/{id}/amount{x}")
-async def api_get_x_newest_posts_by_user(id: int, x: int):
-    """
-    Gets x amount of newest posts made by that user
-
-    Args:
-        :param id: Id of the user
         :param x: amount of posts to search
 
     Returns:
@@ -358,179 +406,197 @@ async def api_get_x_newest_posts_by_user(id: int, x: int):
     Raises:
 
     """
+    headers = {
+        "Content-Type": "application/json;charset=utf-8",
+        "accept": "application/json",
+        "token": token,
+    }
     if x <= 0:
         raise HTTPException(
             status_code=BAD_REQUEST, detail="Amount must be greater than 0"
         )
-    posts = get_x_newest_posts_by_user(id, x)
-    return generate_response_posts(posts)
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                "https://loginback-lg51.onrender.com/user", headers=headers
+            )
+            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
+            if response.status_code == 200:
+                user = response.json()
+                posts = get_x_newest_posts_by_user(int(user.get("id")), x)
+                return generate_response_posts_with_user_from_back_user(posts, user)
+            raise HTTPException(status_code=400, detail={"Unknown error"})
+        except httpx.HTTPError as error:
+            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
+            raise HTTPException(status_code=400, detail={str(error)}) from error
 
 
-@app.get("/posts/amount/{x}")
-async def api_get_x_newest_posts(x: int):
-    """
-    Gets x amount of newest posts made in general
+# @app.get("/posts/amount/{x}")
+# async def api_get_x_newest_posts(x: int):
+#     """
+#     Gets x amount of newest posts made in general
 
-    Args:
-        :param x: amount of posts to search
+#     Args:
+#         :param x: amount of posts to search
 
-    Returns:
-        All x posts made in general. If there are less
-        than x posts created, all the posts will be returned.
+#     Returns:
+#         All x posts made in general. If there are less
+#         than x posts created, all the posts will be returned.
 
-    Raises:
+#     Raises:
 
-    """
-    if x <= 0:
-        raise HTTPException(
-            status_code=BAD_REQUEST, detail="Amount must be greater than 0"
-        )
-    posts = get_x_newest_posts(x)
-    return generate_response_posts(posts)
-
-
-@app.get("/likes")
-def get_all_likes():
-    """
-    Retrieve all likes in the system.
-
-    This function returns a list of all likes recorded in the system.
-
-    Returns:
-        List[Dict[str, int]]: A list of dictionaries, each containing
-        'user_id' and 'post_id' representing a like.
-
-    Raises:
-        No exceptions raised.
-    """
-    all_likes = get_all_the_likes()
-    likes_data = [
-        {"user_id": like.user_id, "post_id": like.id_post} for like in all_likes
-    ]
-    return likes_data
+#     """
+#     if x <= 0:
+#         raise HTTPException(
+#             status_code=BAD_REQUEST, detail="Amount must be greater than 0"
+#         )
+#     posts = get_x_newest_posts(x)
+#     return generate_response_posts(posts)
 
 
-@app.get("/likes/post/{post_id}")
-def get_the_number_of_likes(post_id: int):
-    """
-    Retrieve the user IDs of users who liked a specific post.
+# @app.get("/likes")
+# def get_all_likes():
+#     """
+#     Retrieve all likes in the system.
 
-    Given a `post_id`, this function returns a list of user IDs
-    representing users who liked the post.
+#     This function returns a list of all likes recorded in the system.
 
-    Args:
-        post_id (int): The ID of the post to retrieve likes for.
+#     Returns:
+#         List[Dict[str, int]]: A list of dictionaries, each containing
+#         'user_id' and 'post_id' representing a like.
 
-    Returns:
-        List[int]: A list of user IDs representing users who liked the post.
-
-    Raises:
-        HTTPException: If the specified post does not exist, an
-        HTTPException with a 404 status code is raised.
-    """
-    try:
-        likes_list = get_likes_for_a_post(post_id)
-        user_ids = [like.user_id for like in likes_list]
-        return user_ids
-    except PostNotFound as error:
-        raise HTTPException(status_code=POST_NOT_FOUND, detail=str(error)) from error
+#     Raises:
+#         No exceptions raised.
+#     """
+#     all_likes = get_all_the_likes()
+#     likes_data = [
+#         {"user_id": like.user_id, "post_id": like.id_post} for like in all_likes
+#     ]
+#     return likes_data
 
 
-@app.get("/likes/post/{post_id}/count")
-def get_number_of_likes(post_id: int):
-    """
-    Get the number of likes for a specific post.
+# @app.get("/likes/post/{post_id}")
+# def get_the_number_of_likes(post_id: int):
+#     """
+#     Retrieve the user IDs of users who liked a specific post.
 
-    Args:
-        post_id (int): The ID of the post for which you want to get
-        the like count.
+#     Given a `post_id`, this function returns a list of user IDs
+#     representing users who liked the post.
 
-    Returns:
-        int: The number of likes for the specified post.
+#     Args:
+#         post_id (int): The ID of the post to retrieve likes for.
 
-    Raises:
-        HTTPException: If the post with the specified ID is not found,
-        it will raise an HTTP 404 error.
-    """
-    try:
-        likes = get_likes_count(post_id)
-        return likes
-    except PostNotFound as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
+#     Returns:
+#         List[int]: A list of user IDs representing users who liked the post.
 
-
-@app.get("/likes/user/{user_id}")
-def get_likes_user(user_id: int):
-    """
-    Retrieve the post IDs that a specific user has liked.
-
-    Given a `user_id`, this function returns a list of post IDs representing
-    the posts that the user has liked.
-
-    Args:
-        user_id (int): The ID of the user to retrieve liked posts for.
-
-    Returns:
-        List[int]: A list of post IDs representing posts liked by the user.
-
-    Raises:
-        HTTPException: If the specified user does not exist, an HTTPException
-        with a 404 status code is raised.
-    """
-    try:
-        liked_posts = get_all_the_likes_of_a_user(user_id)
-        post_ids = [like.id_post for like in liked_posts]
-        return post_ids
-    except UserNotFound as error:
-        raise HTTPException(status_code=USER_NOT_FOUND, detail=str(error)) from error
+#     Raises:
+#         HTTPException: If the specified post does not exist, an
+#         HTTPException with a 404 status code is raised.
+#     """
+#     try:
+#         likes_list = get_likes_for_a_post(post_id)
+#         user_ids = [like.user_id for like in likes_list]
+#         return user_ids
+#     except PostNotFound as error:
+#         raise HTTPException(status_code=POST_NOT_FOUND, detail=str(error)) from error
 
 
-# ------- DELETE ---------
+# @app.get("/likes/post/{post_id}/count")
+# def get_number_of_likes(post_id: int):
+#     """
+#     Get the number of likes for a specific post.
+
+#     Args:
+#         post_id (int): The ID of the post for which you want to get
+#         the like count.
+
+#     Returns:
+#         int: The number of likes for the specified post.
+
+#     Raises:
+#         HTTPException: If the post with the specified ID is not found,
+#         it will raise an HTTP 404 error.
+#     """
+#     try:
+#         likes = get_likes_count(post_id)
+#         return likes
+#     except PostNotFound as error:
+#         raise HTTPException(status_code=404, detail=str(error)) from error
 
 
-@app.delete("/post/{id}")
-async def api_delete_post(id: int):
-    """
-    Gets x amount of newest posts made in general
+# @app.get("/likes/user/{user_id}")
+# def get_likes_user(user_id: int):
+#     """
+#     Retrieve the post IDs that a specific user has liked.
 
-    Args:
-        :param x: amount of posts to search
+#     Given a `user_id`, this function returns a list of post IDs representing
+#     the posts that the user has liked.
 
-    Returns:
-        All x posts made in general. If there are less than x posts
-        created, all the posts will be returned.
+#     Args:
+#         user_id (int): The ID of the user to retrieve liked posts for.
 
-    Raises:
-        -
-    """
-    try:
-        delete_post(id)
-        return {"message": "Post deleted successfully"}
-    except KeyError as error:
-        raise HTTPException(
-            status_code=POST_NOT_FOUND, detail="Post doesnt exist"
-        ) from error
+#     Returns:
+#         List[int]: A list of post IDs representing posts liked by the user.
+
+#     Raises:
+#         HTTPException: If the specified user does not exist, an HTTPException
+#         with a 404 status code is raised.
+#     """
+#     try:
+#         liked_posts = get_all_the_likes_of_a_user(user_id)
+#         post_ids = [like.id_post for like in liked_posts]
+#         return post_ids
+#     except UserNotFound as error:
+#         raise HTTPException(status_code=USER_NOT_FOUND, detail=str(error)) from error
 
 
-@app.delete("/likes/user/{user_id}/post/{post_id}")
-async def api_delete_like(user_id: int, post_id: int):
-    """
-    Deletes a like by user_id and post_id.
+# # ------- DELETE ---------
 
-    Args:
-        like_id (int): The ID of the like to be deleted.
 
-    Returns:
-        dict: A message indicating the successful deletion of the like.
+# @app.delete("/post/{id}")
+# async def api_delete_post(id: int):
+#     """
+#     Gets x amount of newest posts made in general
 
-    Raises:
-        HTTPException: If the specified like does not exist, an
-        HTTPException with a 404 status code is raised.
-    """
-    try:
-        delete_like(user_id, post_id)
-        return {"message": "Like deleted successfully"}
-    except KeyError as error:
-        raise HTTPException(
-            status_code=LIKE_NOT_FOUND, detail="Like doesn't exist"
-        ) from error
+#     Args:
+#         :param x: amount of posts to search
+
+#     Returns:
+#         All x posts made in general. If there are less than x posts
+#         created, all the posts will be returned.
+
+#     Raises:
+#         -
+#     """
+#     try:
+#         delete_post(id)
+#         return {"message": "Post deleted successfully"}
+#     except KeyError as error:
+#         raise HTTPException(
+#             status_code=POST_NOT_FOUND, detail="Post doesnt exist"
+#         ) from error
+
+
+# @app.delete("/likes/user/{user_id}/post/{post_id}")
+# async def api_delete_like(user_id: int, post_id: int):
+#     """
+#     Deletes a like by user_id and post_id.
+
+#     Args:
+#         like_id (int): The ID of the like to be deleted.
+
+#     Returns:
+#         dict: A message indicating the successful deletion of the like.
+
+#     Raises:
+#         HTTPException: If the specified like does not exist, an
+#         HTTPException with a 404 status code is raised.
+#     """
+#     try:
+#         delete_like(user_id, post_id)
+#         return {"message": "Like deleted successfully"}
+#     except KeyError as error:
+#         raise HTTPException(
+#             status_code=LIKE_NOT_FOUND, detail="Like doesn't exist"
+#         ) from error
