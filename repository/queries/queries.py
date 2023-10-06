@@ -179,14 +179,27 @@ def get_x_newest_posts_by_user(user_id, amount):
 
 def get_x_newest_posts(amount):
     """
-    Searches the x amount of newest posts made by that user
+    Retrieves all posts in db with all the corresponding user info.
 
-    The return value is a list of Post.
+    Raises:
+        PostNotFound: If a post is not found.
     """
+
     if amount <= 0:
         raise NegativeOrZeroAmount
 
-    return session.query(Post).order_by(desc(Post.posted_at)).limit(amount).all()
+    results = (
+        session.query(Post, User)
+        .join(User, Post.user_id == User.id)
+        .order_by(desc(Post.posted_at))
+        .limit(amount)
+        .all()
+    )
+
+    if not results:
+        raise PostNotFound()
+
+    return results
 
 
 # --  Like --
