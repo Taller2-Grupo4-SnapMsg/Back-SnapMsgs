@@ -17,7 +17,8 @@ COPY . .
 EXPOSE 8000
 
 # This one always should be production data base, since it's the one the "onrender" picks up.
-ENV DB_URI="postgresql://exoiymmb:4HyrnUG6vFsTwmhIG_B_N6j2NdyKMt5s@motty.db.elephantsql.com:5432/exoiymmb"
+ENV DB_URI="postgresql://cwfvbvxl:jtsNDRjbVqGeBgYcYvxGps3LLlX_t-P5@berry.db.elephantsql.com:5432/cwfvbvxl"
 
+#
 # Command to run the FastAPI application
-CMD ["uvicorn", "control.controller:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "control.app:app", "--host", "0.0.0.0", "--port", "8000"]
