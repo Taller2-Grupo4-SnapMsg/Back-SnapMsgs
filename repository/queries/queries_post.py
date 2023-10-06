@@ -9,13 +9,12 @@ from sqlalchemy.orm import sessionmaker
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.errors import (
     PostNotFound,
-    LikeNotFound,
     UserNotFound,
     NegativeOrZeroAmount,
 )
 
 # pylint: disable=C0114, W0401, W0614, E0401
-from repository.tables.posts import Post, Like
+from repository.tables.posts import Post
 
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.tables.users import Base, User
@@ -47,16 +46,6 @@ def create_post(user_id, content, image):
     session.add(post)
     session.commit()
     return post
-
-
-def create_like(id_post, user_id):
-    """
-    Create a like
-    """
-    print("entra a pegarle a la bdd")
-    like = Like(id_post, user_id)
-    session.add(like)
-    session.commit()
 
 
 # ------------- GET ----------------
@@ -202,70 +191,7 @@ def get_x_newest_posts(amount):
     return results
 
 
-# --  Like --
-
-
-def get_likes_for_a_post(post_id):
-    """
-    Retrieve all the likes for a specific post.
-
-    If the post does not exist, raises a PostNotFound exception.
-    """
-    post = session.query(Post).filter(Post.id == post_id).first()
-    if not post:
-        raise PostNotFound()
-    likes = session.query(Like).filter(Like.id_post == post_id).all()
-    return likes
-
-
-def get_all_the_likes():
-    """
-    Retrieve all likes in the system.
-    """
-    return session.query(Like).all()
-
-
-def get_all_the_likes_of_a_user(user_id):
-    """
-    Retrieve all likes given by a specific user.
-
-    If the user does not exist, raises a UserNotFound exception.
-    """
-    # user = session.query(Like).filter(Like.user_id == user_id).first()
-    # if not user:
-    #    raise UserNotFound()
-
-    likes = session.query(Like).filter(Like.user_id == user_id).all()
-    return likes
-
-
-def get_likes_count(post_id):
-    """
-    Returns the number of likes.
-    """
-    post = session.query(Post).filter(Post.id == post_id).first()
-    if not post:
-        raise PostNotFound()
-    return session.query(Like).filter(Like.id_post == post_id).count()
-
-
 # ---------Remove----------
-
-
-def delete_like(user_id, post_id):
-    """
-    Deletes the folowing relation between the two users.
-    """
-    like = (
-        session.query(Like)
-        .filter(Like.user_id == user_id and Like.id_post == post_id)
-        .first()
-    )
-    if like:
-        session.delete(like)
-        session.commit()
-        return
-    raise LikeNotFound()
 
 
 def delete_post(id_post):
@@ -297,14 +223,6 @@ def delete_posts():
     Deletes all posts.
     """
     session.query(Post).delete()
-    session.commit()
-
-
-def delete_likes():
-    """
-    Deletes all likes.
-    """
-    session.query(Like).delete()
     session.commit()
 
 

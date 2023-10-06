@@ -133,6 +133,13 @@ def generate_response_posts_with_user_from_back_user(posts, user):
     return response
 
 
+def generate_response_users_with_user_from_back_user(users):
+    response = []
+    for user in users:
+        response.append(generate_user_from_db(user))
+    return response
+
+
 # ------------------------------------------ LIKES ------------------------------------------
 
 
@@ -142,7 +149,6 @@ class LikeCreateRequest(BaseModel):
     This class is a Pydantic model for the request body.
     """
 
-    user_id: int
     post_id: int
 
     # I disable it since it's a pydantic configuration
