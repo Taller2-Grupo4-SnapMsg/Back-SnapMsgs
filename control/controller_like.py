@@ -167,7 +167,7 @@ async def get_likes_user(token: str = Header(...)):
             if response.status_code == 200:
                 user = response.json()
                 posts = get_user_likes(user.get("id"))
-                return generate_response_posts_with_user_from_back_user(posts, user)
+                return generate_response_posts_with_users_from_db(posts)
             raise HTTPException(status_code=400, detail={"Unknown error"})
         except UserNotFound as error:
             raise HTTPException(

@@ -157,7 +157,6 @@ async def api_get_posts_by_user(token: str = Header(...)):
 
     async with httpx.AsyncClient() as client:
         try:
-            print(token)
             response = await client.get(
                 "https://loginback-lg51.onrender.com/user", headers=headers
             )
