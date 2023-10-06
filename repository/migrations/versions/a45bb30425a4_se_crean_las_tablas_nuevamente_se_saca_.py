@@ -1,3 +1,4 @@
+# pylint: skip-file
 """se crean las tablas nuevamente, se saca el id del like
 
 Revision ID: a45bb30425a4

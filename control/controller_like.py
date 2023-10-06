@@ -1,8 +1,7 @@
 """
     Fast API for the likes controller
 """
-from fastapi import HTTPException, Header
-import httpx
+from fastapi import HTTPException, APIRouter
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries import *
@@ -10,11 +9,7 @@ from repository.queries.queries import *
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
 
-# from control.controller_like import app
-from fastapi import APIRouter
-
 router = APIRouter()
-
 
 def generate_like(like):
     """

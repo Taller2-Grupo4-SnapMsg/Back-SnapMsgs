@@ -1,3 +1,5 @@
+
+# pylint: skip-file
 """creando tablas
 
 Revision ID: 65d3a0b487c6
