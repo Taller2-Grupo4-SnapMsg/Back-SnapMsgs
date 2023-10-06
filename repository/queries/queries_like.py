@@ -51,9 +51,10 @@ def get_likes_from_post(post_id):
 
     If the post does not exist, raises a PostNotFound exception.
     """
+    print(f"POST_ID: {post_id}")
     post = session.query(Post).filter(Post.id == post_id).first()
-    if not post:
-        raise PostNotFound()
+    #if not post:
+    #    raise PostNotFound()
 
     users = (
         session.query(User)
