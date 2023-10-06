@@ -1,7 +1,7 @@
 """
 Archivo con algunas pruebas de la base de datos
 """
-from repository.queries.queries_post import create_post, get_posts, get_post_by_id
+from repository.queries.queries import create_post, get_posts, get_post_by_id
 
 USER_ID = 58
 CONTENT = "primer postttt"
