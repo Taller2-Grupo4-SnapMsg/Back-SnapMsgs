@@ -11,6 +11,7 @@ from control.common_setup import *
 
 router = APIRouter()
 
+
 def generate_like(like):
     """
     This function casts the orm_object into a pydantic model.
