@@ -22,7 +22,6 @@ class PostCreateRequest(BaseModel):
     This class is a Pydantic model for the request body.
     """
 
-    user_id: int
     content: str
     image: str
 
