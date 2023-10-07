@@ -45,7 +45,8 @@ async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
 
             # Verifica si la solicitud se completó con éxito (código de respuesta 200)
             if response.status_code == 200:
-                create_post(post.user_id, post.content, post.image)
+                user = response.json()
+                create_post(int(user.get("id")), post.content, post.image)
                 return {"message": "Post created successfully"}
 
             raise HTTPException(status_code=400, detail={"Unknown error"})
