@@ -3,6 +3,7 @@ Archivo con algunas pruebas de la base de datos
 """
 from operator import and_
 from sqlalchemy import desc
+from sqlalchemy.exc import IntegrityError
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.common_setup import *
@@ -12,6 +13,7 @@ from repository.errors import (
     PostNotFound,
     UserNotFound,
     NegativeOrZeroAmount,
+    DatabaseError,
 )
 
 # pylint: disable=C0114, W0401, W0614, E0401
@@ -33,10 +35,13 @@ def create_post(user_id, content, image):
         content=content,
         image=image,
     )
-
-    session.add(post)
-    session.commit()
-    return post
+    try:
+        session.add(post)
+        session.commit()
+        return post
+    except IntegrityError as error:
+        session.rollback()
+        raise DatabaseError from error
 
 
 # ------------- GET ----------------

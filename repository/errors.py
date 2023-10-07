@@ -14,6 +14,15 @@ class DatabaseTimeout(Exception):
         super().__init__("Database timeout")
 
 
+class DatabaseError(Exception):
+    """
+    Exception raised when the database times out.
+    """
+
+    def __init__(self):
+        super().__init__("Database error")
+
+
 class NegativeOrZeroAmount(Exception):
     """
     Exception raised when amount is equal or less than 0

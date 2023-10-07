@@ -3,16 +3,13 @@
 Archivo con algunas pruebas de la base de datos
 """
 from sqlalchemy import desc
+from sqlalchemy.exc import IntegrityError
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.common_setup import *
 
 # pylint: disable=C0114, W0401, W0614, E0401
-from repository.errors import (
-    PostNotFound,
-    LikeNotFound,
-    UserNotFound,
-)
+from repository.errors import PostNotFound, LikeNotFound, UserNotFound, DatabaseError
 
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.tables.posts import Post, Like
@@ -27,10 +24,14 @@ def create_like(id_post, user_id):
     """
     Create a like
     """
-    like = Like(id_post, user_id)
-    session.add(like)
-    session.commit()
-    return like
+    try:
+        like = Like(id_post, user_id)
+        session.add(like)
+        session.commit()
+        return like
+    except IntegrityError as error:
+        session.rollback()
+        raise DatabaseError from error
 
 
 # ----------- Get --------------
