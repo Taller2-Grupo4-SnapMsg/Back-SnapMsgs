@@ -122,14 +122,14 @@ async def api_get_post_by_id(id: int, token: str = Header(...)):
             )
             # Verifica si la solicitud se completó con éxito (código de respuesta 200)
             if response.status_code == 200:
-                user = response.json()
+                # user = response.json()
                 # pylint: disable=C0103, W0622
-                post = get_post_by_id(id)
+                post, user = get_post_by_id(id)
                 if post is None:
                     raise HTTPException(
                         status_code=POST_NOT_FOUND, detail="Post not found"
                     )
-                return generate_post_from_back_user(post, user)
+                return generate_post_from_db(post, user)
 
             raise HTTPException(status_code=400, detail={"Unknown error"})
         except httpx.HTTPError as error:

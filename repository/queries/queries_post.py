@@ -60,7 +60,7 @@ def get_post_by_id(post_id):
 
     The return value is a Post.
     """
-    post = session.query(Post).filter(Post.id == post_id).first()
+    post = session.query(Post, User).filter(Post.id == post_id).join(User).first()
     if not post:
         raise PostNotFound
     return post
