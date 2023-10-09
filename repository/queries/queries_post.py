@@ -59,6 +59,19 @@ def create_post(user_id, content, image):
 
 
 # listo
+def get_post_by_id2(post_id):
+    """
+    Searches the specific post based on id
+
+    The return value is a Post.
+    """
+    post = session.query(Post, User).filter(Post.id == post_id).join(User).first()
+    if not post:
+        raise PostNotFound
+    return post
+
+
+# para que no falle coverange, pero creo que no va
 def get_post_by_id(post_id):
     """
     Searches the specific post based on id
