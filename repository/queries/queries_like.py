@@ -57,7 +57,7 @@ def get_likes_from_post(post_id):
     return users
 
 
-def get_the_number_of_likes(post_id):
+def get_amount_likes(post_id):
     """
     Returns the number of likes.
     """

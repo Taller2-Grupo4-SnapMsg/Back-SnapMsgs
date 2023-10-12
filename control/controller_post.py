@@ -138,7 +138,7 @@ async def api_get_post_by_id(id: int, token: str = Header(...)):
 
 # pylint: disable=C0103, W0622
 @router.get("/posts/user/", tags=["Posts"])  # ANDA
-async def api_get_posts_by_user(token: str = Header(...)):
+async def api_get_posts_user_by_token(token: str = Header(...)):
     """
     Gets all posts made by that user
     Use with caution!
@@ -164,6 +164,44 @@ async def api_get_posts_by_user(token: str = Header(...)):
             if response.status_code == 200:
                 user = response.json()
                 posts = get_posts_by_user_id(int(user.get("id")))
+                if posts is None:
+                    raise HTTPException(
+                        status_code=POST_NOT_FOUND, detail="Posts not found"
+                    )
+                return generate_response_posts_with_user_from_back_user(posts, user)
+            raise HTTPException(status_code=400, detail={"Unknown error"})
+        except httpx.HTTPError as error:
+            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
+            raise HTTPException(status_code=400, detail={str(error)}) from error
+
+
+#QUEDA PROBAR
+# pylint: disable=C0103, W0622
+@router.get("/posts/user/{user_id}", tags=["Posts"])
+async def api_get_posts_by_user_id(user_id: int, token: str = Header(...)):
+    """
+    Gets all posts made by user id
+
+    Returns:
+        All posts made by that user
+
+    Raises:
+        -
+    """
+    headers = {
+        "Content-Type": "application/json;charset=utf-8",
+        "accept": "application/json",
+        "token": token,
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(
+                "https://loginback-lg51.onrender.com/user", headers=headers
+            )
+            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
+            if response.status_code == 200:
+                posts = get_posts_by_user_id(int(user_id))
                 if posts is None:
                     raise HTTPException(
                         status_code=POST_NOT_FOUND, detail="Posts not found"
@@ -286,8 +324,52 @@ async def api_get_x_newest_posts(x: int, token: str = Header(...)):
             # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
             raise HTTPException(status_code=400, detail={str(error)}) from error
 
+## ------- PUT ---------
 
-# # ------- DELETE ---------
+@router.put("posts", tags=["Posts"])
+async def api_put_posts(token: str = Header(...)):
+    """
+    Edits the post sent in the request body 
+
+    Args:
+        :param x: amount of posts to search
+
+    Returns:
+        All x posts made in general. If there are less
+        than x posts created, all the posts will be returned.
+
+    Raises:
+    """
+    
+    headers = {
+        "Content-Type": "application/json;charset=utf-8",
+        "accept": "application/json",
+        "token": token,
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            # Realiza una solicitud GET al endpoint de tu otro backend
+            response = await client.get(
+                "https://loginback-lg51.onrender.com/user", headers=headers
+            )
+
+            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
+            if response.status_code == 200:
+                # chequear si funciona
+                modified_post = PostToEdit(**response.json())
+                ## call function
+                put_post(modified_post)
+                return {"message": "Post edited successfully"}
+
+            raise HTTPException(status_code=400, detail={"Unknown error"})
+        except httpx.HTTPError as error:
+            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
+            raise HTTPException(status_code=400, detail={str(error)}) from error
+
+
+
+## ------- DELETE ---------
 
 
 @router.delete("/post/{id}", tags=["Posts"])

@@ -49,6 +49,9 @@ class PostResponse(BaseModel):
     posted_at: str
     content: str
     image: str
+    amount_likes: int
+    amount_reposts: int
+    
 
     # I disable it since it's a pydantic configuration
     # pylint: disable=too-few-public-methods
@@ -60,6 +63,28 @@ class PostResponse(BaseModel):
 
         orm_mode = True
         from_attributes = True
+
+
+class PostToEdit(BaseModel):
+    """
+    This class is a Pydantic model for the response body.
+    """
+
+    id: int
+    content: str
+    image: str
+
+    # I disable it since it's a pydantic configuration
+    # pylint: disable=too-few-public-methods
+    class Config:
+        """
+        This is a pydantic configuration so I can cast
+        orm_objects into pydantic models.
+        """
+
+        orm_mode = True
+        from_attributes = True
+
 
 
 def generate_user_from_db(user):

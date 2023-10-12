@@ -1,11 +1,15 @@
 """
 Archivo con algunas pruebas de la base de datos
 """
-from operator import and_
+from sqlalchemy import and_, or_
 from sqlalchemy import desc
+from sqlalchemy.orm import aliased
+from sqlalchemy.orm import joinedload
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.common_setup import *
+
+from repository.tables.users import Following
 
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.errors import (
@@ -42,17 +46,6 @@ def create_post(user_id, content, image):
 # ------------- GET ----------------
 
 
-# --  Posts --
-# def get_posts():
-#     """
-#     Returns all posts, no filter
-
-#     The return value is a list of Posts.
-#     The posts are ordered from newest to oldest
-#     """
-#     return session.query(Post).order_by(desc(Post.posted_at)).all()
-
-
 # listo
 def get_post_by_id2(post_id):
     """
@@ -61,19 +54,6 @@ def get_post_by_id2(post_id):
     The return value is a Post.
     """
     post = session.query(Post, User).filter(Post.id == post_id).join(User).first()
-    if not post:
-        raise PostNotFound
-    return post
-
-
-# para que no falle coverange, pero creo que no va
-def get_post_by_id(post_id):
-    """
-    Searches the specific post based on id
-
-    The return value is a Post.
-    """
-    post = session.query(Post).filter(Post.id == post_id).first()
     if not post:
         raise PostNotFound
     return post
@@ -194,8 +174,74 @@ def get_x_newest_posts(amount):
 
     return results
 
+#-----------new queries----------------
 
-# ---------Remove----------
+#aca despues va a tener que contemplar que solo me muestre los publicos que 
+#van con mis intereses
+def get_visible_posts(user_id):
+    visible_posts = (
+        session.query(Post)
+        .join(User, User.id == Post.user_id)
+        .filter(
+            or_(
+                and_(Following.user_id == user_id, Following.following_id == user_id),
+                Post.is_public == True,
+            )
+        )
+        .options(joinedload(Post.user))
+        .order_by(Post.posted_at.desc())
+        .all()
+    )
+
+    return visible_posts
+
+
+def get_visible_posts_for_user(session, user_a_id, user_b_id):
+    # Consulta para obtener los posts visibles para el usuario A cuando visita el perfil del usuario B
+    visible_posts = (
+        session.query(Post)
+        .join(User, Post.user_id == user_b_id)
+        .outerjoin(Following, Following.user_id == user_a_id)
+        .filter(
+            (
+                (user_a_id == user_b_id)  # Si el usuario A visita su propio perfil
+                | Following.following_id == user_b_id  # Usuario A sigue a B
+                | (Post.is_public == True)  # El post es público
+            )
+        )
+        .order_by(Post.posted_at.desc())
+        .all()
+    )
+
+    return visible_posts
+
+
+# --------- Put ----------
+
+def put_post(modified_post):
+    """
+    Searches the post with the same id and updates it
+    The function updates all the info from the post in the db
+    with the info in the modified_post.
+    Be sure everything that is allowed to be modified
+    is in the modified_post!
+    That is content, image and etiquetas
+
+    Raises PostNotFound if not foun
+    """
+    existing_post = session.query(Post).filter(Post.id == modified_post.id).first()
+    if not existing_post:
+        raise PostNotFound
+
+    #Update what we allow to be updated
+    existing_post.content = modified_post.content
+    existing_post.image = modified_post.image
+    #falta modificar las etiquetas de las publicaciones
+    
+    session.commit()
+
+
+# --------- Delete ----------
 
 
 def delete_post(id_post):
@@ -253,51 +299,17 @@ def get_posts():
     return results
 
 
-# def get_posts_by_user_id(user_id):
-#     """
-#     Retrieves posts of a specific user along with user information.
+#----------------No va - Pero está en los tests----------------
 
-#     Args:
-#         user_id (int): The ID of the user whose Post to retrieve.
-#         n (int): Number of Post to retrieve.
+# para que no falle coverange, pero creo que no va
+def get_post_by_id(post_id):
+    """
+    Searches the specific post based on id
 
-#     Raises:
-#         PostNotFound: If a post is not found.
-#     """
+    The return value is a Post.
+    """
+    post = session.query(Post).filter(Post.id == post_id).first()
+    if not post:
+        raise PostNotFound
+    return post
 
-#     results = (
-#         session.query(Post)
-#         .filter(Post.user_id == user_id)
-#         .order_by(desc(Post.posted_at)).all()
-#     )
-
-#     if not results:
-#         raise PostNotFound()
-
-#     return results
-
-
-# def get_recent_post_by_user(user_id, n):
-#     """
-#     Retrieves the n most recent Post of a specific user along with user information.
-
-#     Args:
-#         user_id (int): The ID of the user whose Post to retrieve.
-#         n (int): Number of Post to retrieve.
-
-#     Raises:
-#         PostNotFound: If a post is not found.
-#     """
-#     results = (
-#         session.query(Post, User)
-#         .join(User, Post.user_id == User.id)
-#         .filter(User.id == user_id)
-#         .order_by(desc(Post.posted_at))
-#         .limit(n)
-#         .all()
-#     )
-
-#     if not results:
-#         raise PostNotFound()
-
-#     return results

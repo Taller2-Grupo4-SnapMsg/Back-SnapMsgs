@@ -14,6 +14,18 @@ from sqlalchemy.orm import declarative_base
 Base = declarative_base()
 
 
+def create_users_foreign_key():
+    """
+    This function creates a column with user_id as a foregin key.
+    """
+    return Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        primary_key=True,
+    )
+
+
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-instance-attributes
 class User(Base):
@@ -36,6 +48,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     location = Column(String(100), nullable=False)
     blocked = Column(Boolean, nullable=False, default=False)
+    is_public = Column(Boolean, default=True, nullable=True)
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -73,7 +86,6 @@ class Following(Base):
 
     __tablename__ = "following"
 
-    # pylint: disable=R0801
     user_id = Column(
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -81,12 +93,7 @@ class Following(Base):
         primary_key=True,
     )
 
-    following_id = Column(
-        Integer,
-        ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-        primary_key=True,
-    )
+    following_id = create_users_foreign_key()
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     _table_args__ = (UniqueConstraint("user_id", "following_id"),)
@@ -95,3 +102,24 @@ class Following(Base):
     def __init__(self, user_id, following_id):
         self.user_id = user_id
         self.following_id = following_id
+
+
+class Interests(Base):
+    """
+    Class that represents the interests table of users
+    """
+
+    __tablename__ = "interests"
+
+    # We disable duplicate code here since it is a table and the
+    # foreign key is the same in all tables
+    # pylint: disable=R0801
+    user_id = create_users_foreign_key()
+
+    interest = Column(String(75), nullable=False, primary_key=True)
+
+    _table_args__ = (UniqueConstraint("user_id", "interest"),)
+
+    def __init__(self, user_id, interest):
+        self.user_id = user_id
+        self.interest = interest
