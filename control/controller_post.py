@@ -8,9 +8,40 @@ import httpx
 from repository.queries.queries_post import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
+from repository.queries.queries_repost import *
+
+# pylint: disable=C0114, W0401, W0614, E0602, E0401
+from repository.queries.queries_like import *
+
+# pylint: disable=C0114, W0401, W0614, E0602, E0401
+from repository.queries.queries_global import *
+
+# pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
 
 router = APIRouter()
+
+# ------------ Function Auxiliar ------------
+
+def generate_posts_with_info():
+    """
+    Retrieves all posts with their corresponding user info, likes, and reposts.
+
+    Returns:
+        List[dict]: A list of dictionaries representing each post with user info,
+        likes count, and reposts count.
+    """
+    posts = get_posts()
+    
+    posts_info = []
+    for post, user in posts:
+        likes_count = get_the_number_of_likes(post.id)
+        reposts_count = get_the_number_of_reposts_of_a_post(post.id)
+        
+        post_info = generate_post_from_db(post, user, likes_count, reposts_count)        
+        posts_info.append(post_info)
+    
+    return posts_info
 
 # ------------ POST  ------------
 
@@ -20,228 +51,85 @@ async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
     """
     Creates a new post
 
-    Args:
-        post (Post): The post to create.
+    Args: post (PostCreateRequest): The post to create.
+    Returns: Post: The post that was created.
 
-    Returns:
-        Post: The post that was created.
-
-    Raises:
-        -
     """
+    user = await get_user_from_token(token)
+    create_post(int(user.get("id")), post.content, post.image)
+    return {"message": "Post created successfully"}
 
-    headers = {
-        "Content-Type": "application/json;charset=utf-8",
-        "accept": "application/json",
-        "token": token,
-    }
-
-    async with httpx.AsyncClient() as client:
-        try:
-            # Realiza una solicitud GET al endpoint de tu otro backend
-            response = await client.get(
-                "https://loginback-lg51.onrender.com/user", headers=headers
-            )
-
-            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
-            if response.status_code == 200:
-                user = response.json()
-                create_post(int(user.get("id")), post.content, post.image)
-                return {"message": "Post created successfully"}
-
-            raise HTTPException(status_code=400, detail={"Unknown error"})
-        except httpx.HTTPError as error:
-            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
-            raise HTTPException(status_code=400, detail={str(error)}) from error
+# # ------------- GET ----------------
 
 
-# ------------- GET ----------------
+# @router.get("/posts", tags=["Posts"])
+# async def api_get_posts(token: str = Header(...)):
+#     """
+#     Gets all the posts.
 
+#     Returns: List of Posts
+
+#     """
+#     _ = await get_user_from_token(token)
+#     posts_db = get_all_posts_with_details()
+#     posts = generate_response_posts_from_db(posts_db)
+#     return posts
 
 @router.get("/posts", tags=["Posts"])
 async def api_get_posts(token: str = Header(...)):
     """
-    Gets all the posts ever created.
-    Use with caution!
+    Gets all the posts.
 
-    Args:
-        -
+    Returns: List of Posts
 
-    Returns:
-        List of Posts
-
-    Raises:
-        -
     """
-    headers = {
-        "Content-Type": "application/json;charset=utf-8",
-        "accept": "application/json",
-        "token": token,
-    }
-
-    async with httpx.AsyncClient() as client:
-        try:
-            # Realiza una solicitud GET al endpoint de tu otro backend
-            response = await client.get(
-                "https://loginback-lg51.onrender.com/user", headers=headers
-            )
-            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
-            if response.status_code == 200:
-                posts_and_users = get_posts()
-                return generate_response_posts_with_users_from_db(posts_and_users)
-            raise HTTPException(status_code=400, detail={"Unknown error"})
-        except httpx.HTTPError as error:
-            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
-            raise HTTPException(status_code=400, detail={str(error)}) from error
+    _ = await get_user_from_token(token)
+    posts = generate_posts_with_info()
+    return posts
 
 
-# pylint: disable=C0103, W0622
 @router.get("/posts/{id}", tags=["Posts"])
 async def api_get_post_by_id(id: int, token: str = Header(...)):
     """
-    Gets the post with the id passed
-    Args:
-        :param id: Id of the post
+    Gets the post with the id
 
-    Returns:
-        The post with that Id
-
-    Raises:
-        HTTPEXCEPTION with code 404 if post not found
+    Args: Id of the post
+    Returns: The post with that Id
+    Raises: HTTPEXCEPTION with code 404 if post not found
     """
-    headers = {
-        "Content-Type": "application/json;charset=utf-8",
-        "accept": "application/json",
-        "token": token,
-    }
-
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                "https://loginback-lg51.onrender.com/user", headers=headers
-            )
-            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
-            if response.status_code == 200:
-                # pylint: disable=C0103, W0622
-                post, user = get_post_by_id2(id)
-                if post is None:
-                    raise HTTPException(
-                        status_code=POST_NOT_FOUND, detail="Post not found"
-                    )
-                return generate_post_from_db(post, user)
-
-            raise HTTPException(status_code=400, detail={"Unknown error"})
-        except httpx.HTTPError as error:
-            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
-            raise HTTPException(status_code=400, detail={str(error)}) from error
+    user = await get_user_from_token(token)
+    posts_db = get_post_from_user_b_to_user_a(int(user.get("id")), id)
+    posts = generate_response_posts_from_db(posts_db)
+    return posts
 
 
 # pylint: disable=C0103, W0622
 @router.get("/posts/user/", tags=["Posts"])  # ANDA
 async def api_get_posts_user_by_token(token: str = Header(...)):
+    """   
+    Gets all posts from a user by token
+
+    Returns: All posts made by that user
     """
-    Gets all posts made by that user
-    Use with caution!
-
-    Returns:
-        All posts made by that user
-
-    Raises:
-        -
-    """
-    headers = {
-        "Content-Type": "application/json;charset=utf-8",
-        "accept": "application/json",
-        "token": token,
-    }
-
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                "https://loginback-lg51.onrender.com/user", headers=headers
-            )
-            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
-            if response.status_code == 200:
-                user = response.json()
-                posts = get_posts_by_user_id(int(user.get("id")))
-                if posts is None:
-                    raise HTTPException(
-                        status_code=POST_NOT_FOUND, detail="Posts not found"
-                    )
-                return generate_response_posts_with_user_from_back_user(posts, user)
-            raise HTTPException(status_code=400, detail={"Unknown error"})
-        except httpx.HTTPError as error:
-            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
-            raise HTTPException(status_code=400, detail={str(error)}) from error
+    user = await get_user_from_token(token)
+    posts_db = get_posts_from_users_followed_by_user_a(int(user.get("id")))
+    posts = generate_response_posts_from_db(posts_db)
+    return posts
 
 
-#QUEDA PROBAR
 # pylint: disable=C0103, W0622
 @router.get("/posts/user/{user_id}", tags=["Posts"])
 async def api_get_posts_by_user_id(user_id: int, token: str = Header(...)):
     """
-    Gets all posts made by user id
+    Gets all posts from a user by id
 
-    Returns:
-        All posts made by that user
-
-    Raises:
-        -
+    Returns: All posts made by that user
     """
-    headers = {
-        "Content-Type": "application/json;charset=utf-8",
-        "accept": "application/json",
-        "token": token,
-    }
-
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                "https://loginback-lg51.onrender.com/user", headers=headers
-            )
-            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
-            if response.status_code == 200:
-                posts = get_posts_by_user_id(int(user_id))
-                if posts is None:
-                    raise HTTPException(
-                        status_code=POST_NOT_FOUND, detail="Posts not found"
-                    )
-                return generate_response_posts_with_user_from_back_user(posts, user)
-            raise HTTPException(status_code=400, detail={"Unknown error"})
-        except httpx.HTTPError as error:
-            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
-            raise HTTPException(status_code=400, detail={str(error)}) from error
-
-
-# # pylint: disable=W0511
-# # TODO
-# @router.get("/posts/user/{id}/date/{date}")
-# async def api_get_posts_by_user_and_date(id: int, date: str):
-#     """
-#     Gets all posts made by that user that date
-
-#     Args:
-#         :param id: Id of the user
-#         :param date: Specific date as a string with format "YYYY-MM-DD"
-
-#     Returns:
-#         All posts made by that user that date
-
-#     Raises:
-#         ValueError: if invalid date format
-#     """
-#     try:
-#         # está comparando YYYY-MM-DD contra YYYY-MM-DD HH-MM-SS que hay en la bdd
-#         datetime_date = strptime(date, "%Y-%m-%d")
-
-#         post = get_posts_by_user_and_date(id, datetime_date)
-#         return generate_response_posts(post)
-#     except ValueError as error:
-#         raise HTTPException(
-#             status_code=BAD_REQUEST,
-#             detail="Invalid\
-#                             date format. Expected format: YYYY-MM-DD",
-#         ) from error
+    _ = await get_user_from_token(token)
+    user = await get_user_from_token(token)
+    posts_db = get_post_from_user_b_to_user_a(int(user.get("id")), user_id)
+    posts = generate_response_posts_from_db(posts_db)
+    return posts
 
 
 @router.get("/posts/user/amount/{x}", tags=["Posts"])
@@ -249,40 +137,15 @@ async def api_get_x_newest_posts_by_user(x: int, token: str = Header(...)):
     """
     Gets x amount of newest posts made by that user (the owner of the token)
 
-    Args:
-        :param x: amount of posts to search
+    Args: amount of posts to search
 
-    Returns:
-        All x posts made by that user. If user made less
-        than x posts, all the posts will be returned.
-
-    Raises:
-
+    Returns: All x posts made by that user. If user made less
+    than x posts, all the posts will be returned.
     """
-    headers = {
-        "Content-Type": "application/json;charset=utf-8",
-        "accept": "application/json",
-        "token": token,
-    }
-    if x <= 0:
-        raise HTTPException(
-            status_code=BAD_REQUEST, detail="Amount must be greater than 0"
-        )
+    user = await get_user_from_token(token)
+    posts = get_x_newest_posts_by_user(int(user.get("id")), x)
+    return generate_response_posts_with_user_from_back_user(posts, user)
 
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                "https://loginback-lg51.onrender.com/user", headers=headers
-            )
-            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
-            if response.status_code == 200:
-                user = response.json()
-                posts = get_x_newest_posts_by_user(int(user.get("id")), x)
-                return generate_response_posts_with_user_from_back_user(posts, user)
-            raise HTTPException(status_code=400, detail={"Unknown error"})
-        except httpx.HTTPError as error:
-            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
-            raise HTTPException(status_code=400, detail={str(error)}) from error
 
 
 @router.get("/posts/amount/{x}", tags=["Posts"])
@@ -290,39 +153,14 @@ async def api_get_x_newest_posts(x: int, token: str = Header(...)):
     """
     Gets x amount of newest posts made in general
 
-    Args:
-        :param x: amount of posts to search
+    Args: amount of posts to search
 
-    Returns:
-        All x posts made in general. If there are less
-        than x posts created, all the posts will be returned.
-
-    Raises:
-
+    Returns: All x posts made in general. If there are less
+    than x posts created, all the posts will be returned.
     """
-    headers = {
-        "Content-Type": "application/json;charset=utf-8",
-        "accept": "application/json",
-        "token": token,
-    }
-    if x <= 0:
-        raise HTTPException(
-            status_code=BAD_REQUEST, detail="Amount must be greater than 0"
-        )
-
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                "https://loginback-lg51.onrender.com/user", headers=headers
-            )
-            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
-            if response.status_code == 200:
-                posts = get_x_newest_posts(x)
-                return generate_response_posts_with_users_from_db(posts)
-            raise HTTPException(status_code=400, detail={"Unknown error"})
-        except httpx.HTTPError as error:
-            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
-            raise HTTPException(status_code=400, detail={str(error)}) from error
+    _ = await get_user_from_token(token)
+    posts = get_x_newest_posts(x)
+    return generate_response_posts_with_users_from_db(posts)
 
 ## ------- PUT ---------
 
@@ -331,42 +169,17 @@ async def api_put_posts(token: str = Header(...)):
     """
     Edits the post sent in the request body 
 
-    Args:
-        :param x: amount of posts to search
+    Args: amount of posts to search
 
-    Returns:
-        All x posts made in general. If there are less
-        than x posts created, all the posts will be returned.
-
-    Raises:
-    """
-    
-    headers = {
-        "Content-Type": "application/json;charset=utf-8",
-        "accept": "application/json",
-        "token": token,
-    }
-
-    async with httpx.AsyncClient() as client:
-        try:
-            # Realiza una solicitud GET al endpoint de tu otro backend
-            response = await client.get(
-                "https://loginback-lg51.onrender.com/user", headers=headers
-            )
-
-            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
-            if response.status_code == 200:
-                # chequear si funciona
-                modified_post = PostToEdit(**response.json())
-                ## call function
-                put_post(modified_post)
-                return {"message": "Post edited successfully"}
-
-            raise HTTPException(status_code=400, detail={"Unknown error"})
-        except httpx.HTTPError as error:
-            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
-            raise HTTPException(status_code=400, detail={str(error)}) from error
-
+    Returns: All x posts made in general. If there are less
+    than x posts created, all the posts will be returned.
+    """ 
+    response = await get_user_from_token(token)
+    # chequear si funciona
+    modified_post = PostToEdit(**response.json())
+    ## call function
+    put_post(modified_post)
+    return {"message": "Post edited successfully"}
 
 
 ## ------- DELETE ---------
@@ -375,38 +188,8 @@ async def api_put_posts(token: str = Header(...)):
 @router.delete("/post/{id}", tags=["Posts"])
 async def api_delete_post(id: int, token: str = Header(...)):
     """
-    Gets x amount of newest posts made in general
-
-    Args:
-        :param x: amount of posts to search
-
-    Returns:
-        All x posts made in general. If there are less than x posts
-        created, all the posts will be returned.
-
-    Raises:
-        -
+    Deletes the post with the id
     """
-    headers = {
-        "Content-Type": "application/json;charset=utf-8",
-        "accept": "application/json",
-        "token": token,
-    }
-
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                "https://loginback-lg51.onrender.com/user", headers=headers
-            )
-            # Verifica si la solicitud se completó con éxito (código de respuesta 200)
-            if response.status_code == 200:
-                delete_post(id)
-                return {"message": "Post deleted successfully"}
-            raise HTTPException(status_code=400, detail={"Unknown error"})
-        except KeyError as error:
-            raise HTTPException(
-                status_code=POST_NOT_FOUND, detail="Post doesnt exist"
-            ) from error
-        except httpx.HTTPError as error:
-            # Maneja las excepciones de HTTP, por ejemplo, si la solicitud falla
-            raise HTTPException(status_code=400, detail={str(error)}) from error
+    _ = await get_user_from_token(token)
+    delete_post(id)
+    return {"message": "Post deleted successfully"}

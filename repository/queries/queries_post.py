@@ -1,28 +1,28 @@
 """
 Archivo con algunas pruebas de la base de datos
 """
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, exists, or_, func
 from sqlalchemy import desc
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm import joinedload
+from sqlalchemy.exc import IntegrityError
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.common_setup import *
-
-from repository.tables.users import Following
 
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.errors import (
     PostNotFound,
     UserNotFound,
     NegativeOrZeroAmount,
+    DatabaseError,
 )
 
 # pylint: disable=C0114, W0401, W0614, E0401
-from repository.tables.posts import Post
+from repository.tables.posts import Post, Like, Repost
 
 # pylint: disable=C0114, W0401, W0614, E0401
-from repository.tables.users import User
+from repository.tables.users import User, Following
 
 
 # ----- CREATE ------
@@ -38,9 +38,13 @@ def create_post(user_id, content, image):
         image=image,
     )
 
-    session.add(post)
-    session.commit()
-    return post
+    try:
+        session.add(post)
+        session.commit()
+        return post
+    except IntegrityError as error:
+        session.rollback()
+        raise DatabaseError from error
 
 
 # ------------- GET ----------------
@@ -68,10 +72,10 @@ def get_posts_by_user_id(user_id):
     The posts are ordered from newest to oldest
     """
     posts = (
-        session.query(Post)
+        session.query(Post, User)
+        .join(Post)
         .filter(Post.user_id == user_id)
-        .order_by(desc(Post.posted_at))
-        .all()
+        .order_by(Post.posted_at.desc())
     )
     if not posts:
         raise UserNotFound
@@ -176,19 +180,44 @@ def get_x_newest_posts(amount):
 
 #-----------new queries----------------
 
+
+
+
+
+
 #aca despues va a tener que contemplar que solo me muestre los publicos que 
 #van con mis intereses
 def get_visible_posts(user_id):
+    # Subquery para contar likes
+    likes_subquery = (
+        session.query(func.count(Like.id))
+        .filter(Like.id_post == Post.id)
+        .label("like_count")
+    )
+
+    # Subquery para contar reposts
+    reposts_subquery = (
+        session.query(func.count(Repost.id))
+        .filter(Repost.id_post == Post.id)
+        .label("repost_count")
+    )
+
+    # Consulta para obtener los posts visibles para el usuario
     visible_posts = (
-        session.query(Post)
+        session.query(
+            Post,
+            likes_subquery,
+            reposts_subquery
+        )
         .join(User, User.id == Post.user_id)
+        .outerjoin(Following, and_(Following.user_id == user_id, Following.following_id == Post.user_id))
         .filter(
             or_(
                 and_(Following.user_id == user_id, Following.following_id == user_id),
                 Post.is_public == True,
             )
         )
-        .options(joinedload(Post.user))
+        .group_by(Post.id)
         .order_by(Post.posted_at.desc())
         .all()
     )
@@ -196,12 +225,32 @@ def get_visible_posts(user_id):
     return visible_posts
 
 
-def get_visible_posts_for_user(session, user_a_id, user_b_id):
+def get_visible_posts_for_user(user_a_id, user_b_id):
+    # Subquery para contar likes
+    likes_subquery = (
+        session.query(func.count(Like.id))
+        .filter(Like.id_post == Post.id)
+        .label("like_count")
+    )
+
+    # Subquery para contar reposts
+    reposts_subquery = (
+        session.query(func.count(Repost.id))
+        .filter(Repost.id_post == Post.id)
+        .label("repost_count")
+    )
+
     # Consulta para obtener los posts visibles para el usuario A cuando visita el perfil del usuario B
     visible_posts = (
-        session.query(Post)
+        session.query(
+            Post,
+            likes_subquery,
+            reposts_subquery
+        )
         .join(User, Post.user_id == user_b_id)
         .outerjoin(Following, Following.user_id == user_a_id)
+        .outerjoin(Like, Like.id_post == Post.id)
+        .outerjoin(Repost, Repost.id_post == Post.id)
         .filter(
             (
                 (user_a_id == user_b_id)  # Si el usuario A visita su propio perfil
@@ -209,6 +258,7 @@ def get_visible_posts_for_user(session, user_a_id, user_b_id):
                 | (Post.is_public == True)  # El post es público
             )
         )
+        .group_by(Post.id)
         .order_by(Post.posted_at.desc())
         .all()
     )

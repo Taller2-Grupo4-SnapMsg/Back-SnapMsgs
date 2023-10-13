@@ -3,8 +3,9 @@ Clases for the response bodies of the posts and likes controller.
 There are also functions to generate the correct classes from the db objects
 and from the json objects.
 """
-
+from fastapi import HTTPException
 from pydantic import BaseModel
+import httpx
 
 POST_NOT_FOUND = 404
 USER_NOT_FOUND = 404
@@ -49,8 +50,8 @@ class PostResponse(BaseModel):
     posted_at: str
     content: str
     image: str
-    amount_likes: int
-    amount_reposts: int
+    number_likes: int
+    number_reposts: int
     
 
     # I disable it since it's a pydantic configuration
@@ -85,7 +86,16 @@ class PostToEdit(BaseModel):
         orm_mode = True
         from_attributes = True
 
-
+def generate_post_from_db(post, user, likes_count, reposts_count):
+    return PostResponse(
+        id=post.id,
+        user=generate_user_from_db(user),
+        posted_at=str(post.posted_at),
+        content=post.content,
+        image=post.image,
+        number_likes=likes_count,
+        number_reposts=reposts_count
+    )
 
 def generate_user_from_db(user):
     """
@@ -99,26 +109,16 @@ def generate_user_from_db(user):
         avatar=user.avatar,
     )
 
-
-def generate_post_from_db(post, user):
-    """
-    This function casts the orm_object into a pydantic model.
-    (from data base object to json)
-    """
-    return PostResponse(
-        id=post.id,
-        user=generate_user_from_db(user),
-        posted_at=str(post.posted_at),
-        content=post.content,
-        image=post.image,
-    )
-
-
-# pylint: disable=C0116
-def generate_response_posts_with_users_from_db(posts_and_users):
+def generate_response_posts_from_db(posts_db):
     response = []
-    for pair in posts_and_users:
-        response.append(generate_post_from_db(pair[0], pair[1]))
+    for post_db in posts_db:
+        post_info, user, likes_count, reposts_count = post_db
+        if likes_count is None:
+            likes_count = 0
+        if reposts_count is None:
+            reposts_count = 0
+        post = generate_post_from_db(post_info, user, likes_count, reposts_count)
+        response.append(post)
     return response
 
 
@@ -185,3 +185,18 @@ class LikeCreateRequest(BaseModel):
 
         orm_mode = True
         from_attributes = True
+
+async def get_user_from_token(token):
+    headers = {
+        "Content-Type": "application/json;charset=utf-8",
+        "accept": "application/json",
+        "token": token,
+    }
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get("https://loginback-lg51.onrender.com/user", headers=headers)
+
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail={"Unknown error"})
+
+        return response.json()
