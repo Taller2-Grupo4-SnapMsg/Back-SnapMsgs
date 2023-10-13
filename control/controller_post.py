@@ -3,6 +3,7 @@
 """
 from fastapi import HTTPException, Header, APIRouter
 import httpx
+from datetime import datetime
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_post import *
@@ -20,28 +21,6 @@ from repository.queries.queries_global import *
 from control.common_setup import *
 
 router = APIRouter()
-
-# ------------ Function Auxiliar ------------
-
-def generate_posts_with_info():
-    """
-    Retrieves all posts with their corresponding user info, likes, and reposts.
-
-    Returns:
-        List[dict]: A list of dictionaries representing each post with user info,
-        likes count, and reposts count.
-    """
-    posts = get_posts()
-    
-    posts_info = []
-    for post, user in posts:
-        likes_count = get_the_number_of_likes(post.id)
-        reposts_count = get_the_number_of_reposts_of_a_post(post.id)
-        
-        post_info = generate_post_from_db(post, user, likes_count, reposts_count)        
-        posts_info.append(post_info)
-    
-    return posts_info
 
 # ------------ POST  ------------
 
@@ -62,19 +41,6 @@ async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
 # # ------------- GET ----------------
 
 
-# @router.get("/posts", tags=["Posts"])
-# async def api_get_posts(token: str = Header(...)):
-#     """
-#     Gets all the posts.
-
-#     Returns: List of Posts
-
-#     """
-#     _ = await get_user_from_token(token)
-#     posts_db = get_all_posts_with_details()
-#     posts = generate_response_posts_from_db(posts_db)
-#     return posts
-
 @router.get("/posts", tags=["Posts"])
 async def api_get_posts(token: str = Header(...)):
     """
@@ -84,7 +50,8 @@ async def api_get_posts(token: str = Header(...)):
 
     """
     _ = await get_user_from_token(token)
-    posts = generate_posts_with_info()
+    posts_db = get_all_posts_with_details()
+    posts = generate_response_posts_from_db(posts_db)
     return posts
 
 
@@ -128,6 +95,22 @@ async def api_get_posts_by_user_id(user_id: int, token: str = Header(...)):
     _ = await get_user_from_token(token)
     user = await get_user_from_token(token)
     posts_db = get_post_from_user_b_to_user_a(int(user.get("id")), user_id)
+    posts = generate_response_posts_from_db(posts_db)
+    return posts
+
+# pylint: disable=C0103, W0622
+@router.get("/posts/user/date/{date_str}/n/{n}", tags=["Posts"])
+async def api_get_posts_users_that_I_follow(n: int, 
+                                            date_str: str,
+                                            token: str = Header(...)):
+    """
+    Gets all posts from a user by id
+
+    Returns: All posts made by that user
+    """
+    date = datetime.strptime(date_str, '%Y-%m-%d_%H:%M:%S')
+    user = await get_user_from_token(token)
+    posts_db = get_public_posts_user_is_interested_in(int(user.get("id")), n, date)
     posts = generate_response_posts_from_db(posts_db)
     return posts
 
