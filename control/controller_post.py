@@ -24,18 +24,18 @@ router = APIRouter()
 
 # ------------ POST  ------------
 
-
 @router.post("/posts", tags=["Posts"])
 async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
-    """
-    Creates a new post
-
-    Args: post (PostCreateRequest): The post to create.
-    Returns: Post: The post that was created.
-
-    """
     user = await get_user_from_token(token)
-    create_post(int(user.get("id")), post.content, post.image)
+    
+    created_post = create_post(int(user.get("id")), post.content, post.image)
+    print("PASA CREAR POST")
+    # Asocia etiquetas al post
+    try:
+        create_hashtag(created_post.id, post.hashtags)  # Convierte el conjunto a lista
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error al crear etiquetas")
+    
     return {"message": "Post created successfully"}
 
 # # ------------- GET ----------------
@@ -65,7 +65,7 @@ async def api_get_post_by_id(id: int, token: str = Header(...)):
     Raises: HTTPEXCEPTION with code 404 if post not found
     """
     user = await get_user_from_token(token)
-    posts_db = get_post_from_user_b_to_user_a(int(user.get("id")), id)
+    posts_db = get_post_by_id_global(int(user.get("id")), id)
     posts = generate_response_posts_from_db(posts_db)
     return posts
 
@@ -79,7 +79,8 @@ async def api_get_posts_user_by_token(token: str = Header(...)):
     Returns: All posts made by that user
     """
     user = await get_user_from_token(token)
-    posts_db = get_posts_from_users_followed_by_user_a(int(user.get("id")))
+    posts_db = get_post_from_user_b_to_user_a(int(user.get("id")), 
+                                              int(user.get("id")))
     posts = generate_response_posts_from_db(posts_db)
     return posts
 
@@ -99,8 +100,40 @@ async def api_get_posts_by_user_id(user_id: int, token: str = Header(...)):
     return posts
 
 # pylint: disable=C0103, W0622
-@router.get("/posts/user/date/{date_str}/n/{n}", tags=["Posts"])
+@router.get("/posts/follow/{date_str}/n/{n}", tags=["Posts"])
 async def api_get_posts_users_that_I_follow(n: int, 
+                                            date_str: str,
+                                            token: str = Header(...)):
+    """
+    Gets all posts from a user by id
+
+    Returns: All posts made by that user
+    """
+    date = datetime.strptime(date_str, '%Y-%m-%d_%H:%M:%S')
+    user = await get_user_from_token(token)
+    posts_db = get_posts_from_users_followed_by_user_a(int(user.get("id")), n, date)
+    posts = generate_response_posts_from_db(posts_db)
+    return posts
+
+# pylint: disable=C0103, W0622
+@router.get("/posts/follow/post_reposts/{date_str}/n/{n}", tags=["Posts"])
+async def api_get_posts_users_that_I_follow(n: int, 
+                                            date_str: str,
+                                            token: str = Header(...)):
+    """
+    Gets all posts from a user by id
+
+    Returns: All posts made by that user
+    """
+    date = datetime.strptime(date_str, '%Y-%m-%d_%H:%M:%S')
+    user = await get_user_from_token(token)
+    posts_db = get_posts_and_reposts_from_users_followed_by_user_a(int(user.get("id")), n, date)
+    posts = generate_response_posts_from_db(posts_db)
+    return posts
+
+# pylint: disable=C0103, W0622
+@router.get("/posts/interest/{date_str}/n/{n}", tags=["Posts"])
+async def api_get_posts_users_interest(n: int, 
                                             date_str: str,
                                             token: str = Header(...)):
     """
@@ -114,36 +147,6 @@ async def api_get_posts_users_that_I_follow(n: int,
     posts = generate_response_posts_from_db(posts_db)
     return posts
 
-
-@router.get("/posts/user/amount/{x}", tags=["Posts"])
-async def api_get_x_newest_posts_by_user(x: int, token: str = Header(...)):
-    """
-    Gets x amount of newest posts made by that user (the owner of the token)
-
-    Args: amount of posts to search
-
-    Returns: All x posts made by that user. If user made less
-    than x posts, all the posts will be returned.
-    """
-    user = await get_user_from_token(token)
-    posts = get_x_newest_posts_by_user(int(user.get("id")), x)
-    return generate_response_posts_with_user_from_back_user(posts, user)
-
-
-
-@router.get("/posts/amount/{x}", tags=["Posts"])
-async def api_get_x_newest_posts(x: int, token: str = Header(...)):
-    """
-    Gets x amount of newest posts made in general
-
-    Args: amount of posts to search
-
-    Returns: All x posts made in general. If there are less
-    than x posts created, all the posts will be returned.
-    """
-    _ = await get_user_from_token(token)
-    posts = get_x_newest_posts(x)
-    return generate_response_posts_with_users_from_db(posts)
 
 ## ------- PUT ---------
 

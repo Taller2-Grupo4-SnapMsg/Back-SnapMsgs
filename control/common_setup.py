@@ -5,6 +5,7 @@ and from the json objects.
 """
 from fastapi import HTTPException
 from pydantic import BaseModel
+from typing import List
 import httpx
 
 POST_NOT_FOUND = 404
@@ -25,6 +26,7 @@ class PostCreateRequest(BaseModel):
 
     content: str
     image: str
+    hashtags: List[str]
 
 
 class UserResponse(BaseModel):
@@ -86,7 +88,12 @@ class PostToEdit(BaseModel):
         orm_mode = True
         from_attributes = True
 
+
 def generate_post_from_db(post, user, likes_count, reposts_count):
+    """
+    This function casts the orm_object into a pydantic model.
+    (from data base object to json)
+    """
     return PostResponse(
         id=post.id,
         user=generate_user_from_db(user),
@@ -112,62 +119,21 @@ def generate_user_from_db(user):
 def generate_response_posts_from_db(posts_db):
     response = []
     for post_db in posts_db:
+
         post_info, user, likes_count, reposts_count = post_db
         if likes_count is None:
             likes_count = 0
         if reposts_count is None:
             reposts_count = 0
+
         post = generate_post_from_db(post_info, user, likes_count, reposts_count)
         response.append(post)
-    return response
 
-
-def generate_user_from_back_user(user):
-    """
-    This function casts the orm_object into a pydantic model.
-    (from data base object to json)
-    """
-    return UserResponse(
-        username=user.get("username"),
-        name=user.get("name"),
-        last_name=user.get("last_name"),
-        avatar=user.get("avatar"),
-    )
-
-
-def generate_post_from_back_user(post, user):
-    """
-    This function casts the orm_object into a pydantic model.
-    (from data base object to json)
-    """
-    return PostResponse(
-        id=post.id,
-        user=generate_user_from_back_user(user),
-        posted_at=str(post.posted_at),
-        content=post.content,
-        image=post.image,
-    )
-
-
-# pylint: disable=C0116
-def generate_response_posts_with_user_from_back_user(posts, user):
-    response = []
-    for post in posts:
-        response.append(generate_post_from_back_user(post, user))
-    return response
-
-
-def generate_response_users_with_user_from_back_user(users):
-    response = []
-    for user in users:
-        response.append(generate_user_from_db(user))
     return response
 
 
 # ------------------------------------------ LIKES ------------------------------------------
 
-
-# Define a Pydantic model for the request body
 class LikeCreateRequest(BaseModel):
     """
     This class is a Pydantic model for the request body.
@@ -175,7 +141,6 @@ class LikeCreateRequest(BaseModel):
 
     post_id: int
 
-    # I disable it since it's a pydantic configuration
     # pylint: disable=too-few-public-methods
     class Config:
         """
@@ -186,6 +151,9 @@ class LikeCreateRequest(BaseModel):
         orm_mode = True
         from_attributes = True
 
+
+# ----------------- Common functions -----------------
+
 async def get_user_from_token(token):
     headers = {
         "Content-Type": "application/json;charset=utf-8",
@@ -194,7 +162,7 @@ async def get_user_from_token(token):
     }
 
     async with httpx.AsyncClient() as client:
-        response = await client.get("https://loginback-lg51.onrender.com/user", headers=headers)
+        response = await client.get("https://gateway-api-merok23.cloud.okteto.net/user", headers=headers)
 
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail={"Unknown error"})

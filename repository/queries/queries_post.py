@@ -1,6 +1,7 @@
 """
 Archivo con algunas pruebas de la base de datos
 """
+from typing import List
 from sqlalchemy import and_, exists, or_, func
 from sqlalchemy import desc
 from sqlalchemy.orm import aliased
@@ -19,13 +20,27 @@ from repository.errors import (
 )
 
 # pylint: disable=C0114, W0401, W0614, E0401
-from repository.tables.posts import Post, Like, Repost
+from repository.tables.posts import Post, Like, Repost, Hashtag
 
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.tables.users import User, Following
 
 
 # ----- CREATE ------
+
+def create_hashtag(id_post: int, hashtags: List[str]):
+    print("ENTRA A CREAR HASTTAG")
+    print(hashtags)
+    try:
+        for hashtag in hashtags:
+            new_hashtag = Hashtag(id_post=id_post, 
+                                  hashtag=hashtag)
+            session.add(new_hashtag)
+        session.commit()
+    except IntegrityError as error:
+        session.rollback()
+        raise DatabaseError from error
+    return
 
 
 def create_post(user_id, content, image):

@@ -22,8 +22,8 @@ from repository.tables.posts import Post, Repost
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.tables.users import User
 
-# ----------- Post --------------
 
+# ----------- Post --------------
 
 def create_repost(id_post, user_id):
     """
@@ -40,7 +40,6 @@ def create_repost(id_post, user_id):
 
 
 # ----------- Get --------------
-
 
 def get_reposts_from_post(post_id):
     """
@@ -76,16 +75,6 @@ def get_the_posts_reposted_by_the_user(user_id):
     """
     Retrieves posts reposted by a specific user, with information 
     about the post and the user who made the post.
-
-    Args:
-        user_id (int): The ID of the user for whom to retrieve reposted posts.
-
-    Returns:
-        List[Tuple[Post, User]]: A list of tuples containing Post 
-        and User objects for reposted posts.
-
-    Raises:
-        UserNotFound: If the specified user is not found.
     """
     user = session.query(User).filter(User.id == user_id).first()
 
@@ -120,7 +109,8 @@ def delete_repost(user_id, post_id):
     """
     repost = (
         session.query(Repost)
-        .filter(Repost.user_id == user_id, Repost.id_post == post_id)
+        .filter(Repost.user_id == user_id, 
+                Repost.id_post == post_id)
         .first()
     )
     if repost:

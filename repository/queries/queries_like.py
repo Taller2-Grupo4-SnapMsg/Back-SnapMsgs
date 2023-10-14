@@ -59,9 +59,6 @@ def delete_like(user_id, post_id):
     """
     Deletes the folowing relation between the two users.
     """
-    print(f"USER_ID: {user_id}")
-    print(f"POST_ID: {post_id}")
-    # like = session.query(Like).filter(Like.user_id == user_id, Like.post_id == post_id).first()
     like = (
         session.query(Like)
         .filter(Like.user_id == user_id, Like.id_post == post_id)
