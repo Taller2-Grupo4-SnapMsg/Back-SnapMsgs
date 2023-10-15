@@ -14,7 +14,7 @@ async def api_create_repost(post_id: int, token: str = Header(...)):
     return {"message": "Repost created successfully"}
 
 
-@router.delete("/reposts/user/post/{post_id}", tags=["Reposts"])
+@router.delete("/reposts/{post_id}", tags=["Reposts"])
 async def api_delete_respost(post_id: int, token: str = Header(...)):
     """
     Deletes a repost given by the user to a specific post.

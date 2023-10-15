@@ -22,7 +22,7 @@ async def api_create_like(post_id: int, token: str = Header(...)):
     return {"message": "Like created successfully"}
 
 
-@router.delete("/likes/user/post/{post_id}", tags=["Likes"])
+@router.delete("/likes/{post_id}", tags=["Likes"])
 async def api_delete_like(post_id: int, token: str = Header(...)):
     """
     Deletes a like given by the user to a specific post.

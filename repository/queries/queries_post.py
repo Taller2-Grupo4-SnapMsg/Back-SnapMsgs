@@ -11,6 +11,9 @@ from sqlalchemy.exc import IntegrityError
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.common_setup import *
 
+# pylint: disable=C0114, W0401, W0614, E0602, E0401
+from repository.queries.queries_hashtag import *
+
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.errors import (
     PostNotFound,
@@ -20,27 +23,10 @@ from repository.errors import (
 )
 
 # pylint: disable=C0114, W0401, W0614, E0401
-from repository.tables.posts import Post, Like, Repost, Hashtag
+from repository.tables.posts import Post, Like, Repost
 
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.tables.users import User, Following
-
-
-# ----- CREATE ------
-
-def create_hashtag(id_post: int, hashtags: List[str]):
-    print("ENTRA A CREAR HASTTAG")
-    print(hashtags)
-    try:
-        for hashtag in hashtags:
-            new_hashtag = Hashtag(id_post=id_post, 
-                                  hashtag=hashtag)
-            session.add(new_hashtag)
-        session.commit()
-    except IntegrityError as error:
-        session.rollback()
-        raise DatabaseError from error
-    return
 
 
 def create_post(user_id, content, image):
@@ -64,19 +50,32 @@ def create_post(user_id, content, image):
 
 # ------------- GET ----------------
 
+def update_post(post_id, user_id, content, image):
+    post = session.query(Post).filter(Post.id == post_id, Post.user_id == user_id).first()
 
-# listo
-def get_post_by_id2(post_id):
-    """
-    Searches the specific post based on id
+    if post is None:
+        raise PostNotFound()
 
-    The return value is a Post.
-    """
-    post = session.query(Post, User).filter(Post.id == post_id).join(User).first()
-    if not post:
-        raise PostNotFound
+    post.content = content
+    post.image = image
+    session.commit()
     return post
 
+
+def delete_post(id_post):
+    """
+    Deletes the folowing relation between the two users.
+    """
+    delete_hashtags_for_post(id_post)
+    post = session.query(Post).filter(Post.id == id_post).first()
+    if post:
+        session.delete(post)
+        session.commit()
+        return
+    raise UserNotFound()
+
+
+#----------------No se usan, quedan por los tests ----------------
 
 # listo
 def get_posts_by_user_id(user_id):
@@ -193,96 +192,6 @@ def get_x_newest_posts(amount):
 
     return results
 
-#-----------new queries----------------
-
-
-
-
-
-
-#aca despues va a tener que contemplar que solo me muestre los publicos que 
-#van con mis intereses
-def get_visible_posts(user_id):
-    # Subquery para contar likes
-    likes_subquery = (
-        session.query(func.count(Like.id))
-        .filter(Like.id_post == Post.id)
-        .label("like_count")
-    )
-
-    # Subquery para contar reposts
-    reposts_subquery = (
-        session.query(func.count(Repost.id))
-        .filter(Repost.id_post == Post.id)
-        .label("repost_count")
-    )
-
-    # Consulta para obtener los posts visibles para el usuario
-    visible_posts = (
-        session.query(
-            Post,
-            likes_subquery,
-            reposts_subquery
-        )
-        .join(User, User.id == Post.user_id)
-        .outerjoin(Following, and_(Following.user_id == user_id, Following.following_id == Post.user_id))
-        .filter(
-            or_(
-                and_(Following.user_id == user_id, Following.following_id == user_id),
-                Post.is_public == True,
-            )
-        )
-        .group_by(Post.id)
-        .order_by(Post.posted_at.desc())
-        .all()
-    )
-
-    return visible_posts
-
-
-def get_visible_posts_for_user(user_a_id, user_b_id):
-    # Subquery para contar likes
-    likes_subquery = (
-        session.query(func.count(Like.id))
-        .filter(Like.id_post == Post.id)
-        .label("like_count")
-    )
-
-    # Subquery para contar reposts
-    reposts_subquery = (
-        session.query(func.count(Repost.id))
-        .filter(Repost.id_post == Post.id)
-        .label("repost_count")
-    )
-
-    # Consulta para obtener los posts visibles para el usuario A cuando visita el perfil del usuario B
-    visible_posts = (
-        session.query(
-            Post,
-            likes_subquery,
-            reposts_subquery
-        )
-        .join(User, Post.user_id == user_b_id)
-        .outerjoin(Following, Following.user_id == user_a_id)
-        .outerjoin(Like, Like.id_post == Post.id)
-        .outerjoin(Repost, Repost.id_post == Post.id)
-        .filter(
-            (
-                (user_a_id == user_b_id)  # Si el usuario A visita su propio perfil
-                | Following.following_id == user_b_id  # Usuario A sigue a B
-                | (Post.is_public == True)  # El post es público
-            )
-        )
-        .group_by(Post.id)
-        .order_by(Post.posted_at.desc())
-        .all()
-    )
-
-    return visible_posts
-
-
-# --------- Put ----------
-
 def put_post(modified_post):
     """
     Searches the post with the same id and updates it
@@ -304,21 +213,6 @@ def put_post(modified_post):
     #falta modificar las etiquetas de las publicaciones
     
     session.commit()
-
-
-# --------- Delete ----------
-
-
-def delete_post(id_post):
-    """
-    Deletes the folowing relation between the two users.
-    """
-    post = session.query(Post).filter(Post.id == id_post).first()
-    if post:
-        session.delete(post)
-        session.commit()
-        return
-    raise UserNotFound()
 
 
 def delete_posts_by_user(user_id):
@@ -364,9 +258,6 @@ def get_posts():
     return results
 
 
-#----------------No va - Pero está en los tests----------------
-
-# para que no falle coverange, pero creo que no va
 def get_post_by_id(post_id):
     """
     Searches the specific post based on id
