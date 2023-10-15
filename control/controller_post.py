@@ -36,7 +36,7 @@ async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
 # # ------------- GET ----------------
 
 # pylint: disable=C0103, W0622
-@router.get("/posts/profile/{date_str}/amount{n}", tags=["Posts"])  # ANDA
+@router.get("/posts/profile/{date_str}/amount{n}/", tags=["Posts"])  # ANDA
 async def api_get_posts_user_by_token(n: int, 
                                         date_str: str,
                                         token: str = Header(...)):
@@ -55,7 +55,7 @@ async def api_get_posts_user_by_token(n: int,
 
 
 #pylint: disable=C0103, W0622
-@router.get("/posts/profile/{user_id}/{date_str}/amount{n}", tags=["Posts"])
+@router.get("/posts/profile/{user_id}/{date_str}/amount{n}/", tags=["Posts"])
 async def api_get_posts_by_user_id(user_id: int,
                                     n: int, 
                                     date_str: str,
@@ -75,7 +75,7 @@ async def api_get_posts_by_user_id(user_id: int,
     return posts
 
 #pylint: disable=C0103, W0622
-@router.get("/posts/feed/{date_str}/n/{n}", tags=["Posts"])
+@router.get("/posts/feed/{date_str}/n/{n}/", tags=["Posts"])
 async def api_get_posts_user_feed(n: int, 
                                             date_str: str,
                                             token: str = Header(...)):
@@ -89,7 +89,7 @@ async def api_get_posts_user_feed(n: int,
     return posts
 
 #pylint: disable=C0103, W0622
-@router.get("/posts/feed/followings/{date_str}/n/{n}", tags=["Posts"])
+@router.get("/posts/feed/followings/{date_str}/n/{n}/", tags=["Posts"])
 async def api_get_posts_users_that_I_follow(n: int, 
                                             date_str: str,
                                             token: str = Header(...)):
@@ -105,7 +105,7 @@ async def api_get_posts_users_that_I_follow(n: int,
     return posts
 
 #pylint: disable=C0103, W0622
-@router.get("/posts/feed/interest/{date_str}/n/{n}", tags=["Posts"])
+@router.get("/posts/feed/interest/{date_str}/n/{n}/", tags=["Posts"])
 async def api_get_posts_users_interest(n: int, 
                                             date_str: str,
                                             token: str = Header(...)):
@@ -120,7 +120,7 @@ async def api_get_posts_users_interest(n: int,
     posts = generate_response_posts_from_db(posts_db)
     return posts
 
-@router.get("/posts/{id}", tags=["Posts"])
+@router.get("/posts/{id}/", tags=["Posts"])
 async def api_get_post_by_id(id: int, token: str = Header(...)):
     """
     Gets the post with the id
@@ -147,7 +147,7 @@ async def api_get_post_by_id(id: int, token: str = Header(...)):
 
 ## ------- PUT ---------
 
-@router.put("/posts/{post_id}", tags=["Posts"])
+@router.put("/posts/{post_id}/", tags=["Posts"])
 async def api_update_post(post_id: int, post_data: PostCreateRequest, token: str = Header(...)):
     """
     Update the post with the id
@@ -162,7 +162,7 @@ async def api_update_post(post_id: int, post_data: PostCreateRequest, token: str
 ## ------- DELETE ---------
 
 
-@router.delete("/posts/{id}", tags=["Posts"])
+@router.delete("/posts/{id}/", tags=["Posts"])
 async def api_delete_post(id: int, token: str = Header(...)):
     """
     Deletes the post with the id

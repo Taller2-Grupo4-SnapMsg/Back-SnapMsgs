@@ -170,19 +170,42 @@ def get_post_from_user_b_to_user_a(user_id_a, user_id_b, n, date):
 
     return posts
 
-def get_post_for_user_feed(user_id_a, n, date) :
+def get_post_for_user_feed(user_id, n, date):
     """
     Obtains the posts for a user's feed, those of the users 
     they follow and those that may interest them
     """
-    post_that_I_follow = list(get_posts_from_users_followed_by_user(
-                        user_id_a, int(n * 0.7), date))
-    post_of_my_interest = list(get_public_posts_user_is_interested_in(
-                        user_id_a, int(n * 0.3), date))
-    return post_that_I_follow + post_of_my_interest
+    posts_from_followed = _get_posts_from_users_followed_by_user(
+                            user_id, date)
+    posts_of_interest = _get_public_posts_user_is_interested_in(
+                            user_id, date)
+    num_posts_from_followed = int(n * 0.7)
+    num_posts_of_interest = int(n * 0.3)
 
+    combined_posts = posts_from_followed.limit(num_posts_from_followed) \
+    .union_all(posts_of_interest.limit(num_posts_of_interest))
+    posts = combined_posts.order_by(Post.posted_at.desc()).limit(n)
+    return list(posts)
 
-def get_public_posts_user_is_interested_in(user_id, amount, oldest_date) :
+def get_posts_from_users_followed_by_user(user_id, n, date) :
+    """
+    Gets posts from users I follow
+    """
+    posts_from_followed = _get_posts_from_users_followed_by_user(
+                        user_id, date)
+    posts = posts_from_followed.order_by(Post.posted_at.desc()).limit(n)
+    return posts
+
+def get_public_posts_user_is_interested_in(user_id, n, date) :
+    """
+    Obtains public posts that may interest the user
+    """
+    posts_of_interest = _get_public_posts_user_is_interested_in(
+                        user_id, date)
+    posts = posts_of_interest.order_by(Post.posted_at.desc()).limit(n)
+    return posts
+
+def _get_public_posts_user_is_interested_in(user_id, oldest_date) :
     """
     Obtains public posts that may interest the user
     """
@@ -222,13 +245,13 @@ def get_public_posts_user_is_interested_in(user_id, amount, oldest_date) :
         .filter(Post.user_id != user_id)
         .filter(Post.posted_at < oldest_date)
         .order_by(desc(Post.posted_at))
-        .limit(amount)
+        #.limit(amount)
     )
 
     return posts
 
 
-def get_posts_from_users_followed_by_user(user_id, n, date):
+def _get_posts_from_users_followed_by_user(user_id, date):
     """
     Gets posts from users I follow
     """
@@ -292,8 +315,8 @@ def get_posts_from_users_followed_by_user(user_id, n, date):
     )
     combined_posts = original_posts.union_all(reposts)
 
-    posts = combined_posts.order_by(Post.posted_at.desc()).limit(n)
-    return posts
+    #posts = combined_posts.order_by(Post.posted_at.desc()).limit(n)
+    return combined_posts
 
 def get_post_by_id_global(user_id, post_id):
     """Gets a post by id"""
