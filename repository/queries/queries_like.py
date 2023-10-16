@@ -9,7 +9,12 @@ from sqlalchemy.exc import IntegrityError
 from repository.queries.common_setup import *
 
 # pylint: disable=C0114, W0401, W0614, E0401
-from repository.errors import PostNotFound, LikeNotFound, UserNotFound, DatabaseError
+from repository.errors import (
+    PostNotFound,
+    LikeNotFound,
+    UserNotFound,
+    DatabaseError,
+)
 
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.tables.posts import Post, Like
@@ -37,13 +42,44 @@ def create_like(id_post, user_id):
 # ----------- Get --------------
 
 
+def get_the_number_of_likes(post_id):
+    """
+    Returns the number of likes.
+    """
+    post = session.query(Post).filter(Post.id == post_id).first()
+    if not post:
+        raise PostNotFound()
+    return session.query(Like).filter(Like.id_post == post_id).count()
+
+
+# ----------- Delete --------------
+
+
+def delete_like(user_id, post_id):
+    """
+    Deletes the folowing relation between the two users.
+    """
+    like = (
+        session.query(Like)
+        .filter(Like.user_id == user_id, Like.id_post == post_id)
+        .first()
+    )
+    if like:
+        session.delete(like)
+        session.commit()
+        return
+    raise LikeNotFound()
+
+
+# ----------- no se usan (solo debug) --------------
+
+
 def get_likes_from_post(post_id):
     """
     Retrieve all the likes for a specific post.
 
     If the post does not exist, raises a PostNotFound exception.
     """
-    print(f"POST_ID: {post_id}")
     post = session.query(Post).filter(Post.id == post_id).first()
     if not post:
         raise PostNotFound()
@@ -56,16 +92,6 @@ def get_likes_from_post(post_id):
     )
 
     return users
-
-
-def get_the_number_of_likes(post_id):
-    """
-    Returns the number of likes.
-    """
-    post = session.query(Post).filter(Post.id == post_id).first()
-    if not post:
-        raise PostNotFound()
-    return session.query(Like).filter(Like.id_post == post_id).count()
 
 
 def get_user_likes(user_id):
@@ -103,28 +129,6 @@ def get_all_the_likes():
     Retrieve all likes in the system.
     """
     return session.query(Like).all()
-
-
-# ----------- Delete --------------
-
-
-def delete_like(user_id, post_id):
-    """
-    Deletes the folowing relation between the two users.
-    """
-    print(f"USER_ID: {user_id}")
-    print(f"POST_ID: {post_id}")
-    # like = session.query(Like).filter(Like.user_id == user_id, Like.post_id == post_id).first()
-    like = (
-        session.query(Like)
-        .filter(Like.user_id == user_id, Like.id_post == post_id)
-        .first()
-    )
-    if like:
-        session.delete(like)
-        session.commit()
-        return
-    raise LikeNotFound()
 
 
 def delete_likes():

@@ -3,8 +3,10 @@ Clases for the response bodies of the posts and likes controller.
 There are also functions to generate the correct classes from the db objects
 and from the json objects.
 """
-
+from fastapi import HTTPException
 from pydantic import BaseModel
+from typing import List
+import httpx
 
 POST_NOT_FOUND = 404
 USER_NOT_FOUND = 404
@@ -24,6 +26,7 @@ class PostCreateRequest(BaseModel):
 
     content: str
     image: str
+    hashtags: List[str]
 
 
 class UserResponse(BaseModel):
@@ -33,6 +36,7 @@ class UserResponse(BaseModel):
     the corresponding User
     """
 
+    id: int
     username: str
     name: str
     last_name: str
@@ -49,6 +53,10 @@ class PostResponse(BaseModel):
     posted_at: str
     content: str
     image: str
+    number_likes: int
+    number_reposts: int
+    hashtags: List[str]
+    user_repost: UserResponse
 
     # I disable it since it's a pydantic configuration
     # pylint: disable=too-few-public-methods
@@ -62,20 +70,30 @@ class PostResponse(BaseModel):
         from_attributes = True
 
 
-def generate_user_from_db(user):
+class PostToEdit(BaseModel):
     """
-    This function casts the orm_object into a pydantic model.
-    (from data base object to json)
+    This class is a Pydantic model for the response body.
     """
-    return UserResponse(
-        username=user.username,
-        name=user.name,
-        last_name=user.surname,
-        avatar=user.avatar,
-    )
+
+    id: int
+    content: str
+    image: str
+
+    # I disable it since it's a pydantic configuration
+    # pylint: disable=too-few-public-methods
+    class Config:
+        """
+        This is a pydantic configuration so I can cast
+        orm_objects into pydantic models.
+        """
+
+        orm_mode = True
+        from_attributes = True
 
 
-def generate_post_from_db(post, user):
+def generate_post_from_db(
+    post, user, likes_count, reposts_count, hashtags, user_repost, is_repost
+):
     """
     This function casts the orm_object into a pydantic model.
     (from data base object to json)
@@ -86,63 +104,84 @@ def generate_post_from_db(post, user):
         posted_at=str(post.posted_at),
         content=post.content,
         image=post.image,
+        number_likes=likes_count,
+        number_reposts=reposts_count,
+        hashtags=hashtags,
+        user_repost=generate_user_repost_from_db(user_repost, is_repost),
     )
 
 
-# pylint: disable=C0116
-def generate_response_posts_with_users_from_db(posts_and_users):
-    response = []
-    for pair in posts_and_users:
-        response.append(generate_post_from_db(pair[0], pair[1]))
-    return response
-
-
-def generate_user_from_back_user(user):
+def generate_user_from_db(user):
     """
     This function casts the orm_object into a pydantic model.
     (from data base object to json)
     """
     return UserResponse(
-        username=user.get("username"),
-        name=user.get("name"),
-        last_name=user.get("last_name"),
-        avatar=user.get("avatar"),
+        id=user.id,
+        username=user.username,
+        name=user.name,
+        last_name=user.surname,
+        avatar=user.avatar,
     )
 
 
-def generate_post_from_back_user(post, user):
+def generate_user_repost_from_db(user, is_repost):
     """
     This function casts the orm_object into a pydantic model.
     (from data base object to json)
     """
-    return PostResponse(
-        id=post.id,
-        user=generate_user_from_back_user(user),
-        posted_at=str(post.posted_at),
-        content=post.content,
-        image=post.image,
+    if is_repost == False:
+        return UserResponse(
+            id=-1,
+            username="",
+            name="",
+            last_name="",
+            avatar="",
+        )
+    return UserResponse(
+        id=user.id,
+        username=user.username,
+        name=user.name,
+        last_name=user.surname,
+        avatar=user.avatar,
     )
 
 
-# pylint: disable=C0116
-def generate_response_posts_with_user_from_back_user(posts, user):
+def generate_response_posts_from_db(posts_db):
     response = []
-    for post in posts:
-        response.append(generate_post_from_back_user(post, user))
-    return response
+    for post_db in posts_db:
+        (
+            post_info,
+            user,
+            user_repost,
+            likes_count,
+            reposts_count,
+            hashtags,
+            is_repost,
+        ) = post_db
 
+        if likes_count is None:
+            likes_count = 0
+        if reposts_count is None:
+            reposts_count = 0
 
-def generate_response_users_with_user_from_back_user(users):
-    response = []
-    for user in users:
-        response.append(generate_user_from_db(user))
+        post = generate_post_from_db(
+            post_info,
+            user,
+            likes_count,
+            reposts_count,
+            hashtags,
+            user_repost,
+            is_repost,
+        )
+        response.append(post)
+
     return response
 
 
 # ------------------------------------------ LIKES ------------------------------------------
 
 
-# Define a Pydantic model for the request body
 class LikeCreateRequest(BaseModel):
     """
     This class is a Pydantic model for the request body.
@@ -150,7 +189,6 @@ class LikeCreateRequest(BaseModel):
 
     post_id: int
 
-    # I disable it since it's a pydantic configuration
     # pylint: disable=too-few-public-methods
     class Config:
         """
@@ -160,3 +198,24 @@ class LikeCreateRequest(BaseModel):
 
         orm_mode = True
         from_attributes = True
+
+
+# ----------------- Common functions -----------------
+
+
+async def get_user_from_token(token):
+    headers = {
+        "Content-Type": "application/json;charset=utf-8",
+        "accept": "application/json",
+        "token": token,
+    }
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            "https://gateway-api-merok23.cloud.okteto.net/user", headers=headers
+        )
+
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail={"Unknown error"})
+
+        return response.json()

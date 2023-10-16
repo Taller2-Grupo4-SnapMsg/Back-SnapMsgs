@@ -7,17 +7,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 from control.controller_like import router as router_like
 from control.controller_post import router as router_post
+from control.controller_repost import router as router_repost
 
 tags_metadata = [
     {"name": "Likes", "description": "Endpoints Likes"},
     {"name": "Posts", "description": "Endpoints Post"},
+    {"name": "Reposts", "description": "Endpoints Repost"},
 ]
 
 origins = ["*"]
 
 app = FastAPI()
-
-# app.include_router(like_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,3 +29,4 @@ app.add_middleware(
 
 app.include_router(router_like, prefix="")
 app.include_router(router_post, prefix="")
+app.include_router(router_repost, prefix="")

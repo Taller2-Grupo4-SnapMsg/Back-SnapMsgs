@@ -1,12 +1,18 @@
 """
 Archivo con algunas pruebas de la base de datos
 """
-from operator import and_
+from typing import List
+from sqlalchemy import and_, exists, or_, func
 from sqlalchemy import desc
+from sqlalchemy.orm import aliased
+from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.common_setup import *
+
+# pylint: disable=C0114, W0401, W0614, E0602, E0401
+from repository.queries.queries_hashtag import *
 
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.errors import (
@@ -17,13 +23,10 @@ from repository.errors import (
 )
 
 # pylint: disable=C0114, W0401, W0614, E0401
-from repository.tables.posts import Post
+from repository.tables.posts import Post, Like, Repost
 
 # pylint: disable=C0114, W0401, W0614, E0401
-from repository.tables.users import User
-
-
-# ----- CREATE ------
+from repository.tables.users import User, Following
 
 
 def create_post(user_id, content, image):
@@ -35,6 +38,7 @@ def create_post(user_id, content, image):
         content=content,
         image=image,
     )
+
     try:
         session.add(post)
         session.commit()
@@ -47,41 +51,34 @@ def create_post(user_id, content, image):
 # ------------- GET ----------------
 
 
-# --  Posts --
-# def get_posts():
-#     """
-#     Returns all posts, no filter
+def update_post(post_id, user_id, content, image):
+    post = (
+        session.query(Post).filter(Post.id == post_id, Post.user_id == user_id).first()
+    )
 
-#     The return value is a list of Posts.
-#     The posts are ordered from newest to oldest
-#     """
-#     return session.query(Post).order_by(desc(Post.posted_at)).all()
+    if post is None:
+        raise PostNotFound()
 
-
-# listo
-def get_post_by_id2(post_id):
-    """
-    Searches the specific post based on id
-
-    The return value is a Post.
-    """
-    post = session.query(Post, User).filter(Post.id == post_id).join(User).first()
-    if not post:
-        raise PostNotFound
+    post.content = content
+    post.image = image
+    session.commit()
     return post
 
 
-# para que no falle coverange, pero creo que no va
-def get_post_by_id(post_id):
+def delete_post(id_post):
     """
-    Searches the specific post based on id
+    Deletes the folowing relation between the two users.
+    """
+    delete_hashtags_for_post(id_post)
+    post = session.query(Post).filter(Post.id == id_post).first()
+    if post:
+        session.delete(post)
+        session.commit()
+        return
+    raise UserNotFound()
 
-    The return value is a Post.
-    """
-    post = session.query(Post).filter(Post.id == post_id).first()
-    if not post:
-        raise PostNotFound
-    return post
+
+# ----------------No se usan, quedan por los tests ----------------
 
 
 # listo
@@ -93,10 +90,10 @@ def get_posts_by_user_id(user_id):
     The posts are ordered from newest to oldest
     """
     posts = (
-        session.query(Post)
+        session.query(Post, User)
+        .join(Post)
         .filter(Post.user_id == user_id)
-        .order_by(desc(Post.posted_at))
-        .all()
+        .order_by(Post.posted_at.desc())
     )
     if not posts:
         raise UserNotFound
@@ -200,19 +197,27 @@ def get_x_newest_posts(amount):
     return results
 
 
-# ---------Remove----------
-
-
-def delete_post(id_post):
+def put_post(modified_post):
     """
-    Deletes the folowing relation between the two users.
+    Searches the post with the same id and updates it
+    The function updates all the info from the post in the db
+    with the info in the modified_post.
+    Be sure everything that is allowed to be modified
+    is in the modified_post!
+    That is content, image and etiquetas
+
+    Raises PostNotFound if not foun
     """
-    post = session.query(Post).filter(Post.id == id_post).first()
-    if post:
-        session.delete(post)
-        session.commit()
-        return
-    raise UserNotFound()
+    existing_post = session.query(Post).filter(Post.id == modified_post.id).first()
+    if not existing_post:
+        raise PostNotFound
+
+    # Update what we allow to be updated
+    existing_post.content = modified_post.content
+    existing_post.image = modified_post.image
+    # falta modificar las etiquetas de las publicaciones
+
+    session.commit()
 
 
 def delete_posts_by_user(user_id):
@@ -258,51 +263,13 @@ def get_posts():
     return results
 
 
-# def get_posts_by_user_id(user_id):
-#     """
-#     Retrieves posts of a specific user along with user information.
+def get_post_by_id(post_id):
+    """
+    Searches the specific post based on id
 
-#     Args:
-#         user_id (int): The ID of the user whose Post to retrieve.
-#         n (int): Number of Post to retrieve.
-
-#     Raises:
-#         PostNotFound: If a post is not found.
-#     """
-
-#     results = (
-#         session.query(Post)
-#         .filter(Post.user_id == user_id)
-#         .order_by(desc(Post.posted_at)).all()
-#     )
-
-#     if not results:
-#         raise PostNotFound()
-
-#     return results
-
-
-# def get_recent_post_by_user(user_id, n):
-#     """
-#     Retrieves the n most recent Post of a specific user along with user information.
-
-#     Args:
-#         user_id (int): The ID of the user whose Post to retrieve.
-#         n (int): Number of Post to retrieve.
-
-#     Raises:
-#         PostNotFound: If a post is not found.
-#     """
-#     results = (
-#         session.query(Post, User)
-#         .join(User, Post.user_id == User.id)
-#         .filter(User.id == user_id)
-#         .order_by(desc(Post.posted_at))
-#         .limit(n)
-#         .all()
-#     )
-
-#     if not results:
-#         raise PostNotFound()
-
-#     return results
+    The return value is a Post.
+    """
+    post = session.query(Post).filter(Post.id == post_id).first()
+    if not post:
+        raise PostNotFound
+    return post
