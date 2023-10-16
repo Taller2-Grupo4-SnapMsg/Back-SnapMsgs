@@ -30,7 +30,6 @@ def create_post(user_id, content, image):
         content=content,
         image=image,
     )
-
     try:
         session.add(post)
         session.commit()
