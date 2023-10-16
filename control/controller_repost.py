@@ -12,7 +12,7 @@ from control.common_setup import *
 router = APIRouter()
 
 
-@router.post("/reposts", tags=["Reposts"])
+@router.post("/reposts/{post_id}", tags=["Reposts"])
 async def api_create_repost(post_id: int, token: str = Header(...)):
     """
     Creates a new repost.
