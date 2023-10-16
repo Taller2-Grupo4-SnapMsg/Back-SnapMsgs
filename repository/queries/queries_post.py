@@ -54,12 +54,10 @@ def update_post(post_id, user_id, content, image, hashtags):
         if post is None:
             raise PostNotFound()
 
-        if post.user_id != user_id:
-            raise UserWithouPermission()
         post.content = content
         post.image = image
-        delete_hashtags_for_post(id_post)
-        create_hashtags(id_post, hashtags)
+        delete_hashtags_for_post(post_id)
+        create_hashtags(post_id, hashtags)
         session.commit()
     except IntegrityError as error:
         session.rollback()

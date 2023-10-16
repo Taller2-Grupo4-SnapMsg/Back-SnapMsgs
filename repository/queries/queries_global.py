@@ -273,6 +273,7 @@ def _get_public_posts_user_is_interested_in(user_id, oldest_date):
     return posts
 
 
+# pylint: disable=R0914
 def _get_posts_from_users_followed_by_user(user_id, date):
     """
     Gets posts from users I follow
@@ -297,6 +298,13 @@ def _get_posts_from_users_followed_by_user(user_id, date):
         session.query(Following)
         .filter(Following.user_id == user_id)
         .filter(Following.following_id == post_user_alias.id)
+        .exists()
+    )
+
+    subquery_follow = (
+        session.query(Following)
+        .filter(Following.user_id == user_id)
+        .filter(Following.following_id == user_who_reposted_alias.id)
         .exists()
     )
 
@@ -344,6 +352,7 @@ def _get_posts_from_users_followed_by_user(user_id, date):
         .distinct(repost_alias.id)
         .filter(repost_alias.posted_at < date)
         .filter(or_(post_user_alias.is_public.is_(True), subquery))
+        .filter(subquery_follow)
         # .filter(repost_alias.user_id != user_id)
     )
     combined_posts = original_posts.union_all(reposts)

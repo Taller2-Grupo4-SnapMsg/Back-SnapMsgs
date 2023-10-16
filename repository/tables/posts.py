@@ -14,7 +14,7 @@ from repository.tables.users import create_users_foreign_key
 # pylint: disable=too-many-instance-attributes
 class Post(Base):
     """
-    Class that represents the user class on the database.
+    Class that represents the post class on the database.
     """
 
     __tablename__ = "posts"

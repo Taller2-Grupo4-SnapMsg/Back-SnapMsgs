@@ -24,7 +24,7 @@ jobs:
     - name: Run Tests with Coverage
       run: |
         export DB_URI="postgresql://exoiymmb:4HyrnUG6vFsTwmhIG_B_N6j2NdyKMt5s@motty.db.elephantsql.com:5432/exoiymmb"
-        coverage run -m pytest tests/test_posts.py
+        coverage run -m pytest tests/test_feed.py
 
     - name: Generate Coverage Report
       run: |
