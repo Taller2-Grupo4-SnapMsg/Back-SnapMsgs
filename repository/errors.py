@@ -14,6 +14,15 @@ class DatabaseTimeout(Exception):
         super().__init__("Database timeout")
 
 
+class DatabaseError(Exception):
+    """
+    Exception raised when the database times out.
+    """
+
+    def __init__(self):
+        super().__init__("Database error")
+
+
 class NegativeOrZeroAmount(Exception):
     """
     Exception raised when amount is equal or less than 0
@@ -23,6 +32,15 @@ class NegativeOrZeroAmount(Exception):
         super().__init__("Invalid amount. Equal or less than zero.")
 
 
+class UserWithouPermission(Exception):
+    """
+    Exception raised when amount is equal or less than 0
+    """
+
+    def __init__(self):
+        super().__init__("User doesnt have permissions to do that action.")
+
+
 class PostNotFound(Exception):
     """
     Exception raised when post not found.
@@ -30,6 +48,15 @@ class PostNotFound(Exception):
 
     def __init__(self):
         super().__init__("Post not found")
+
+
+class RepostNotFound(Exception):
+    """
+    Exception raised when post not found.
+    """
+
+    def __init__(self):
+        super().__init__("Repost not found")
 
 
 class UserNotFound(Exception):
@@ -48,21 +75,3 @@ class LikeNotFound(Exception):
 
     def __init__(self):
         super().__init__("Like not found")
-
-
-class RepostNotFound(Exception):
-    """
-    Exception raised when repost not found.
-    """
-
-    def __init__(self):
-        super().__init__("Repost not found")
-
-
-class DatabaseError(Exception):
-    """
-    Exception raised when the database times out.
-    """
-
-    def __init__(self):
-        super().__init__("Database error")

@@ -20,6 +20,9 @@ from repository.tables.posts import Hashtag
 
 
 def create_hashtags(id_post: int, hashtags: List[str]):
+    """
+    Create a hashtag for a post
+    """
     print(hashtags)
     try:
         for hashtag in hashtags:
@@ -29,7 +32,6 @@ def create_hashtags(id_post: int, hashtags: List[str]):
     except IntegrityError as error:
         session.rollback()
         raise DatabaseError from error
-    return
 
 
 # ----- DELETE ------

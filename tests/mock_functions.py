@@ -1,9 +1,9 @@
+# pylint: skip-file
 """
 Functions to mock backend-user behaviour.
 Normally the user would have to create their account and then navigate.
 Here I have funcitons that create the user with my parameters.
 No checks of verifications are made.
-
 """
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401

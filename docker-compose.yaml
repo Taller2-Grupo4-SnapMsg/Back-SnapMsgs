@@ -34,7 +34,7 @@ services:
     container_name: fastapi_app_container
     working_dir: /app
     environment:
-      DB_URI: postgresql://admin:admin123@postgres:5432/test-back-users # Use the appropriate DB URI here
+      DB_URI: postgresql://cwfvbvxl:jtsNDRjbVqGeBgYcYvxGps3LLlX_t-P5@berry.db.elephantsql.com:5432/cwfvbvxl # Use the appropriate DB URI here
     ports:
       - "8080:8080"
     command: bash -c "pip install --no-cache-dir -r requirements.txt && uvicorn control.app:app --host 0.0.0.0 --port 8080"

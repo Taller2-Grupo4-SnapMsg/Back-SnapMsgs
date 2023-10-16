@@ -1,8 +1,11 @@
 """
 Archivo con algunas pruebas de la base de datos
 """
-from sqlalchemy import and_, func, literal_column, or_, desc
+from sqlalchemy import and_, literal_column, or_, desc
+from sqlalchemy import func
 from sqlalchemy.orm import aliased
+
+from repository.errors import PostNotFound
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.common_setup import *
@@ -14,7 +17,8 @@ from repository.tables.posts import Post, Like, Repost, Hashtag
 from repository.tables.users import User, Following, Interests
 
 
-def create_like_subquery(session):
+# pylint: disable=E1102
+def create_like_subquery():
     """Create and return a subquery that counts 'Likes' per 'id_post'."""
     return (
         session.query(Like.id_post, func.count(Like.id_post).label("like_count"))
@@ -23,7 +27,8 @@ def create_like_subquery(session):
     )
 
 
-def create_repost_subquery(session):
+# pylint: disable=E1102
+def create_repost_subquery():
     """Create and return a subquery that counts 'Reposts' per 'id_post'."""
     return (
         session.query(Repost.id_post, func.count(Repost.id_post).label("repost_count"))
@@ -32,7 +37,8 @@ def create_repost_subquery(session):
     )
 
 
-def create_hashtags_subquery(session):
+# pylint: disable=E1102
+def create_hashtags_subquery():
     """Create and return a subquery that retrieves hashtags per 'id_post'."""
     return (
         session.query(
@@ -43,7 +49,8 @@ def create_hashtags_subquery(session):
     )
 
 
-def create_repost_subquery_with_repost_user(session):
+# pylint: disable=E1102
+def create_repost_subquery_with_repost_user():
     """
     Create and return a subquery that counts the number of
     'Reposts' per 'id_post' and includes the 'user_id'
@@ -81,13 +88,15 @@ def is_public(user_id):
     public = (
         session.query(User)
         .filter(User.id == user_id)
+        # pylint: disable=C0121
         .filter(User.is_public == True)
         .first()
     )
+    print(public)
     return public is not None
 
 
-def get_post_from_user_b_to_user_a(user_id_a, user_id_b, n, date):
+def get_post_from_user_b_to_user_a(user_id_a, user_id_b, amount, date):
     """
     To get posts from a user's profile.
 
@@ -108,14 +117,21 @@ def get_post_from_user_b_to_user_a(user_id_a, user_id_b, n, date):
     - if you follow the person who made the original post
     - the person who made the original post is public
     """
-    like_subquery = create_like_subquery(session)
-    repost_subquery = create_repost_subquery(session)
-    hashtags_subquery = create_hashtags_subquery(session)
+    like_subquery = create_like_subquery()
+    repost_subquery = create_repost_subquery()
+    hashtags_subquery = create_hashtags_subquery()
 
     posts = []
     post_user_alias = aliased(User)
     user_who_reposted_alias = aliased(User)
     user_who_reposted_alias_ = aliased(User)
+
+    subquery = (
+        session.query(Following)
+        .filter(Following.user_id == user_id_a)
+        .filter(Following.following_id == post_user_alias.id)
+        .exists()
+    )
 
     if (
         is_following(user_id_a, user_id_b)
@@ -163,54 +179,51 @@ def get_post_from_user_b_to_user_a(user_id_a, user_id_b, n, date):
                 .outerjoin(like_subquery, Post.id == like_subquery.c.id_post)
                 .outerjoin(hashtags_subquery, Post.id == hashtags_subquery.c.id_post)
             )
-            .filter(
-                or_(
-                    post_user_alias.is_public.is_(True),
-                    is_following(user_id_a, post_user_alias.id),
-                )
-            )
+            .filter(or_(post_user_alias.is_public.is_(True), subquery))
             .filter(user_who_reposted_alias.id == user_id_b)
             .filter(Post.posted_at < date)
         )
     combined_posts = original_posts.union_all(reposts)
 
-    posts = combined_posts.order_by(Post.posted_at.desc()).limit(n)
+    posts = combined_posts.order_by(Post.posted_at.desc()).limit(amount)
 
     return posts
 
 
-def get_post_for_user_feed(user_id, n, date):
+def get_post_for_user_feed(user_id, amount, date):
     """
     Obtains the posts for a user's feed, those of the users
     they follow and those that may interest them
     """
-    posts_from_followed = _get_posts_from_users_followed_by_user(user_id, date)
+    posts_from_followed = _get_posts_from_users_followed_by_user(
+        user_id, date
+    ).order_by(Post.posted_at.desc())
     posts_of_interest = _get_public_posts_user_is_interested_in(user_id, date)
-    num_posts_from_followed = int(n * 0.7)
-    num_posts_of_interest = int(n * 0.3)
+    num_posts_from_followed = int(amount * 0.7)
+    num_posts_of_interest = int(amount * 0.3)
 
     combined_posts = posts_from_followed.limit(num_posts_from_followed).union_all(
         posts_of_interest.limit(num_posts_of_interest)
     )
-    posts = combined_posts.order_by(Post.posted_at.desc()).limit(n)
+    posts = combined_posts.order_by(Post.posted_at.desc()).limit(amount)
     return list(posts)
 
 
-def get_posts_from_users_followed_by_user(user_id, n, date):
+def get_posts_from_users_followed_by_user(user_id, amount, date):
     """
     Gets posts from users I follow
     """
     posts_from_followed = _get_posts_from_users_followed_by_user(user_id, date)
-    posts = posts_from_followed.order_by(Post.posted_at.desc()).limit(n)
+    posts = posts_from_followed.order_by(Post.posted_at.desc()).limit(amount)
     return posts
 
 
-def get_public_posts_user_is_interested_in(user_id, n, date):
+def get_public_posts_user_is_interested_in(user_id, amount, date):
     """
     Obtains public posts that may interest the user
     """
     posts_of_interest = _get_public_posts_user_is_interested_in(user_id, date)
-    posts = posts_of_interest.order_by(Post.posted_at.desc()).limit(n)
+    posts = posts_of_interest.order_by(Post.posted_at.desc()).limit(amount)
     return posts
 
 
@@ -218,9 +231,9 @@ def _get_public_posts_user_is_interested_in(user_id, oldest_date):
     """
     Obtains public posts that may interest the user
     """
-    like_subquery = create_like_subquery(session)
-    repost_subquery = create_repost_subquery(session)
-    hashtags_subquery = create_hashtags_subquery(session)
+    like_subquery = create_like_subquery()
+    repost_subquery = create_repost_subquery()
+    hashtags_subquery = create_hashtags_subquery()
 
     user_who_reposted_alias_ = aliased(User)
     interests_alias = aliased(Interests)
@@ -246,9 +259,10 @@ def _get_public_posts_user_is_interested_in(user_id, oldest_date):
             Following,
             and_(Following.user_id == user_id, Following.following_id == User.id),
         )
+        # pylint: disable=C0121
         .filter(Following.user_id == None)
-        # .filter(not is_following(user_id, User.id))
         .distinct(Post.posted_at)
+        # pylint: disable=C0121
         .filter(User.is_public == True)
         .filter(Post.user_id != user_id)
         .filter(Post.posted_at < oldest_date)
@@ -263,15 +277,28 @@ def _get_posts_from_users_followed_by_user(user_id, date):
     """
     Gets posts from users I follow
     """
-    like_subquery = create_like_subquery(session)
-    repost_subquery = create_repost_subquery_with_repost_user(session)
-    hashtags_subquery = create_hashtags_subquery(session)
+    like_subquery = create_like_subquery()
+    repost_subquery = create_repost_subquery_with_repost_user()
+    hashtags_subquery = create_hashtags_subquery()
 
     post_alias = aliased(Post)
     repost_alias = aliased(Post)
     post_user_alias = aliased(User)
     user_who_reposted_alias = aliased(User)
     user_who_reposted_alias_ = aliased(User)
+
+    followers_subquery = (
+        session.query(Following.following_id)
+        .filter(Following.user_id == User.id)  # Reemplaza con la variable real
+        .subquery()
+    )
+
+    subquery = (
+        session.query(Following)
+        .filter(Following.user_id == user_id)
+        .filter(Following.following_id == post_user_alias.id)
+        .exists()
+    )
 
     original_posts = (
         session.query(
@@ -308,32 +335,33 @@ def _get_posts_from_users_followed_by_user(user_id, date):
             .join(user_who_reposted_alias, user_who_reposted_alias.id == Repost.user_id)
             .outerjoin(repost_subquery, repost_alias.id == repost_subquery.c.id_post)
             .outerjoin(like_subquery, repost_alias.id == like_subquery.c.id_post)
-        )
-        .distinct(repost_alias.id)
-        .filter(repost_alias.posted_at < date)
-        .filter(
-            or_(
-                post_user_alias.is_public.is_(True),
-                is_following(user_id, post_user_alias.id),
+            .join(
+                followers_subquery,
+                followers_subquery.c.following_id == user_who_reposted_alias.id,
             )
         )
+        # .filter(user_who_reposted_alias.id.in_(followers_subquery))
+        .distinct(repost_alias.id)
+        .filter(repost_alias.posted_at < date)
+        .filter(or_(post_user_alias.is_public.is_(True), subquery))
         # .filter(repost_alias.user_id != user_id)
     )
     combined_posts = original_posts.union_all(reposts)
 
-    # posts = combined_posts.order_by(Post.posted_at.desc()).limit(n)
+    # posts = combined_posts.order_by(Post.posted_at.desc()).limit(amount)
     return combined_posts
 
 
 def get_post_by_id_global(user_id, post_id):
     """Gets a post by id"""
-    like_subquery = create_like_subquery(session)
-    repost_subquery = create_repost_subquery(session)
-    hashtags_subquery = create_hashtags_subquery(session)
+    like_subquery = create_like_subquery()
+    repost_subquery = create_repost_subquery()
+    hashtags_subquery = create_hashtags_subquery()
 
     user_who_reposted_alias_ = aliased(User)
 
     post = session.query(Post).filter(Post.id == post_id).first()
+
     if (
         is_following(user_id, post.user_id)
         or is_public(post.user_id)
@@ -359,3 +387,4 @@ def get_post_by_id_global(user_id, post_id):
         )
 
         return posts
+    raise PostNotFound()

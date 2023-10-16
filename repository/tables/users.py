@@ -48,7 +48,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     location = Column(String(100), nullable=False)
     blocked = Column(Boolean, nullable=False, default=False)
-    is_public = Column(Boolean, default=True, nullable=True)
+    is_public = Column(Boolean, default=True, nullable=False)
 
     # pylint: disable=too-many-arguments
     def __init__(
