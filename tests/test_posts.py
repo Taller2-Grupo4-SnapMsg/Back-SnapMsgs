@@ -6,7 +6,6 @@ import pytest
 # pylint: disable=C0114, W0401, W0614, E0401, E0602, C0116
 from repository.queries.queries_post import *
 
-
 NON_EXISTANT_USER_ID = -2
 NON_EXISTANT_POST_ID = -2
 

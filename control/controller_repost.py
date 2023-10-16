@@ -1,5 +1,12 @@
+"""
+This file contains the controller for the reposts.
+"""
 from fastapi import APIRouter, Header
+
+# pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_repost import *
+
+# pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
 
 router = APIRouter()

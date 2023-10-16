@@ -1,9 +1,8 @@
 """
-    Fast API
+    Fast API Controller for Posts
 """
-from fastapi import HTTPException, Header, APIRouter
-import httpx
 from datetime import datetime
+from fastapi import HTTPException, Header, APIRouter
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_post import *
@@ -24,14 +23,19 @@ router = APIRouter()
 
 @router.post("/posts", tags=["Posts"])
 async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
+    """
+    Create a post with its image uploaded to Firebase and hashtags created accordingly.
+    Returns post or raises an exception with error code 500.
+    """
     try:
         user = await get_user_from_token(token)
+        # pylint: disable=E1121, R0913
         post = create_post(int(user.get("id")), post.content, post.image, post.hashtags)
         if post is None:
             raise HTTPException(status_code=500, detail="Error while creating post")
         # create_hashtags(created_post.id, post.hashtags)  # Convierte el conjunto a lista
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Error al crear etiquetas")
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
 
     return {"message": "Post created successfully"}
 
@@ -158,10 +162,11 @@ async def api_update_post(
     """
     Update the post with the id
     """
-    user = await get_user_from_token(token)
-    delete_hashtags_for_post(post_id)
-    post = update_post(post_id, user.get("id"), post_data.content, post_data.image)
-    create_hashtags(post.id, post_data.hashtags)
+    try:
+        user = await get_user_from_token(token)
+        update_post(post_id, user.get("id"), post_data.content, post_data.image, post_data.hashtags)
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
     return {"message": "Post updated successfully"}
 
 
@@ -173,6 +178,10 @@ async def api_delete_post(id: int, token: str = Header(...)):
     """
     Deletes the post with the id
     """
-    _ = await get_user_from_token(token)
-    delete_post(id)
+    try:
+        user = await get_user_from_token(token)
+        delete_post(id, user.get("id"))
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
+
     return {"message": "Post deleted successfully"}

@@ -3,9 +3,9 @@ Clases for the response bodies of the posts and likes controller.
 There are also functions to generate the correct classes from the db objects
 and from the json objects.
 """
+from typing import List
 from fastapi import HTTPException
 from pydantic import BaseModel
-from typing import List
 import httpx
 
 POST_NOT_FOUND = 404
@@ -90,7 +90,7 @@ class PostToEdit(BaseModel):
         orm_mode = True
         from_attributes = True
 
-
+# pylint: disable=R0913
 def generate_post_from_db(
     post, user, likes_count, reposts_count, hashtags, user_repost, is_repost
 ):
@@ -130,7 +130,7 @@ def generate_user_repost_from_db(user, is_repost):
     This function casts the orm_object into a pydantic model.
     (from data base object to json)
     """
-    if is_repost == False:
+    if is_repost is False:
         return UserResponse(
             id=-1,
             username="",
@@ -148,6 +148,9 @@ def generate_user_repost_from_db(user, is_repost):
 
 
 def generate_response_posts_from_db(posts_db):
+    """
+    This function casts the orm_object into a pydantic model.
+    """
     response = []
     for post_db in posts_db:
         (
@@ -204,6 +207,9 @@ class LikeCreateRequest(BaseModel):
 
 
 async def get_user_from_token(token):
+    """
+    This function gets the user from the token.
+    """
     headers = {
         "Content-Type": "application/json;charset=utf-8",
         "accept": "application/json",
