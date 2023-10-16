@@ -50,8 +50,11 @@ def create_post(user_id, content, image):
 
 # ------------- GET ----------------
 
+
 def update_post(post_id, user_id, content, image):
-    post = session.query(Post).filter(Post.id == post_id, Post.user_id == user_id).first()
+    post = (
+        session.query(Post).filter(Post.id == post_id, Post.user_id == user_id).first()
+    )
 
     if post is None:
         raise PostNotFound()
@@ -75,7 +78,8 @@ def delete_post(id_post):
     raise UserNotFound()
 
 
-#----------------No se usan, quedan por los tests ----------------
+# ----------------No se usan, quedan por los tests ----------------
+
 
 # listo
 def get_posts_by_user_id(user_id):
@@ -192,6 +196,7 @@ def get_x_newest_posts(amount):
 
     return results
 
+
 def put_post(modified_post):
     """
     Searches the post with the same id and updates it
@@ -207,11 +212,11 @@ def put_post(modified_post):
     if not existing_post:
         raise PostNotFound
 
-    #Update what we allow to be updated
+    # Update what we allow to be updated
     existing_post.content = modified_post.content
     existing_post.image = modified_post.image
-    #falta modificar las etiquetas de las publicaciones
-    
+    # falta modificar las etiquetas de las publicaciones
+
     session.commit()
 
 
@@ -268,4 +273,3 @@ def get_post_by_id(post_id):
     if not post:
         raise PostNotFound
     return post
-

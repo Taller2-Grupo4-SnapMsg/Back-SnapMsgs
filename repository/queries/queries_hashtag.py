@@ -18,12 +18,12 @@ from repository.tables.posts import Hashtag
 
 # ----- CREATE ------
 
+
 def create_hashtags(id_post: int, hashtags: List[str]):
     print(hashtags)
     try:
         for hashtag in hashtags:
-            new_hashtag = Hashtag(id_post=id_post, 
-                                  hashtag=hashtag)
+            new_hashtag = Hashtag(id_post=id_post, hashtag=hashtag)
             session.add(new_hashtag)
         session.commit()
     except IntegrityError as error:
@@ -31,7 +31,9 @@ def create_hashtags(id_post: int, hashtags: List[str]):
         raise DatabaseError from error
     return
 
+
 # ----- DELETE ------
+
 
 def delete_hashtags_for_post(post_id):
     """

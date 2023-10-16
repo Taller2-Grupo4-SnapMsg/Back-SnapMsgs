@@ -35,6 +35,7 @@ class UserResponse(BaseModel):
     This way, with the post in the response, the front already gets the information from
     the corresponding User
     """
+
     id: int
     username: str
     name: str
@@ -56,7 +57,6 @@ class PostResponse(BaseModel):
     number_reposts: int
     hashtags: List[str]
     user_repost: UserResponse
-    
 
     # I disable it since it's a pydantic configuration
     # pylint: disable=too-few-public-methods
@@ -91,13 +91,9 @@ class PostToEdit(BaseModel):
         from_attributes = True
 
 
-def generate_post_from_db(post, 
-                        user, 
-                        likes_count, 
-                        reposts_count,
-                        hashtags,
-                        user_repost,
-                        is_repost):
+def generate_post_from_db(
+    post, user, likes_count, reposts_count, hashtags, user_repost, is_repost
+):
     """
     This function casts the orm_object into a pydantic model.
     (from data base object to json)
@@ -111,8 +107,9 @@ def generate_post_from_db(post,
         number_likes=likes_count,
         number_reposts=reposts_count,
         hashtags=hashtags,
-        user_repost=generate_user_repost_from_db(user_repost, is_repost)
+        user_repost=generate_user_repost_from_db(user_repost, is_repost),
     )
+
 
 def generate_user_from_db(user):
     """
@@ -127,6 +124,7 @@ def generate_user_from_db(user):
         avatar=user.avatar,
     )
 
+
 def generate_user_repost_from_db(user, is_repost):
     """
     This function casts the orm_object into a pydantic model.
@@ -134,12 +132,12 @@ def generate_user_repost_from_db(user, is_repost):
     """
     if is_repost == False:
         return UserResponse(
-        id=-1,
-        username="",
-        name="",
-        last_name="",
-        avatar="",
-    )
+            id=-1,
+            username="",
+            name="",
+            last_name="",
+            avatar="",
+        )
     return UserResponse(
         id=user.id,
         username=user.username,
@@ -152,30 +150,40 @@ def generate_user_repost_from_db(user, is_repost):
 def generate_response_posts_from_db(posts_db):
     response = []
     for post_db in posts_db:
-        post_info, user, user_repost, likes_count, \
-        reposts_count, hashtags, is_repost = post_db
+        (
+            post_info,
+            user,
+            user_repost,
+            likes_count,
+            reposts_count,
+            hashtags,
+            is_repost,
+        ) = post_db
 
         print("HASHTAGS")
         print(hashtags)
-        
+
         if likes_count is None:
             likes_count = 0
         if reposts_count is None:
             reposts_count = 0
 
-        post = generate_post_from_db(post_info, 
-                                     user, 
-                                     likes_count, 
-                                     reposts_count,
-                                     hashtags,
-                                     user_repost,
-                                     is_repost)
+        post = generate_post_from_db(
+            post_info,
+            user,
+            likes_count,
+            reposts_count,
+            hashtags,
+            user_repost,
+            is_repost,
+        )
         response.append(post)
 
     return response
 
 
 # ------------------------------------------ LIKES ------------------------------------------
+
 
 class LikeCreateRequest(BaseModel):
     """
@@ -197,6 +205,7 @@ class LikeCreateRequest(BaseModel):
 
 # ----------------- Common functions -----------------
 
+
 async def get_user_from_token(token):
     headers = {
         "Content-Type": "application/json;charset=utf-8",
@@ -205,7 +214,9 @@ async def get_user_from_token(token):
     }
 
     async with httpx.AsyncClient() as client:
-        response = await client.get("https://gateway-api-merok23.cloud.okteto.net/user", headers=headers)
+        response = await client.get(
+            "https://gateway-api-merok23.cloud.okteto.net/user", headers=headers
+        )
 
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail={"Unknown error"})

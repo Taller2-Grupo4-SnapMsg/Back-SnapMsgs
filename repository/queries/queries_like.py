@@ -73,6 +73,7 @@ def delete_like(user_id, post_id):
 
 # ----------- no se usan (solo debug) --------------
 
+
 def get_likes_from_post(post_id):
     """
     Retrieve all the likes for a specific post.
@@ -91,6 +92,7 @@ def get_likes_from_post(post_id):
     )
 
     return users
+
 
 def get_user_likes(user_id):
     """
@@ -121,11 +123,13 @@ def get_user_likes(user_id):
 
     return liked_posts
 
+
 def get_all_the_likes():
     """
     Retrieve all likes in the system.
     """
     return session.query(Like).all()
+
 
 def delete_likes():
     """

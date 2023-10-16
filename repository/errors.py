@@ -49,6 +49,7 @@ class LikeNotFound(Exception):
     def __init__(self):
         super().__init__("Like not found")
 
+
 class RepostNotFound(Exception):
     """
     Exception raised when repost not found.
@@ -56,6 +57,7 @@ class RepostNotFound(Exception):
 
     def __init__(self):
         super().__init__("Repost not found")
+
 
 class DatabaseError(Exception):
     """

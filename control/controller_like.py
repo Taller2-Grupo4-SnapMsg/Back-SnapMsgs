@@ -12,6 +12,7 @@ from control.common_setup import *
 
 router = APIRouter()
 
+
 @router.post("/likes", tags=["Likes"])
 async def api_create_like(post_id: int, token: str = Header(...)):
     """
@@ -30,7 +31,3 @@ async def api_delete_like(post_id: int, token: str = Header(...)):
     user = await get_user_from_token(token)
     delete_like(user.get("id"), post_id)
     return {"message": "Like deleted successfully"}
-
-
-
-

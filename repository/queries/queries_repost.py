@@ -25,6 +25,7 @@ from repository.tables.users import User
 
 # ----------- Post --------------
 
+
 def create_repost(id_post, user_id):
     """
     Create a repost
@@ -40,6 +41,7 @@ def create_repost(id_post, user_id):
 
 
 # ----------- Get --------------
+
 
 def get_reposts_from_post(post_id):
     """
@@ -73,7 +75,7 @@ def get_the_number_of_reposts_of_a_post(post_id):
 
 def get_the_posts_reposted_by_the_user(user_id):
     """
-    Retrieves posts reposted by a specific user, with information 
+    Retrieves posts reposted by a specific user, with information
     about the post and the user who made the post.
     """
     user = session.query(User).filter(User.id == user_id).first()
@@ -109,8 +111,7 @@ def delete_repost(user_id, post_id):
     """
     repost = (
         session.query(Repost)
-        .filter(Repost.user_id == user_id, 
-                Repost.id_post == post_id)
+        .filter(Repost.user_id == user_id, Repost.id_post == post_id)
         .first()
     )
     if repost:
