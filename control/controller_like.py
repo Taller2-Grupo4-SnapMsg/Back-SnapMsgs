@@ -13,7 +13,7 @@ from control.common_setup import *
 router = APIRouter()
 
 
-@router.post("/likes", tags=["Likes"])
+@router.post("/likes/{post_id}", tags=["Likes"])
 async def api_create_like(post_id: int, token: str = Header(...)):
     """
     Creates a new like.
