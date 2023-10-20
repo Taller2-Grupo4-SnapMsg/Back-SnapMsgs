@@ -13,12 +13,12 @@ USER_NOT_FOUND = 404
 LIKE_NOT_FOUND = 404
 BAD_REQUEST = 400
 
-API_BASE_URL = "https://loginback-lg51.onrender.com"
+API_BASE_URL = "https://gateway-api-merok23.cloud.okteto.net"
+
 
 # ------------------------------------------ POSTS ------------------------------------------
 
 
-# Define a Pydantic model for the request body
 class PostCreateRequest(BaseModel):
     """
     This class is a Pydantic model for the request body.

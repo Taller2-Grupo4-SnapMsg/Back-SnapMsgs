@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from repository.queries.common_setup import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
-from repository.queries.queries_hashtag import *
+from repository.queries.V_queries_hashtag import *
 
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.errors import (

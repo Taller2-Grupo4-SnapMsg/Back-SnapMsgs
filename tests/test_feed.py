@@ -6,8 +6,8 @@ import datetime
 import pytest
 
 # pylint: disable=C0114, W0401, W0614, E0401, E0602, C0116
-from repository.queries.queries_global import *
-from repository.queries.queries_post import *
+from repository.queries.V_queries_global import *
+from repository.queries.V_queries_post import *
 from tests.mock_functions import *
 from repository.tables.posts import Post
 

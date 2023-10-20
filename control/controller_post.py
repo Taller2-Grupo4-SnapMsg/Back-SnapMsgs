@@ -5,13 +5,13 @@ from datetime import datetime
 from fastapi import HTTPException, Header, APIRouter
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
-from repository.queries.queries_post import *
+from repository.queries.V_queries_post import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
-from repository.queries.queries_hashtag import *
+from repository.queries.V_queries_hashtag import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
-from repository.queries.queries_global import *
+from repository.queries.V_queries_global import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *

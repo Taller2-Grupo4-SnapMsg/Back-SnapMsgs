@@ -5,7 +5,7 @@ Fast API for the likes controller
 from fastapi import APIRouter, Header
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
-from repository.queries.queries_like import *
+from repository.queries.V_queries_like import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
