@@ -13,8 +13,6 @@ from repository.errors import (
     DatabaseError,
 )
 
-# pylint: disable=C0114, W0401, W0614, E0401
-from repository.tables.posts import Repost
 
 
 # ----------- Post --------------

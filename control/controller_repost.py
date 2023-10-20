@@ -12,37 +12,37 @@ from control.common_setup import *
 router = APIRouter()
 
 
-@router.post("/reposts/{post_id}", tags=["Reposts"])
-async def api_create_repost(post_id: int, token: str = Header(...)):
-    """
-    Creates a new repost.
-    """
-    try:
-        user = await get_user_from_token(token)
-        create_repost(post_id, user.get("id"))
+# @router.post("/reposts/{post_id}", tags=["Reposts"])
+# async def api_create_repost(post_id: int, token: str = Header(...)):
+#     """
+#     Creates a new repost.
+#     """
+#     try:
+#         user = await get_user_from_token(token)
+#         create_repost(post_id, user.get("id"))
 
-    except DatabaseError as db_error:
-        raise HTTPException(
-            status_code=400, detail="Post doesnt exist or repost already exists"
-        ) from db_error
-    except Exception as error:
-        raise HTTPException(status_code=500, detail=str(error)) from error
-    return {"message": "Repost created successfully"}
+#     except DatabaseError as db_error:
+#         raise HTTPException(
+#             status_code=400, detail="Post doesnt exist or repost already exists"
+#         ) from db_error
+#     except Exception as error:
+#         raise HTTPException(status_code=500, detail=str(error)) from error
+#     return {"message": "Repost created successfully"}
 
 
-@router.delete("/reposts/{post_id}", tags=["Reposts"])
-async def api_delete_respost(post_id: int, token: str = Header(...)):
-    """
-    Deletes a repost given by the user to a specific post.
-    """
-    try:
-        user = await get_user_from_token(token)
-        delete_repost(user.get("id"), post_id)
+# @router.delete("/reposts/{post_id}", tags=["Reposts"])
+# async def api_delete_respost(post_id: int, token: str = Header(...)):
+#     """
+#     Deletes a repost given by the user to a specific post.
+#     """
+#     try:
+#         user = await get_user_from_token(token)
+#         delete_repost(user.get("id"), post_id)
 
-    except RepostNotFound as db_error:
-        raise HTTPException(
-            status_code=404, detail="Post or repost doesnt exist"
-        ) from db_error
-    except Exception as error:
-        raise HTTPException(status_code=500, detail=str(error)) from error
-    return {"message": "Repost deleted successfully"}
+#     except RepostNotFound as db_error:
+#         raise HTTPException(
+#             status_code=404, detail="Post or repost doesnt exist"
+#         ) from db_error
+#     except Exception as error:
+#         raise HTTPException(status_code=500, detail=str(error)) from error
+#     return {"message": "Repost deleted successfully"}

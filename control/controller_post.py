@@ -5,13 +5,13 @@ from datetime import datetime
 from fastapi import HTTPException, Header, APIRouter
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
-from repository.queries.V_queries_post import *
+from repository.queries.queries_posts import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
-from repository.queries.V_queries_hashtag import *
+from repository.queries.queries_hashtags import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
-from repository.queries.V_queries_global import *
+from repository.queries.queries_global import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
@@ -30,10 +30,7 @@ async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
     try:
         user = await get_user_from_token(token)
         # pylint: disable=E1121, R0913
-        post = create_post(int(user.get("id")), post.content, post.image, post.hashtags)
-        if post is None:
-            raise HTTPException(status_code=500, detail="Error while creating post")
-        # create_hashtags(created_post.id, post.hashtags)  # Convierte el conjunto a lista
+        create_post(int(user.get("id")), post.content, post.image, post.hashtags)
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
 
@@ -43,100 +40,100 @@ async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
 # # ------------- GET ----------------
 
 
-# pylint: disable=C0103, W0622
-@router.get("/posts/profile/{date_str}/amount/{n}", tags=["Posts"])  # ANDA
-async def api_get_posts_user_by_token(n: int, date_str: str, token: str = Header(...)):
-    """
-    Gets all posts from a user by token
+# # pylint: disable=C0103, W0622
+# @router.get("/posts/profile/{date_str}/amount/{n}", tags=["Posts"])  # ANDA
+# async def api_get_posts_user_by_token(n: int, date_str: str, token: str = Header(...)):
+#     """
+#     Gets all posts from a user by token
 
-    Returns: All posts made by that user
-    """
-    date = datetime.strptime(date_str, "%Y-%m-%d_%H:%M:%S")
-    user = await get_user_from_token(token)
-    posts_db = get_post_from_user_b_to_user_a(
-        int(user.get("id")), int(user.get("id")), n, date
-    )
-    posts = generate_response_posts_from_db(posts_db)
-    return posts
-
-
-# pylint: disable=C0103, W0622
-@router.get("/posts/profile/{user_id}/{date_str}/amount/{n}", tags=["Posts"])
-async def api_get_posts_by_user_id(
-    user_id: int, n: int, date_str: str, token: str = Header(...)
-):
-    """
-    Gets all posts from a user by id
-
-    Returns: All posts made by that user
-    """
-    date = datetime.strptime(date_str, "%Y-%m-%d_%H:%M:%S")
-    user = await get_user_from_token(token)
-    posts_db = get_post_from_user_b_to_user_a(int(user.get("id")), user_id, n, date)
-    posts = generate_response_posts_from_db(posts_db)
-    return posts
+#     Returns: All posts made by that user
+#     """
+#     date = datetime.strptime(date_str, "%Y-%m-%d_%H:%M:%S")
+#     user = await get_user_from_token(token)
+#     posts_db = get_post_from_user_b_to_user_a(
+#         int(user.get("id")), int(user.get("id")), n, date
+#     )
+#     posts = generate_response_posts_from_db(posts_db)
+#     return posts
 
 
-# pylint: disable=C0103, W0622
-@router.get("/posts/feed/{date_str}/amount/{n}", tags=["Posts"])
-async def api_get_posts_user_feed(n: int, date_str: str, token: str = Header(...)):
-    """
-    Gets all posts from a user by id
-    """
-    date = datetime.strptime(date_str, "%Y-%m-%d_%H:%M:%S")
-    user = await get_user_from_token(token)
-    posts_db = get_post_for_user_feed(int(user.get("id")), n, date)
-    posts = generate_response_posts_from_db(posts_db)
-    return posts
+# # pylint: disable=C0103, W0622
+# @router.get("/posts/profile/{user_id}/{date_str}/amount/{n}", tags=["Posts"])
+# async def api_get_posts_by_user_id(
+#     user_id: int, n: int, date_str: str, token: str = Header(...)
+# ):
+#     """
+#     Gets all posts from a user by id
+
+#     Returns: All posts made by that user
+#     """
+#     date = datetime.strptime(date_str, "%Y-%m-%d_%H:%M:%S")
+#     user = await get_user_from_token(token)
+#     posts_db = get_post_from_user_b_to_user_a(int(user.get("id")), user_id, n, date)
+#     posts = generate_response_posts_from_db(posts_db)
+#     return posts
 
 
-# pylint: disable=C0103, W0622
-@router.get("/posts/feed/followings/{date_str}/amount/{n}", tags=["Posts"])
-async def api_get_posts_users_that_I_follow(
-    n: int, date_str: str, token: str = Header(...)
-):
-    """
-    Gets all posts from a user by id
-
-    Returns: All posts made by that user
-    """
-    date = datetime.strptime(date_str, "%Y-%m-%d_%H:%M:%S")
-    user = await get_user_from_token(token)
-    posts_db = get_posts_from_users_followed_by_user(int(user.get("id")), n, date)
-    posts = generate_response_posts_from_db(posts_db)
-    return posts
+# # pylint: disable=C0103, W0622
+# @router.get("/posts/feed/{date_str}/amount/{n}", tags=["Posts"])
+# async def api_get_posts_user_feed(n: int, date_str: str, token: str = Header(...)):
+#     """
+#     Gets all posts from a user by id
+#     """
+#     date = datetime.strptime(date_str, "%Y-%m-%d_%H:%M:%S")
+#     user = await get_user_from_token(token)
+#     posts_db = get_post_for_user_feed(int(user.get("id")), n, date)
+#     posts = generate_response_posts_from_db(posts_db)
+#     return posts
 
 
-# pylint: disable=C0103, W0622
-@router.get("/posts/feed/interest/{date_str}/amount/{n}", tags=["Posts"])
-async def api_get_posts_users_interest(n: int, date_str: str, token: str = Header(...)):
-    """
-    Gets all posts from a user by id
+# # pylint: disable=C0103, W0622
+# @router.get("/posts/feed/followings/{date_str}/amount/{n}", tags=["Posts"])
+# async def api_get_posts_users_that_I_follow(
+#     n: int, date_str: str, token: str = Header(...)
+# ):
+#     """
+#     Gets all posts from a user by id
 
-    Returns: All posts made by that user
-    """
-    date = datetime.strptime(date_str, "%Y-%m-%d_%H:%M:%S")
-    user = await get_user_from_token(token)
-    posts_db = get_public_posts_user_is_interested_in(int(user.get("id")), n, date)
-    posts = generate_response_posts_from_db(posts_db)
-    return posts
+#     Returns: All posts made by that user
+#     """
+#     date = datetime.strptime(date_str, "%Y-%m-%d_%H:%M:%S")
+#     user = await get_user_from_token(token)
+#     posts_db = get_posts_from_users_followed_by_user(int(user.get("id")), n, date)
+#     posts = generate_response_posts_from_db(posts_db)
+#     return posts
 
 
-@router.get("/posts/{id}", tags=["Posts"])
-async def api_get_post_by_id(id: int, token: str = Header(...)):
-    """
-    Gets the post with the id
+# # pylint: disable=C0103, W0622
+# @router.get("/posts/feed/interest/{date_str}/amount/{n}", tags=["Posts"])
+# async def api_get_posts_users_interest(n: int, date_str: str, token: str = Header(...)):
+#     """
+#     Gets all posts from a user by id
 
-    Args: Id of the post
-    Returns: The post with that Id
-    Raises: HTTPEXCEPTION with code 404 if post not found
-    """
-    user = await get_user_from_token(token)
-    # pylint: disable=E1111
-    post_db = get_post_by_id_global(int(user.get("id")), id)
-    if post_db is None:
-        raise HTTPException(status_code=404, detail="Post not Found")
-    return generate_post(post_db)
+#     Returns: All posts made by that user
+#     """
+#     date = datetime.strptime(date_str, "%Y-%m-%d_%H:%M:%S")
+#     user = await get_user_from_token(token)
+#     posts_db = get_public_posts_user_is_interested_in(int(user.get("id")), n, date)
+#     posts = generate_response_posts_from_db(posts_db)
+#     return posts
+
+
+# @router.get("/posts/{id}", tags=["Posts"])
+# async def api_get_post_by_id(id: int, token: str = Header(...)):
+#     """
+#     Gets the post with the id
+
+#     Args: Id of the post
+#     Returns: The post with that Id
+#     Raises: HTTPEXCEPTION with code 404 if post not found
+#     """
+#     user = await get_user_from_token(token)
+#     # pylint: disable=E1111
+#     post_db = get_post_by_id_global(int(user.get("id")), id)
+#     if post_db is None:
+#         raise HTTPException(status_code=404, detail="Post not Found")
+#     return generate_post(post_db)
 
 
 ## ------- PUT ---------
@@ -166,14 +163,14 @@ async def api_update_post(
 ## ------- DELETE ---------
 
 
-@router.delete("/posts/{id}/", tags=["Posts"])
-async def api_delete_post(id: int, token: str = Header(...)):
+@router.delete("/posts/{post_id}/", tags=["Posts"])
+async def api_delete_post(post_id: int, token: str = Header(...)):
     """
     Deletes the post with the id
     """
     try:
         user = await get_user_from_token(token)
-        delete_post(id, user.get("id"))
+        delete_post(post_id, user.get("id"))
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
 

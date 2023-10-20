@@ -64,3 +64,12 @@ def delete_like(user_id, post_id):
         session.commit()
         return
     raise LikeNotFound()
+
+def delete_likes_for_post(post_id):
+    """
+    Elimina todos los hashtags de una publicación específica.
+    """
+    delete_query = Delete(Like).where(Like.id_post == post_id)
+    result = session.execute(delete_query)
+    session.commit()
+    return result.rowcount

@@ -11,7 +11,7 @@ from repository.errors import PostNotFound
 from repository.queries.common_setup import *
 
 # pylint: disable=C0114, W0401, W0614, E0401
-from repository.tables.posts import Post, Like, Repost, Hashtag
+from repository.tables.posts import Post, Like, Hashtag
 
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.tables.users import User, Following, Interests
