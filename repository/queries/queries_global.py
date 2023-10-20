@@ -34,6 +34,20 @@ def is_following(user_id, user_id_to_check_if_following):
     )
     return following is not None
 
+def get_content_id_from_post(post_id):
+    """
+    Returns True if the user with the given id is following
+    the user with the given id.
+    """
+    post = (
+        session.query(Post)
+        .filter(Post.post_id == post_id)
+        .first()
+    )
+    if post is None:
+        raise PostNotFound()
+    return post.content_id
+
 
 def is_public(user_id):
     """

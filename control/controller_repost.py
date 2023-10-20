@@ -12,14 +12,14 @@ from control.common_setup import *
 router = APIRouter()
 
 
-@router.post("/reposts/{repost_id}", tags=["Reposts"])
-async def api_create_repost(repost_id: int, token: str = Header(...)):
+@router.post("/reposts/{post_id}", tags=["Reposts"])
+async def api_create_repost(post_id: int, token: str = Header(...)):
     """
     Creates a new repost.
     """
     try:
         user = await get_user_from_token(token)
-        create_repost(repost_id, user.get("id"))
+        create_repost(post_id, user.get("id"))
 
     except DatabaseError as db_error:
         raise HTTPException(

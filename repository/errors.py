@@ -40,6 +40,16 @@ class RepostAlreadyMade(Exception):
     def __init__(self):
         super().__init__("User already reposted that post.")
 
+
+class CannotLikeRepost(Exception):
+    """
+    Exception raised when amount is equal or less than 0
+    """
+
+    def __init__(self):
+        super().__init__("Reposts cannot be liked.")
+
+
 class UserWithouPermission(Exception):
     """
     Exception raised when amount is equal or less than 0
