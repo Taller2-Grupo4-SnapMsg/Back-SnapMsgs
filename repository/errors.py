@@ -32,6 +32,14 @@ class NegativeOrZeroAmount(Exception):
         super().__init__("Invalid amount. Equal or less than zero.")
 
 
+class RepostAlreadyMade(Exception):
+    """
+    Exception raised when user wants to repost a post they already reposted
+    """
+
+    def __init__(self):
+        super().__init__("User already reposted that post.")
+
 class UserWithouPermission(Exception):
     """
     Exception raised when amount is equal or less than 0
