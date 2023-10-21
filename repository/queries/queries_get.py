@@ -1,6 +1,7 @@
 """
 Queries for getting posts, reposts, and all their info
 """
+from operator import or_
 from sqlalchemy.orm import aliased
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
@@ -97,6 +98,8 @@ def get_posts_and_reposts_from_users(
             )
             .filter(Post.post_id.in_(posts_id))
             .filter(
+                # "too manu positional arguments"
+                # pylint: disable=E1121
                 or_(
                     # so that I can check my own profile with this query
                     user_visited_id == user_visitor_id,
