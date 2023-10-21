@@ -122,3 +122,26 @@ def create_how_many_likes(subquery_likes_count):
     Creates a subquery that counts the amount of likes each content has.
     """
     return subquery_likes_count.c.like_count.label("how_many_likes")
+
+
+def create_subquery_hashtags_interests(user_id):
+    """
+    Create subquery that counts the amount of likes each content has
+    """
+    return (
+        session.query(Hashtag.content_id).filter(Hashtag.hashtag == Interests.interest
+                                  ).filter(Interests.user_id == user_id
+                                  ).distinct().subquery()
+    )
+
+def create_subquery_posts_from_followd(user_id):
+    """
+    Create subquery that counts the amount of likes each content has
+    """
+    return (
+        session.query(Post.post_id)
+                .join(Following, Following.following_id == Post.user_poster_id)
+                .filter(Following.user_id == user_id)
+                .distinct()
+                .subquery()
+    )
