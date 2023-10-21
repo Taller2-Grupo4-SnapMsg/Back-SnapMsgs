@@ -140,7 +140,7 @@ def create_subquery_posts_from_followd(user_id):
     Create subquery that counts the amount of likes each content has
     """
     return (
-        session.query(Post.content_id)
+        session.query(Post.post_id)
                 .join(Following, Following.following_id == Post.user_poster_id)
                 .filter(Following.user_id == user_id)
                 .distinct()
