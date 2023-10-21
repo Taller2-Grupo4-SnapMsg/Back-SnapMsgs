@@ -37,10 +37,8 @@ class UserResponse(BaseModel):
     """
 
     id: int
-    username: str
     name: str
-    last_name: str
-    avatar: str
+    is_public: bool
 
 
 class PostResponse(BaseModel):
@@ -48,15 +46,17 @@ class PostResponse(BaseModel):
     This class is a Pydantic model for the response body.
     """
 
-    id: int
-    user: UserResponse
-    posted_at: str
-    content: str
+    post_id: int
+    user_poster: UserResponse
+    user_creator: UserResponse
+    created_at: str
+    text: str
     image: str
     number_likes: int
     number_reposts: int
     hashtags: List[str]
-    user_repost: UserResponse
+    did_i_like: bool
+    did_i_repost: bool
 
     # I disable it since it's a pydantic configuration
     # pylint: disable=too-few-public-methods
@@ -72,73 +72,65 @@ class PostResponse(BaseModel):
 
 # pylint: disable=R0913
 def generate_post_from_db(
-    post, user, likes_count, reposts_count, hashtags, user_repost, is_repost
+    post_info, content_info, user_poster_id,
+        user_poster_name,
+        user_poster_is_public,
+        user_creator_id,
+        user_creator_name,
+        user_creator_is_public, hashtags, 
+    likes_count, reposts_count, did_i_like, did_i_repost,
 ):
     """
     This function casts the orm_object into a pydantic model.
     (from data base object to json)
     """
     return PostResponse(
-        id=post.id,
-        user=generate_user_from_db(user),
-        posted_at=str(post.posted_at),
-        content=post.content,
-        image=post.image,
+        post_id=post_info.post_id,
+        user_poster=generate_user_from_db(user_poster_id, user_poster_name, user_poster_is_public),
+        user_creator=generate_user_from_db(user_creator_id, user_creator_name, user_creator_is_public),
+        created_at=str(post_info.created_at),
+        text=content_info.text,
+        image=content_info.image,
         number_likes=likes_count,
         number_reposts=reposts_count,
         hashtags=hashtags,
-        user_repost=generate_user_repost_from_db(user_repost, is_repost),
+        did_i_like=did_i_like,
+        did_i_repost=did_i_repost,
     )
 
-
-def generate_user_from_db(user):
+#listo
+def generate_user_from_db(user_id,
+        user_name,
+        user_public):
     """
     This function casts the orm_object into a pydantic model.
     (from data base object to json)
     """
     return UserResponse(
-        id=user.id,
-        username=user.username,
-        name=user.name,
-        last_name=user.surname,
-        avatar=user.avatar,
+        id=user_id,
+        name=user_name,
+        is_public=user_public,
     )
 
-
-def generate_user_repost_from_db(user, is_repost):
-    """
-    This function casts the orm_object into a pydantic model.
-    (from data base object to json)
-    """
-    if is_repost is False:
-        return UserResponse(
-            id=-1,
-            username="",
-            name="",
-            last_name="",
-            avatar="",
-        )
-    return UserResponse(
-        id=user.id,
-        username=user.username,
-        name=user.name,
-        last_name=user.surname,
-        avatar=user.avatar,
-    )
-
-
+#listo
 def generate_post(post_db):
     """
     This function casts the orm_object into a pydantic model.
     """
     (
         post_info,
-        user,
-        user_repost,
-        likes_count,
-        reposts_count,
+        content_info,
+        user_poster_id,
+        user_poster_name,
+        user_poster_is_public,
+        user_creator_id,
+        user_creator_name,
+        user_creator_is_public,
         hashtags,
-        is_repost,
+       likes_count,
+       reposts_count,
+       did_i_like,
+       did_i_repost,
     ) = post_db
 
     if likes_count is None:
@@ -146,19 +138,25 @@ def generate_post(post_db):
     if reposts_count is None:
         reposts_count = 0
     if hashtags is None:
-        hashtags = []
+       hashtags = []
 
     return generate_post_from_db(
         post_info,
-        user,
-        likes_count,
-        reposts_count,
+        content_info,
+        user_poster_id,
+        user_poster_name,
+        user_poster_is_public,
+        user_creator_id,
+        user_creator_name,
+        user_creator_is_public,
         hashtags,
-        user_repost,
-        is_repost,
+       likes_count,
+       reposts_count,
+       did_i_like,
+       did_i_repost,
     )
 
-
+#listo
 def generate_response_posts_from_db(posts_db):
     """
     This function casts the orm_object into a pydantic model.
@@ -179,7 +177,7 @@ class LikeCreateRequest(BaseModel):
     This class is a Pydantic model for the request body.
     """
 
-    post_id: int
+    content_id: int
 
     # pylint: disable=too-few-public-methods
     class Config:
