@@ -145,7 +145,7 @@ def get_posts_and_reposts_from_users(
 
 
 #query para levantar posts sólo según intereses
-def get_posts_and_reposts_based_on_interests(user_id):
+def get_posts_and_reposts_based_on_interests(user_id, oldest_date, amount):
 
     query_posts = get_posts_and_reposts(user_id)
     
@@ -154,10 +154,12 @@ def get_posts_and_reposts_based_on_interests(user_id):
 
     #User2 = aliased(User)
     query_final = query_posts.filter(Post.content_id.in_(subquery_hashtags_interests),  # user is interested
-                                    ~Post.post_id.in_(subquery_followed_posts),     # no posts from followings
+                                    ~Post.post_id.in_(subquery_followed_posts),     # no posts from users this user is following*
                                     User.is_public == True,                         # the posts shown are public
                                     Post.user_poster_id != user_id                   # they aren't the user's posts
-    )
+                            ).order_by(Post.created_at.desc()
+                            ).filter(Post.created_at < oldest_date
+                            ).limit(amount)
     
     # Execute the query using your SQLAlchemy session
     results = query_final.all()
@@ -166,6 +168,7 @@ def get_posts_and_reposts_based_on_interests(user_id):
         raise UserDoesntHavePosts()
 
     return results
+#* this is so that the other get function, that picks up the posts of the users i do follow, doesnt get repetead posts.
 
 
 

@@ -56,15 +56,12 @@ async def api_get_posts_from_user_visited(
     """
     try:
         oldest_date = datetime.datetime.strptime(oldest_date_str, "%Y-%m-%d_%H:%M:%S")
-        # user_visited = get_user_id_from_email(user_visited_email)
+        user_visited = get_user_id_from_email(user_visited_email)
 
-        # user = await get_user_from_token(token)
+        user = await get_user_from_token(token)
 
-        # posts_db = get_posts_and_reposts_from_users(
-        #     int(user.get("id")), user_visited, oldest_date, amount
-        # )
         posts_db = get_posts_and_reposts_from_users(
-            2, 2, oldest_date, amount
+            int(user.get("id")), user_visited, oldest_date, amount
         )
         posts = generate_response_posts_from_db(posts_db)
 
@@ -73,24 +70,24 @@ async def api_get_posts_from_user_visited(
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
+
 @router.get(
-    "/posts/feed",
+    "/posts/feed/oldest_date/{oldest_date_str}/amount/{amount}",
     tags=["Posts"],
 )
-async def api_get_posts_and_reposts_based_on_interests(token: str = Header(...)):
+async def api_get_posts_and_reposts_based_on_interests(oldest_date_str: str, amount: int, token: str = Header(...)
+):
     """
     Gets all posts from user visited as user visitor
 
     Returns: All posts and reposts made by that user
     """
     try:
-        #oldest_date = datetime.datetime.strptime(oldest_date_str, "%Y-%m-%d_%H:%M:%S")
-        #user_visited = get_user_id_from_email(user_visited_email)
-
+        oldest_date = datetime.datetime.strptime(oldest_date_str, "%Y-%m-%d_%H:%M:%S")
         user = await get_user_from_token(token)
 
         posts_db = get_posts_and_reposts_based_on_interests(
-            int(user.get("id"))
+            int(user.get("id")), oldest_date, amount
         )
         posts = generate_response_posts_from_db(posts_db)
 
