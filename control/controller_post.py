@@ -43,9 +43,7 @@ async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
 # # ------------- GET ----------------
 # pylint: disable=C0103, W0622
 @router.get(
-    "/posts/profile/{user_visited_email}"
-    "/oldest_date/{oldest_date_str}"
-    "amount/{amount}",
+    "/posts/profile/{user_visited_email}/oldest_date/{oldest_date_str}/amount/{amount}",
     tags=["Posts"],
 )
 async def api_get_posts_from_user_visited(
