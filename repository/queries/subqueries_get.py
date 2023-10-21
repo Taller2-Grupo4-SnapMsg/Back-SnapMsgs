@@ -134,12 +134,13 @@ def create_subquery_hashtags_interests(user_id):
                                   ).distinct().subquery()
     )
 
+#no anda
 def create_subquery_posts_from_followd(user_id):
     """
     Create subquery that counts the amount of likes each content has
     """
     return (
-        session.query(Post.post_id)
+        session.query(Post.content_id)
                 .join(Following, Following.following_id == Post.user_poster_id)
                 .filter(Following.user_id == user_id)
                 .distinct()
