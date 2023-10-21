@@ -126,23 +126,26 @@ def create_how_many_likes(subquery_likes_count):
 
 def create_subquery_hashtags_interests(user_id):
     """
-    Create subquery that counts the amount of likes each content has
+    Create subquery that returns all the content_id that have at least one
+    hashtag that correspons to at least one interest that the user_id has
     """
     return (
-        session.query(Hashtag.content_id).filter(Hashtag.hashtag == Interests.interest
-                                  ).filter(Interests.user_id == user_id
-                                  ).distinct().subquery()
+        session.query(Hashtag.content_id)
+        .filter(Hashtag.hashtag == Interests.interest)
+        .filter(Interests.user_id == user_id)
+        .distinct()
+        .subquery()
     )
 
-#no anda
+
 def create_subquery_posts_from_followd(user_id):
     """
-    Create subquery that counts the amount of likes each content has
+    Create subquery that returns all the posts from users that the user_id follows
     """
     return (
         session.query(Post.post_id)
-                .join(Following, Following.following_id == Post.user_poster_id)
-                .filter(Following.user_id == user_id)
-                .distinct()
-                .subquery()
+        .join(Following, Following.following_id == Post.user_poster_id)
+        .filter(Following.user_id == user_id)
+        .distinct()
+        .subquery()
     )

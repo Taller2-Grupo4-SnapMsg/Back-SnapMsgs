@@ -46,11 +46,11 @@ async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
     "/posts/profile/{user_visited_email}/oldest_date/{oldest_date_str}/amount/{amount}",
     tags=["Posts"],
 )
-async def api_get_posts_from_user_visited(
+async def api_get_posts_and_reposts_from_user_visited(
     user_visited_email: str, oldest_date_str: str, amount: int, token: str = Header(...)
 ):
     """
-    Gets all posts from user visited as user visitor
+    Gets all posts and reposts from user visited as user visitor
 
     Returns: All posts and reposts made by that user
     """
@@ -70,12 +70,40 @@ async def api_get_posts_from_user_visited(
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
+@router.get(
+    "/posts/profile/reposts/{user_visited_email}/oldest_date/{oldest_date_str}/amount/{amount}",
+    tags=["Posts"],
+)
+async def api_get_reposts_from_user_visited(
+    user_visited_email: str, oldest_date_str: str, amount: int, token: str = Header(...)
+):
+    """
+    Gets only reposts from user visited as user visitor
+
+    Returns: All posts and reposts made by that user
+    """
+    try:
+        oldest_date = datetime.datetime.strptime(oldest_date_str, "%Y-%m-%d_%H:%M:%S")
+        user_visited = get_user_id_from_email(user_visited_email)
+
+        user = await get_user_from_token(token)
+
+        posts_db = get_reposts_from_user(
+            int(user.get("id")), user_visited, oldest_date, amount
+        )
+        posts = generate_response_posts_from_db(posts_db)
+
+        return posts
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
+
 
 @router.get(
     "/posts/feed/oldest_date/{oldest_date_str}/amount/{amount}",
     tags=["Posts"],
 )
-async def api_get_posts_and_reposts_based_on_interests(oldest_date_str: str, amount: int, token: str = Header(...)
+async def api_get_posts_and_reposts_based_on_interests(
+    oldest_date_str: str, amount: int, token: str = Header(...)
 ):
     """
     Gets all posts from user visited as user visitor
@@ -86,112 +114,12 @@ async def api_get_posts_and_reposts_based_on_interests(oldest_date_str: str, amo
         oldest_date = datetime.datetime.strptime(oldest_date_str, "%Y-%m-%d_%H:%M:%S")
         user = await get_user_from_token(token)
 
-        posts_db = get_posts_and_reposts_based_on_interests(
-            int(user.get("id")), oldest_date, amount
-        )
+        posts_db = get_posts_and_reposts_feed(int(user.get("id")), oldest_date, amount)
         posts = generate_response_posts_from_db(posts_db)
 
         return posts
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
-
-
-
-
-# # pylint: disable=C0103, W0622
-# @router.get("/posts/profile/{date_str}/amount/{n}", tags=["Posts"])  # ANDA
-# async def api_get_posts_user_by_token(n: int, date_str: str, token: str = Header(...)):
-#     """
-#     Gets all posts from a user by token
-
-#     Returns: All posts made by that user
-#     """
-#     date = datetime.strptime(date_str, "%Y-%m-%d_%H:%M:%S")
-#     user = await get_user_from_token(token)
-#     posts_db = get_post_from_user_b_to_user_a(
-#         int(user.get("id")), int(user.get("id")), n, date
-#     )
-#     posts = generate_response_posts_from_db(posts_db)
-#     return posts
-
-
-# # pylint: disable=C0103, W0622
-# @router.get("/posts/profile/{user_id}/{date_str}/amount/{n}", tags=["Posts"])
-# async def api_get_posts_by_user_id(
-#     user_id: int, n: int, date_str: str, token: str = Header(...)
-# ):
-#     """
-#     Gets all posts from a user by id
-
-#     Returns: All posts made by that user
-#     """
-#     date = datetime.strptime(date_str, "%Y-%m-%d_%H:%M:%S")
-#     user = await get_user_from_token(token)
-#     posts_db = get_post_from_user_b_to_user_a(int(user.get("id")), user_id, n, date)
-#     posts = generate_response_posts_from_db(posts_db)
-#     return posts
-
-
-# # pylint: disable=C0103, W0622
-# @router.get("/posts/feed/{date_str}/amount/{n}", tags=["Posts"])
-# async def api_get_posts_user_feed(n: int, date_str: str, token: str = Header(...)):
-#     """
-#     Gets all posts from a user by id
-#     """
-#     date = datetime.strptime(date_str, "%Y-%m-%d_%H:%M:%S")
-#     user = await get_user_from_token(token)
-#     posts_db = get_post_for_user_feed(int(user.get("id")), n, date)
-#     posts = generate_response_posts_from_db(posts_db)
-#     return posts
-
-
-# # pylint: disable=C0103, W0622
-# @router.get("/posts/feed/followings/{date_str}/amount/{n}", tags=["Posts"])
-# async def api_get_posts_users_that_I_follow(
-#     n: int, date_str: str, token: str = Header(...)
-# ):
-#     """
-#     Gets all posts from a user by id
-
-#     Returns: All posts made by that user
-#     """
-#     date = datetime.strptime(date_str, "%Y-%m-%d_%H:%M:%S")
-#     user = await get_user_from_token(token)
-#     posts_db = get_posts_from_users_followed_by_user(int(user.get("id")), n, date)
-#     posts = generate_response_posts_from_db(posts_db)
-#     return posts
-
-
-# # pylint: disable=C0103, W0622
-# @router.get("/posts/feed/interest/{date_str}/amount/{n}", tags=["Posts"])
-# async def api_get_posts_users_interest(n: int, date_str: str, token: str = Header(...)):
-#     """
-#     Gets all posts from a user by id
-
-#     Returns: All posts made by that user
-#     """
-#     date = datetime.strptime(date_str, "%Y-%m-%d_%H:%M:%S")
-#     user = await get_user_from_token(token)
-#     posts_db = get_public_posts_user_is_interested_in(int(user.get("id")), n, date)
-#     posts = generate_response_posts_from_db(posts_db)
-#     return posts
-
-
-# @router.get("/posts/{id}", tags=["Posts"])
-# async def api_get_post_by_id(id: int, token: str = Header(...)):
-#     """
-#     Gets the post with the id
-
-#     Args: Id of the post
-#     Returns: The post with that Id
-#     Raises: HTTPEXCEPTION with code 404 if post not found
-#     """
-#     user = await get_user_from_token(token)
-#     # pylint: disable=E1111
-#     post_db = get_post_by_id_global(int(user.get("id")), id)
-#     if post_db is None:
-#         raise HTTPException(status_code=404, detail="Post not Found")
-#     return generate_post(post_db)
 
 
 ## ------- PUT ---------
