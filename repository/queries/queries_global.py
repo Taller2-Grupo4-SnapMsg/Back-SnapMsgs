@@ -36,8 +36,7 @@ def is_following(user_id, user_id_to_check_if_following):
 
 def get_content_id_from_post(post_id):
     """
-    Returns True if the user with the given id is following
-    the user with the given id.
+    Returns the corresponding content id from that post
     """
     post = (
         session.query(Post)
@@ -47,6 +46,20 @@ def get_content_id_from_post(post_id):
     if post is None:
         raise PostNotFound()
     return post.content_id
+
+
+def get_user_id_from_email(email):
+    """
+    Return the id from the user with this email
+    """
+    user = (
+        session.query(User)
+        .filter(User.email == email)
+        .first()
+    )
+    if user is None:
+        raise PostNotFound()
+    return user.id
 
 
 def is_public(user_id):

@@ -25,7 +25,6 @@ from repository.errors import UserIsPrivate, UserDoesntHavePosts, DatabaseError
 # user that the owner of the token want to visit (could be themselves or someone else)
 def get_posts_and_reposts_from_users(user_visitor_id, user_visited_id, oldest_date, amount ):
     try:
-        print(f"El visitor_id es: {user_visitor_id} y el visited_id es {user_visited_id}")
         subquery_likes_count = create_subquery_likes_count()
         how_many_lies = create_how_many_likes(subquery_likes_count)
 
@@ -45,12 +44,8 @@ def get_posts_and_reposts_from_users(user_visitor_id, user_visited_id, oldest_da
         query = session.query(
             Post,
             Content,
-            User.id.label('user_poster_id'),
-            User.name.label('user_poster_name'),
-            User.is_public.label('user_poster_is_public'),
-            User2.id.label('user_creator_id'),
-            User2.name.label('user_creator_name'),
-            User2.is_public.label('user_creator_is_public'),
+            User,
+            User2,
             hashtags_subquery.c.hashtags,
             how_many_lies,
             how_many_reposts, 

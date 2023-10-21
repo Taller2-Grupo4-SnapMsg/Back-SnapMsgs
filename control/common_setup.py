@@ -37,8 +37,9 @@ class UserResponse(BaseModel):
     """
 
     id: int
-    name: str
-    is_public: bool
+    email: str
+    username: str
+    avatar: str
 
 
 class PostResponse(BaseModel):
@@ -72,12 +73,7 @@ class PostResponse(BaseModel):
 
 # pylint: disable=R0913
 def generate_post_from_db(
-    post_info, content_info, user_poster_id,
-        user_poster_name,
-        user_poster_is_public,
-        user_creator_id,
-        user_creator_name,
-        user_creator_is_public, hashtags, 
+    post_info, content_info, user_poster_info, user_creator_info, hashtags, 
     likes_count, reposts_count, did_i_like, did_i_repost,
 ):
     """
@@ -86,8 +82,8 @@ def generate_post_from_db(
     """
     return PostResponse(
         post_id=post_info.post_id,
-        user_poster=generate_user_from_db(user_poster_id, user_poster_name, user_poster_is_public),
-        user_creator=generate_user_from_db(user_creator_id, user_creator_name, user_creator_is_public),
+        user_poster=generate_user_from_db(user_poster_info),
+        user_creator=generate_user_from_db(user_creator_info),
         created_at=str(post_info.created_at),
         text=content_info.text,
         image=content_info.image,
@@ -99,17 +95,17 @@ def generate_post_from_db(
     )
 
 #listo
-def generate_user_from_db(user_id,
-        user_name,
-        user_public):
+def generate_user_from_db(user_info):
     """
     This function casts the orm_object into a pydantic model.
     (from data base object to json)
     """
+
     return UserResponse(
-        id=user_id,
-        name=user_name,
-        is_public=user_public,
+        id=user_info.id,
+        email=user_info.email,
+        username=user_info.username,
+        avatar=user_info.avatar,
     )
 
 #listo
@@ -120,12 +116,8 @@ def generate_post(post_db):
     (
         post_info,
         content_info,
-        user_poster_id,
-        user_poster_name,
-        user_poster_is_public,
-        user_creator_id,
-        user_creator_name,
-        user_creator_is_public,
+        user_poster_info,
+        user_creator_info,
         hashtags,
        likes_count,
        reposts_count,
@@ -143,12 +135,8 @@ def generate_post(post_db):
     return generate_post_from_db(
         post_info,
         content_info,
-        user_poster_id,
-        user_poster_name,
-        user_poster_is_public,
-        user_creator_id,
-        user_creator_name,
-        user_creator_is_public,
+        user_poster_info,
+        user_creator_info,
         hashtags,
        likes_count,
        reposts_count,
