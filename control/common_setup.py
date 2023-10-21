@@ -13,7 +13,7 @@ USER_NOT_FOUND = 404
 LIKE_NOT_FOUND = 404
 BAD_REQUEST = 400
 
-API_BASE_URL = "https://gateway-api-merok23.cloud.okteto.net"
+API_BASE_URL = "https://gateway-api-service-merok23.cloud.okteto.net"
 
 
 # ------------------------------------------ POSTS ------------------------------------------
@@ -113,7 +113,7 @@ def generate_user_from_db(user_info):
     return UserResponse(
         id=user_info.id,
         email=user_info.email,
-        name=user_info.name,
+        name=user_info,
         username=user_info.username,
         avatar=user_info.avatar,
     )
@@ -204,9 +204,7 @@ async def get_user_from_token(token):
     }
 
     async with httpx.AsyncClient() as client:
-        response = await client.get(
-            "https://gateway-api-merok23.cloud.okteto.net/user", headers=headers
-        )
+        response = await client.get(f"{API_BASE_URL}/user", headers=headers)
 
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail={"Unknown error"})
