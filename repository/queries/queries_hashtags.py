@@ -1,5 +1,5 @@
 """
-Archivo con algunas pruebas de la base de datos
+Queries for creating and deleting hashtags
 """
 from typing import List
 from sqlalchemy import Delete
@@ -19,14 +19,16 @@ from repository.tables.posts import Hashtag
 # ----- CREATE ------
 
 
-def create_hashtags(id_post: int, hashtags: List[str]):
+def create_hashtags(content_id: int, hashtags: List[str]):
     """
-    Create a hashtag for a post
+    Creates a hashtag for a post
     """
-    print(hashtags)
     try:
         for hashtag in hashtags:
-            new_hashtag = Hashtag(id_post=id_post, hashtag=hashtag)
+            new_hashtag = Hashtag(content_id=content_id, hashtag=hashtag)
+
+            # similar lines
+            # pylint: disable=R0801
             session.add(new_hashtag)
         session.commit()
     except IntegrityError as error:
@@ -37,11 +39,15 @@ def create_hashtags(id_post: int, hashtags: List[str]):
 # ----- DELETE ------
 
 
-def delete_hashtags_for_post(post_id):
+def delete_hashtags_for_content(content_id):
     """
-    Elimina todos los hashtags de una publicación específica.
+    Deletes all hashtags from that particular content_id
     """
-    delete_query = Delete(Hashtag).where(Hashtag.id_post == post_id)
-    result = session.execute(delete_query)
-    session.commit()
-    return result.rowcount
+    try:
+        delete_query = Delete(Hashtag).where(Hashtag.content_id == content_id)
+        result = session.execute(delete_query)
+        session.commit()
+        return result.rowcount
+    except IntegrityError as error:
+        session.rollback()
+        raise DatabaseError from error

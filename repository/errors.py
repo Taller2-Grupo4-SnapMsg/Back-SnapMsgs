@@ -32,6 +32,24 @@ class NegativeOrZeroAmount(Exception):
         super().__init__("Invalid amount. Equal or less than zero.")
 
 
+class RepostAlreadyMade(Exception):
+    """
+    Exception raised when user wants to repost a post they already reposted
+    """
+
+    def __init__(self):
+        super().__init__("User already reposted that post.")
+
+
+class CannotLikeRepost(Exception):
+    """
+    Exception raised when amount is equal or less than 0
+    """
+
+    def __init__(self):
+        super().__init__("Reposts cannot be liked.")
+
+
 class UserWithouPermission(Exception):
     """
     Exception raised when amount is equal or less than 0
@@ -39,6 +57,24 @@ class UserWithouPermission(Exception):
 
     def __init__(self):
         super().__init__("User doesnt have permissions to do that action.")
+
+
+class UserDoesntHavePosts(Exception):
+    """
+    Exception raised when post not found.
+    """
+
+    def __init__(self):
+        super().__init__("User doesnt have any posts")
+
+
+class UserIsPrivate(Exception):
+    """
+    Exception raised when post not found.
+    """
+
+    def __init__(self):
+        super().__init__("User is private")
 
 
 class PostNotFound(Exception):

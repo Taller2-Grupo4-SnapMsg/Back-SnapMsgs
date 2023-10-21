@@ -5,7 +5,8 @@ Fast API for the likes controller
 from fastapi import APIRouter, Header
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
-from repository.queries.queries_like import *
+from repository.queries.queries_likes import *
+from repository.queries.queries_global import get_content_id_from_post
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
@@ -20,7 +21,8 @@ async def api_create_like(post_id: int, token: str = Header(...)):
     """
     try:
         user = await get_user_from_token(token)
-        create_like(post_id, user.get("id"))
+        content_id = get_content_id_from_post(post_id)
+        create_like(post_id, content_id, user.get("id"))
 
     except DatabaseError as db_error:
         raise HTTPException(
@@ -38,12 +40,9 @@ async def api_delete_like(post_id: int, token: str = Header(...)):
     """
     try:
         user = await get_user_from_token(token)
-        delete_like(user.get("id"), post_id)
+        content_id = get_content_id_from_post(post_id)
+        delete_like(content_id, user.get("id"))
 
-    except LikeNotFound as db_error:
-        raise HTTPException(
-            status_code=LIKE_NOT_FOUND, detail="Post or Like doesnt exist"
-        ) from db_error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
     return {"message": "Like deleted successfully"}
