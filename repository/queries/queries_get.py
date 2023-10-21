@@ -23,7 +23,7 @@ from repository.errors import UserIsPrivate, UserDoesntHavePosts, DatabaseError
 
 # Made for the profile, where visitor is the actual mobile user, and visited is another
 # user that the owner of the token want to visit (could be themselves or someone else)
-def get_posts_and_reposts_from_users(user_visitor_id: int, user_visited_id: int):
+def get_posts_and_reposts_from_users(user_visitor_id, user_visited_id, oldest_date, amount ):
     try:
         print(f"El visitor_id es: {user_visitor_id} y el visited_id es {user_visited_id}")
         subquery_likes_count = create_subquery_likes_count()
@@ -74,7 +74,9 @@ def get_posts_and_reposts_from_users(user_visitor_id: int, user_visited_id: int)
                 #to check if the user im visiting is public
                 User.is_public == True
             )
-        )
+        ).order_by(Post.created_at.desc()
+        ).filter(Post.created_at < oldest_date
+        ).limit(amount)
 
         results = query.all()
         if results is None:

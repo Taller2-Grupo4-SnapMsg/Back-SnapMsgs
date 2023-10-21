@@ -44,15 +44,16 @@ async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
 # # ------------- GET ----------------
 
 # pylint: disable=C0103, W0622
-@router.get("/posts/profile/{user_visited}", tags=["Posts"]) 
-async def api_get_posts_from_user_visited(user_visited: int , token: str = Header(...)):
+@router.get("/posts/profile/{user_visited}/oldest_date/{oldest_date_str}/amount/{amount}", tags=["Posts"]) 
+async def api_get_posts_from_user_visited(user_visited: int , oldest_date_str: str, amount: int, token: str = Header(...)):
     """
     Gets all posts from user visited as user visitor
 
     Returns: All posts and reposts made by that user
     """
+    oldest_date = datetime.datetime.strptime(oldest_date_str, "%Y-%m-%d_%H:%M:%S")
     user = await get_user_from_token(token)
-    posts_db = get_posts_and_reposts_from_users(int(user.get("id")), user_visited)
+    posts_db = get_posts_and_reposts_from_users(int(user.get("id")), user_visited, oldest_date, amount)
     posts = generate_response_posts_from_db(posts_db)
     return posts
 
