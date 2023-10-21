@@ -32,10 +32,9 @@ def create_subquery_my_like_count_by_user(user_id):
 
 #to check if the user reposted the content or not
 #the column will have a 1 if the user did repost, or a 0 if they didnt
-def create_subquery_my_reposts_count(user_id):
+def create_subquery_my_reposts_count(user_visitor_id):
     return session.query(Post.content_id, func.count().label('user_repost_count')
-                        ).filter(Post.user_poster_id == user_id, Post.post_id != Post.content_id,
-                                 #Post.post_id == post_id
+                        ).filter(Post.user_poster_id == user_visitor_id, Post.user_creator_id != user_visitor_id,
                         ).group_by(Post.content_id
                         ).subquery()
 

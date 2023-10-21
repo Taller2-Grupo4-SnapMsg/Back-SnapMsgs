@@ -32,10 +32,10 @@ def get_posts_and_reposts_from_users(user_visitor_id: int, user_visited_id: int)
         subquery_repost_count = create_subquery_resposts_count()
         how_many_reposts = create_how_many_reposts(subquery_repost_count)
 
-        subquery_my_likes_count = create_subquery_my_like_count_by_user(user_visited_id)
+        subquery_my_likes_count = create_subquery_my_like_count_by_user(user_visitor_id)
         did_i_like_column = create_did_i_like_column(subquery_my_likes_count)
         
-        subquery_my_reposts_count = create_subquery_my_reposts_count(user_visited_id)
+        subquery_my_reposts_count = create_subquery_my_reposts_count(user_visitor_id)
         did_i_repost_column = create_did_i_repost_column(subquery_my_reposts_count)
 
         hashtags_subquery = create_subquery_hashtags()
