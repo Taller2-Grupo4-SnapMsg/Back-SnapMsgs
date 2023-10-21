@@ -6,11 +6,10 @@ from fastapi import APIRouter, Header
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_likes import *
+from repository.queries.queries_global import get_content_id_from_post
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
-
-from repository.queries.queries_global import get_content_id_from_post
 
 router = APIRouter()
 

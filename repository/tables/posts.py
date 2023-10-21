@@ -29,7 +29,7 @@ def create_content_foreign_key(is_primary_key):
         Integer,
         ForeignKey("contents.content_id", ondelete="CASCADE"),
         nullable=False,
-        primary_key=is_primary_key
+        primary_key=is_primary_key,
     )
 
 

@@ -26,6 +26,9 @@ def create_hashtags(content_id: int, hashtags: List[str]):
     try:
         for hashtag in hashtags:
             new_hashtag = Hashtag(content_id=content_id, hashtag=hashtag)
+
+            # similar lines
+            # pylint: disable=R0801
             session.add(new_hashtag)
         session.commit()
     except IntegrityError as error:

@@ -1,3 +1,4 @@
+# pylint: skip-file
 """
 Archivo con algunas pruebas de la base de datos
 """
@@ -26,6 +27,7 @@ def create_like_subquery():
         .subquery()
     )
 
+
 def get_post_for_user_feed(user_id, amount, date):
     """
     Obtains the posts for a user's feed, those of the users
@@ -44,6 +46,7 @@ def get_post_for_user_feed(user_id, amount, date):
     posts = combined_posts.order_by(Post.posted_at.desc()).limit(amount)
     return list(posts)
 
+
 def get_posts_from_users_followed_by_user(user_id, amount, date):
     """
     Gets posts from users I follow
@@ -52,6 +55,7 @@ def get_posts_from_users_followed_by_user(user_id, amount, date):
     posts = posts_from_followed.order_by(Post.posted_at.desc()).limit(amount)
     return posts
 
+
 def get_public_posts_user_is_interested_in(user_id, amount, date):
     """
     Obtains public posts that may interest the user
@@ -59,6 +63,7 @@ def get_public_posts_user_is_interested_in(user_id, amount, date):
     posts_of_interest = _get_public_posts_user_is_interested_in(user_id, date)
     posts = posts_of_interest.order_by(Post.posted_at.desc()).limit(amount)
     return posts
+
 
 def _get_public_posts_user_is_interested_in(user_id, oldest_date):
     """
@@ -104,6 +109,7 @@ def _get_public_posts_user_is_interested_in(user_id, oldest_date):
     )
 
     return posts
+
 
 # pylint: disable=R0914
 def _get_posts_from_users_followed_by_user(user_id, date):
@@ -191,6 +197,7 @@ def _get_posts_from_users_followed_by_user(user_id, date):
 
     # posts = combined_posts.order_by(Post.posted_at.desc()).limit(amount)
     return combined_posts
+
 
 def get_post_by_id_global(user_id, post_id):
     """Gets a post by id"""

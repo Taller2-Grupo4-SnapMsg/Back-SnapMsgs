@@ -1,24 +1,28 @@
 """
 Global queries and functions that could be reused in other queries
 """
-
-"""
-Archivo con algunas pruebas de la base de datos
-"""
-from sqlalchemy import and_, literal_column, or_, desc
-from sqlalchemy import func
-from sqlalchemy.orm import aliased
-
-from repository.errors import PostNotFound
+from psycopg2 import IntegrityError
+from repository.errors import PostNotFound, DatabaseError
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.common_setup import *
 
 # pylint: disable=C0114, W0401, W0614, E0401
-from repository.tables.posts import Post, Like, Hashtag
+from repository.tables.posts import Post
 
 # pylint: disable=C0114, W0401, W0614, E0401
-from repository.tables.users import User, Following, Interests
+from repository.tables.users import User, Following
+
+
+def get_post(post_id):
+    """
+    Get the post based on id
+    """
+    post = session.query(Post).filter(Post.post_id == post_id).first()
+    if post is None:
+        raise PostNotFound()
+
+    return post
 
 
 def is_following(user_id, user_id_to_check_if_following):
@@ -34,15 +38,12 @@ def is_following(user_id, user_id_to_check_if_following):
     )
     return following is not None
 
+
 def get_content_id_from_post(post_id):
     """
     Returns the corresponding content id from that post
     """
-    post = (
-        session.query(Post)
-        .filter(Post.post_id == post_id)
-        .first()
-    )
+    post = session.query(Post).filter(Post.post_id == post_id).first()
     if post is None:
         raise PostNotFound()
     return post.content_id
@@ -52,11 +53,7 @@ def get_user_id_from_email(email):
     """
     Return the id from the user with this email
     """
-    user = (
-        session.query(User)
-        .filter(User.email == email)
-        .first()
-    )
+    user = session.query(User).filter(User.email == email).first()
     if user is None:
         raise PostNotFound()
     return user.id
@@ -74,3 +71,15 @@ def is_public(user_id):
         .first()
     )
     return public is not None
+
+
+def execute_delete_query(delete_query):
+    """
+    Executes the delete query passed as argument
+    """
+    try:
+        session.execute(delete_query)
+        session.commit()
+    except IntegrityError as error:
+        session.rollback()
+        raise DatabaseError from error

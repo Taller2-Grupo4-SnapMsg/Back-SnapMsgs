@@ -38,6 +38,7 @@ class UserResponse(BaseModel):
 
     id: int
     email: str
+    name: str
     username: str
     avatar: str
 
@@ -73,8 +74,15 @@ class PostResponse(BaseModel):
 
 # pylint: disable=R0913
 def generate_post_from_db(
-    post_info, content_info, user_poster_info, user_creator_info, hashtags, 
-    likes_count, reposts_count, did_i_like, did_i_repost,
+    post_info,
+    content_info,
+    user_poster_info,
+    user_creator_info,
+    hashtags,
+    likes_count,
+    reposts_count,
+    did_i_like,
+    did_i_repost,
 ):
     """
     This function casts the orm_object into a pydantic model.
@@ -94,7 +102,8 @@ def generate_post_from_db(
         did_i_repost=did_i_repost,
     )
 
-#listo
+
+# listo
 def generate_user_from_db(user_info):
     """
     This function casts the orm_object into a pydantic model.
@@ -104,11 +113,13 @@ def generate_user_from_db(user_info):
     return UserResponse(
         id=user_info.id,
         email=user_info.email,
+        name=user_info.name,
         username=user_info.username,
         avatar=user_info.avatar,
     )
 
-#listo
+
+# listo
 def generate_post(post_db):
     """
     This function casts the orm_object into a pydantic model.
@@ -119,10 +130,10 @@ def generate_post(post_db):
         user_poster_info,
         user_creator_info,
         hashtags,
-       likes_count,
-       reposts_count,
-       did_i_like,
-       did_i_repost,
+        likes_count,
+        reposts_count,
+        did_i_like,
+        did_i_repost,
     ) = post_db
 
     if likes_count is None:
@@ -130,7 +141,7 @@ def generate_post(post_db):
     if reposts_count is None:
         reposts_count = 0
     if hashtags is None:
-       hashtags = []
+        hashtags = []
 
     return generate_post_from_db(
         post_info,
@@ -138,13 +149,14 @@ def generate_post(post_db):
         user_poster_info,
         user_creator_info,
         hashtags,
-       likes_count,
-       reposts_count,
-       did_i_like,
-       did_i_repost,
+        likes_count,
+        reposts_count,
+        did_i_like,
+        did_i_repost,
     )
 
-#listo
+
+# listo
 def generate_response_posts_from_db(posts_db):
     """
     This function casts the orm_object into a pydantic model.

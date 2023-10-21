@@ -58,6 +58,7 @@ class UserWithouPermission(Exception):
     def __init__(self):
         super().__init__("User doesnt have permissions to do that action.")
 
+
 class UserDoesntHavePosts(Exception):
     """
     Exception raised when post not found.
@@ -66,6 +67,7 @@ class UserDoesntHavePosts(Exception):
     def __init__(self):
         super().__init__("User doesnt have any posts")
 
+
 class UserIsPrivate(Exception):
     """
     Exception raised when post not found.
@@ -73,6 +75,7 @@ class UserIsPrivate(Exception):
 
     def __init__(self):
         super().__init__("User is private")
+
 
 class PostNotFound(Exception):
     """
