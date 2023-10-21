@@ -113,7 +113,7 @@ def generate_user_from_db(user_info):
     return UserResponse(
         id=user_info.id,
         email=user_info.email,
-        name=user_info,
+        name=user_info.name,
         username=user_info.username,
         avatar=user_info.avatar,
     )
