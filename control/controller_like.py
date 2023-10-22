@@ -23,14 +23,17 @@ async def api_create_like(post_id: int, token: str = Header(...)):
         user = await get_user_from_token(token)
         content_id = get_content_id_from_post(post_id)
         create_like(post_id, content_id, user.get("id"))
-
+        return {"message": "Like created successfully"}
+    except PostNotFound as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except CannotLikeRepost as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
     except DatabaseError as db_error:
         raise HTTPException(
             status_code=400, detail="Post doesnt exist or like already exists"
         ) from db_error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
-    return {"message": "Like created successfully"}
 
 
 @router.delete("/likes/{post_id}", tags=["Likes"])
@@ -42,7 +45,10 @@ async def api_delete_like(post_id: int, token: str = Header(...)):
         user = await get_user_from_token(token)
         content_id = get_content_id_from_post(post_id)
         delete_like(content_id, user.get("id"))
-
+        return {"message": "Like deleted successfully"}
+    except LikeNotFound as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except UserWithouPermission as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
-    return {"message": "Like deleted successfully"}

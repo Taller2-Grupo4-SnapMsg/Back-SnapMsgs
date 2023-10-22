@@ -20,14 +20,18 @@ async def api_create_repost(post_id: int, token: str = Header(...)):
     try:
         user = await get_user_from_token(token)
         create_repost(post_id, user.get("id"))
+        return {"message": "Repost created successfully"}
 
     except DatabaseError as db_error:
         raise HTTPException(
             status_code=400, detail="Post doesnt exist or repost already exists"
         ) from db_error
+    except UserWithouPermission as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except RepostAlreadyMade as error:
+        raise HTTPException(status_code=409, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
-    return {"message": "Repost created successfully"}
 
 
 @router.delete("/reposts/{repost_id}", tags=["Reposts"])
@@ -38,7 +42,10 @@ async def api_delete_respost(repost_id: int, token: str = Header(...)):
     try:
         user = await get_user_from_token(token)
         delete_repost(repost_id, user.get("id"))
-
+        return {"message": "Repost deleted successfully"}
+    except PostNotFound as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except UserWithouPermission as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
-    return {"message": "Repost deleted successfully"}
