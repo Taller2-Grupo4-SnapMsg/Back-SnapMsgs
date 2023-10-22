@@ -93,7 +93,7 @@ def get_posts_and_reposts(user_id):
 # "Too many local variables"
 # pylint: disable=R0914
 def get_posts_and_reposts_from_users(
-    user_visitor_id, user_visited_id, oldest_date, amount
+    user_visitor_id, user_visited_id, oldest_date, amount, only_reposts
 ):
     """
     Get posts and reposts, with all their info, where the first id is the user that is
@@ -101,6 +101,8 @@ def get_posts_and_reposts_from_users(
 
     Made for the profile, where visitor is the actual mobile user, and visited is another
     user that the owner of the token want to visit (could be themselves or someone else)
+
+    If only_reposts == True, then only reposts will be returned
     """
     try:
         query_posts = get_posts_and_reposts(user_visitor_id)
@@ -128,61 +130,14 @@ def get_posts_and_reposts_from_users(
             )
             .order_by(Post.created_at.desc())
             .filter(Post.created_at < oldest_date)
-            .limit(amount)
         )
 
-        results = query_final.all()
-        if results is None:
-            # a) the user visited is private and the user visitor doesnt follow them
-            # b) the user doesnt have any posts
-            if is_public(user_visited_id):
-                raise UserIsPrivate()
-            raise UserDoesntHavePosts()
-
-        return results
-    except Exception as error:
-        raise DatabaseError from error
-
-
-def get_reposts_from_user(user_visitor_id, user_visited_id, oldest_date, amount):
-    """
-    Get only reposts, with all their info, where the first id is the user that is
-    visiting and the second id is the user that is being visited.
-
-    Made for the profile, where visitor is the actual mobile user, and visited is another
-    user that the owner of the token want to visit (could be themselves or someone else)
-    """
-    try:
-        query_posts = get_posts_and_reposts(user_visitor_id)
-        posts_id = (
-            session.query(Post.post_id)
-            .filter(Post.user_poster_id == user_visited_id)
-            .distinct()
-            .subquery()
-        )
-        query_final = (
-            query_posts.filter(Post.post_id.in_(posts_id))
-            .filter(
-                or_(
-                    # so that I can check my own profile with this query
-                    user_visited_id == user_visitor_id,
-                    # to check if im following the user
-                    Post.user_poster_id.in_(
-                        session.query(Following.following_id).filter(
-                            Following.user_id == user_visitor_id
-                        )
-                    ),
-                    # to check if the user im visiting is public
-                    bool(User.is_public),
-                )
-            )
-            .filter(
+        if only_reposts:
+            query_final = query_final.filter(
                 Post.user_poster_id != Post.user_creator_id  # to only get the reposts
             )
-            .order_by(Post.created_at.desc())
-            .filter(Post.created_at < oldest_date)
-            .limit(amount)
-        )
+
+        query_final = query_final.limit(amount)
 
         results = query_final.all()
         if results is None:
@@ -206,6 +161,7 @@ def get_posts_and_reposts_based_on_interests(user_id, oldest_date):
     This query will not return a post that the user might like if that post was made by another
     user that this users follows. That's to not repeat posts in the feed, since the query that
     gets posts and reposts from users this user follows might return that post as well.
+
     """
     query_posts = get_posts_and_reposts(user_id)
 
@@ -226,6 +182,7 @@ def get_posts_and_reposts_based_on_interests(user_id, oldest_date):
         .order_by(Post.created_at.desc())
         .filter(Post.created_at < oldest_date)
     )
+
     # * this is so that the other get function, that picks up the posts of the users
     # i do follow, doesnt get repetead posts.
 
