@@ -2,7 +2,7 @@
     Fast API Controller for Posts
 """
 from datetime import datetime
-from fastapi import HTTPException, Header, APIRouter
+from fastapi import HTTPException, Header, APIRouter, Query
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_posts import *
@@ -44,14 +44,14 @@ async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
 # pylint: disable=C0103, W0622
 @router.get(
     "/posts/profile/{user_visited_email}/oldest_date/{oldest_date_str}"
-    "/amount/{amount}/only_reposts/{only_reposts}",
+    "/amount/{amount}/only_reposts/",
     tags=["Posts"],
 )
 async def api_get_posts_and_reposts_from_user_visited(
     user_visited_email: str,
     oldest_date_str: str,
     amount: int,
-    only_reposts_str: str,
+    only_reposts: bool = Query(...),
     token: str = Header(...),
 ):
     """
@@ -62,19 +62,18 @@ async def api_get_posts_and_reposts_from_user_visited(
     try:
         oldest_date = datetime.datetime.strptime(oldest_date_str, "%Y-%m-%d_%H:%M:%S")
         user_visited = get_user_id_from_email(user_visited_email)
-
-        only_reposts = False
-        if only_reposts_str in ("True", "true"):
-            only_reposts = True
-
         user = await get_user_from_token(token)
-
         posts_db = get_posts_and_reposts_from_users(
             int(user.get("id")), user_visited, oldest_date, amount, only_reposts
         )
         posts = generate_response_posts_from_db(posts_db)
 
         return posts
+
+    except UserIsPrivate as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except UserDoesntHavePosts as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
 
@@ -83,9 +82,7 @@ async def api_get_posts_and_reposts_from_user_visited(
     "/posts/feed/oldest_date/{oldest_date_str}/amount/{amount}",
     tags=["Posts"],
 )
-async def api_get_posts_and_reposts_based_on_interests(
-    oldest_date_str: str, amount: int, token: str = Header(...)
-):
+async def api_get_feed(oldest_date_str: str, amount: int, token: str = Header(...)):
     """
     Gets all posts from user visited as user visitor
 
@@ -99,6 +96,10 @@ async def api_get_posts_and_reposts_based_on_interests(
         posts = generate_response_posts_from_db(posts_db)
 
         return posts
+    except UserIsPrivate as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except UserDoesntHavePosts as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
 
@@ -122,9 +123,13 @@ async def api_update_post(
             post_data.image,
             post_data.hashtags,
         )
+        return {"message": "Post updated successfully"}
+    except UserIsPrivate as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except UserDoesntHavePosts as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
-    return {"message": "Post updated successfully"}
 
 
 ## ------- DELETE ---------
@@ -139,5 +144,9 @@ async def api_delete_post(post_id: int, token: str = Header(...)):
         user = await get_user_from_token(token)
         delete_post(post_id, user.get("id"))
         return {"message": "Post deleted successfully"}
+    except UserWithouPermission as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except UserDoesntHavePosts as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error

@@ -104,52 +104,49 @@ def get_posts_and_reposts_from_users(
 
     If only_reposts == True, then only reposts will be returned
     """
-    try:
-        query_posts = get_posts_and_reposts(user_visitor_id)
-        posts_id = (
-            session.query(Post.post_id)
-            .filter(Post.user_poster_id == user_visited_id)
-            .distinct()
-            .subquery()
-        )
-        query_final = (
-            query_posts.filter(Post.post_id.in_(posts_id))
-            .filter(
-                or_(
-                    # so that I can check my own profile with this query
-                    user_visited_id == user_visitor_id,
-                    # to check if im following the user
-                    Post.user_poster_id.in_(
-                        session.query(Following.following_id).filter(
-                            Following.user_id == user_visitor_id
-                        )
-                    ),
-                    # to check if the user im visiting is public
-                    bool(User.is_public),
-                )
+    query_posts = get_posts_and_reposts(user_visitor_id)
+    posts_id = (
+        session.query(Post.post_id)
+        .filter(Post.user_poster_id == user_visited_id)
+        .distinct()
+        .subquery()
+    )
+    query_final = (
+        query_posts.filter(Post.post_id.in_(posts_id))
+        .filter(
+            or_(
+                # so that I can check my own profile with this query
+                user_visited_id == user_visitor_id,
+                # to check if im following the user
+                Post.user_poster_id.in_(
+                    session.query(Following.following_id).filter(
+                        Following.user_id == user_visitor_id
+                    )
+                ),
+                # to check if the user im visiting is public
+                bool(User.is_public),
             )
-            .order_by(Post.created_at.desc())
-            .filter(Post.created_at < oldest_date)
+        )
+        .order_by(Post.created_at.desc())
+        .filter(Post.created_at < oldest_date)
+    )
+
+    if only_reposts:
+        query_final = query_final.filter(
+            Post.user_poster_id != Post.user_creator_id  # to only get the reposts
         )
 
-        if only_reposts:
-            query_final = query_final.filter(
-                Post.user_poster_id != Post.user_creator_id  # to only get the reposts
-            )
+    query_final = query_final.limit(amount)
 
-        query_final = query_final.limit(amount)
+    results = query_final.all()
+    if results is None:
+        # a) the user visited is private and the user visitor doesnt follow them
+        # b) the user doesnt have any posts
+        if is_public(user_visited_id):
+            raise UserIsPrivate()
+        raise UserDoesntHavePosts()
 
-        results = query_final.all()
-        if results is None:
-            # a) the user visited is private and the user visitor doesnt follow them
-            # b) the user doesnt have any posts
-            if is_public(user_visited_id):
-                raise UserIsPrivate()
-            raise UserDoesntHavePosts()
-
-        return results
-    except Exception as error:
-        raise DatabaseError from error
+    return results
 
 
 def get_posts_and_reposts_based_on_interests(user_id, oldest_date):
