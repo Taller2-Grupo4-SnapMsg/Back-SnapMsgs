@@ -13,7 +13,6 @@ from repository.errors import (
     DatabaseError,
     LikeNotFound,
     PostNotFound,
-    UserWithouPermission,
     CannotLikeRepost,
 )
 
@@ -52,13 +51,13 @@ def delete_like(content_id: int, user_id: int):
     Deletes all hashtags from that particular content_id
     """
     try:
-        like = session.query(Like).filter(Like.content_id == content_id).first()
+        like = (
+            session.query(Like)
+            .filter(Like.content_id == content_id, Like.user_id == user_id)
+            .first()
+        )
         if like is None:
             raise LikeNotFound()
-
-        # trying to delete a like that was not made by this user
-        if like.user_id != user_id:
-            raise UserWithouPermission()
 
         session.delete(like)
         session.commit()
