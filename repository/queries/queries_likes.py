@@ -13,7 +13,6 @@ from repository.errors import (
     DatabaseError,
     LikeNotFound,
     PostNotFound,
-    CannotLikeRepost,
 )
 
 # pylint: disable=C0114, W0401, W0614, E0401
