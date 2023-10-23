@@ -66,6 +66,7 @@ async def api_get_posts_and_reposts_from_user_visited(
         posts_db = get_posts_and_reposts_from_users(
             int(user.get("id")), user_visited, oldest_date, amount, only_reposts
         )
+
         posts = generate_response_posts_from_db(posts_db)
 
         return posts
