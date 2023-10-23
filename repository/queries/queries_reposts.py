@@ -73,13 +73,13 @@ def delete_repost(post_id, user_id):
     Deletes the repost with that id, if found
     """
     try:
-        repost = session.query(Post).filter(Post.post_id == post_id).first()
+        repost = (
+            session.query(Post)
+            .filter(Post.post_id == post_id, Post.user_poster_id == user_id)
+            .first()
+        )
         if repost is None:
             raise PostNotFound()
-
-        # trying to delete a post that was not made by this user
-        if repost.user_poster_id != user_id:
-            raise UserWithouPermission()
 
         # trying to delete a post --> wrong endpoint
         if repost.user_creator_id == user_id:

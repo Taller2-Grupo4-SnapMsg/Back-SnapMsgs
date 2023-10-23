@@ -135,7 +135,7 @@ async def api_update_post(
 ## ------- DELETE ---------
 
 
-@router.delete("/posts/{post_id}/", tags=["Posts"])
+@router.delete("/posts/{post_id}", tags=["Posts"])
 async def api_delete_post(post_id: int, token: str = Header(...)):
     """
     Deletes the post with the id
