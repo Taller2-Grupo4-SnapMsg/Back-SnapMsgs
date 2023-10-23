@@ -124,7 +124,7 @@ def get_posts_and_reposts_from_users(
                     )
                 ),
                 # to check if the user im visiting is public
-                bool(User.is_public),
+                bool(is_public(user_visited_id)),
             )
         )
         .order_by(Post.created_at.desc())
