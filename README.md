@@ -34,9 +34,3 @@ pip3 install -r requirements.txt
 ```
 find . -type f -name "*.py" | xargs pylint
 ```
-
-# Si hay permisos denegados
-en la parte de data, skipealos de esta manera:
-```
-sudo chmod -R 755 data/postgres/
-```

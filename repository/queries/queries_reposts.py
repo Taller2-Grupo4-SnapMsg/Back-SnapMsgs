@@ -65,6 +65,39 @@ def create_repost(post_id: int, user_reposter_id: int):
 # ----- DELETE ------
 
 
+def delete_users_repost_from_post(post_id, user_id):
+    """
+    Deletes the repost of the post_id made by this user_id, if found
+    """
+    try:
+        original_post = session.query(Post).filter(Post.post_id == post_id).first()
+        if original_post is None:
+            raise PostNotFound()
+
+        # look for repost made by user_id of original_post.content_id
+        repost_to_delete = (
+            session.query(Post)
+            .filter(
+                Post.user_poster_id == user_id,
+                Post.content_id == original_post.content_id,
+            )
+            .first()
+        )
+        if repost_to_delete is None:
+            raise PostNotFound()
+
+        # trying to delete a post --> wrong endpoint
+        if repost_to_delete.user_creator_id == user_id:
+            raise UserWithouPermission()
+
+        session.delete(repost_to_delete)
+        # pylint: disable=R0801
+        session.commit()
+    except IntegrityError as error:
+        session.rollback()
+        raise DatabaseError from error
+
+
 def delete_repost(post_id, user_id):
     """
     Deletes the repost with that id, if found
@@ -83,6 +116,7 @@ def delete_repost(post_id, user_id):
             raise UserWithouPermission()
 
         session.delete(repost)
+        # pylint: disable=R0801
         session.commit()
     except IntegrityError as error:
         session.rollback()
