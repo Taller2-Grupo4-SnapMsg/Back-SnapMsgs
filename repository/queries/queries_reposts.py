@@ -30,14 +30,11 @@ def create_repost(post_id: int, user_reposter_id: int):
     try:
         post = get_post(post_id)
 
-        # user wants to repost a post --> not allowed
-        if post.user_creator_id != post.user_poster_id:
-            raise UserWithouPermission()
-
         # user wants to repost from a private account --> not allowed
         if not is_public(post.user_creator_id):
             raise UserWithouPermission()
 
+        # search if repost already exists
         repost_check = (
             session.query(Post)
             .filter(Post.user_poster_id == user_reposter_id)
