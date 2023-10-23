@@ -26,8 +26,6 @@ async def api_create_like(post_id: int, token: str = Header(...)):
         return {"message": "Like created successfully"}
     except PostNotFound as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
-    except CannotLikeRepost as error:
-        raise HTTPException(status_code=409, detail=str(error)) from error
     except DatabaseError as db_error:
         raise HTTPException(
             status_code=400, detail="Post doesnt exist or like already exists"

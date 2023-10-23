@@ -13,7 +13,6 @@ from repository.errors import (
     DatabaseError,
     LikeNotFound,
     PostNotFound,
-    CannotLikeRepost,
 )
 
 # pylint: disable=C0114, W0401, W0614, E0401
@@ -30,9 +29,6 @@ def create_like(post_id: int, content_id: int, user_id: int):
         post = session.query(Post).filter(Post.post_id == post_id).first()
         if post is None:
             raise PostNotFound()
-
-        if post.user_creator_id != post.user_poster_id:
-            raise CannotLikeRepost()
 
         like = Like(content_id, user_id)
         session.add(like)
