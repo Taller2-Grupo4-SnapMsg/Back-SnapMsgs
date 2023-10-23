@@ -34,6 +34,10 @@ async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
     try:
         user = await get_user_from_token(token)
         # pylint: disable=E1121, R0913
+        if not valid_content(post.content):
+            raise HTTPException(
+                status_code=400, detail="Content too long. Max 1000 chars"
+            )
         create_post(int(user.get("id")), post.content, post.image, post.hashtags)
         return {"message": "Post created successfully"}
     except Exception as error:

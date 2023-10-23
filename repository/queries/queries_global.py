@@ -25,6 +25,13 @@ def get_post(post_id):
     return post
 
 
+def valid_content(content):
+    """
+    Checks if the content is longer than 1000 chars (max lenght in DB)
+    """
+    return len(content) < 1000
+
+
 def is_following(user_id, user_id_to_check_if_following):
     """
     Returns True if the user with the given id is following
