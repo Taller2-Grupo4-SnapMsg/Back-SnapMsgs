@@ -91,6 +91,7 @@ def delete_users_repost_from_post(post_id, user_id):
             raise UserWithouPermission()
 
         session.delete(repost_to_delete)
+        # pylint: disable=R0801
         session.commit()
     except IntegrityError as error:
         session.rollback()
@@ -115,6 +116,7 @@ def delete_repost(post_id, user_id):
             raise UserWithouPermission()
 
         session.delete(repost)
+        # pylint: disable=R0801
         session.commit()
     except IntegrityError as error:
         session.rollback()

@@ -79,6 +79,32 @@ async def api_get_posts_and_reposts_from_user_visited(
 
 
 @router.get(
+    "/posts/profile/{user_visited_email}",
+    tags=["Posts"],
+)
+async def api_get_amount_posts_from_user_visited(
+    user_visited_email: str,
+    token: str = Header(...),
+):
+    """
+    Gets all posts and reposts from user visited as user visitor
+
+    Returns: All posts and reposts made by that user
+    """
+    try:
+        user_visited = get_user_id_from_email(user_visited_email)
+        user = await get_user_from_token(token)
+        return get_amount_posts_from_users(int(user.get("id")), user_visited)
+
+    except UserIsPrivate as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except UserDoesntHavePosts as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
+
+
+@router.get(
     "/posts/feed/oldest_date/{oldest_date_str}/amount/{amount}",
     tags=["Posts"],
 )

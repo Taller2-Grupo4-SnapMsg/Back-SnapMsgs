@@ -56,6 +56,7 @@ def delete_like(content_id: int, user_id: int):
             raise LikeNotFound()
 
         session.delete(like)
+        # pylint: disable=R0801
         session.commit()
     except IntegrityError as error:
         session.rollback()

@@ -149,6 +149,58 @@ def get_posts_and_reposts_from_users(
     return results
 
 
+# "Too many local variables"
+# pylint: disable=R0914
+def get_amount_posts_from_users(user_visitor_id, user_visited_id):
+    """
+    Get posts and reposts, with all their info, where the first id is the user that is
+    visiting and the second id is the user that is being visited.
+
+    Made for the profile, where visitor is the actual mobile user, and visited is another
+    user that the owner of the token want to visit (could be themselves or someone else)
+
+    If only_reposts == True, then only reposts will be returned
+    """
+    query_posts = get_posts_and_reposts(user_visitor_id)
+    posts_id = (
+        session.query(Post.post_id)
+        .filter(
+            Post.user_poster_id == user_visited_id,
+            Post.user_creator_id == user_visited_id,
+        )
+        .distinct()
+        .subquery()
+    )
+    query_final = (
+        query_posts.filter(Post.post_id.in_(posts_id))
+        .filter(
+            or_(
+                # so that I can check my own profile with this query
+                user_visited_id == user_visitor_id,
+                # to check if im following the user
+                Post.user_poster_id.in_(
+                    session.query(Following.following_id).filter(
+                        Following.user_id == user_visitor_id
+                    )
+                ),
+                # to check if the user im visiting is public
+                bool(User.is_public),
+            )
+        )
+        .order_by(Post.created_at.desc())
+    )
+
+    results = query_final.all()
+    if results is None:
+        # a) the user visited is private and the user visitor doesnt follow them
+        # b) the user doesnt have any posts
+        if is_public(user_visited_id):
+            raise UserIsPrivate()
+        raise UserDoesntHavePosts()
+
+    return len(results)
+
+
 def get_posts_and_reposts_based_on_interests(user_id, oldest_date):
     """
     Gets amount posts and reposts that the user_id might like, that are older than the oldest_date.
