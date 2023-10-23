@@ -34,6 +34,23 @@ async def api_create_repost(post_id: int, token: str = Header(...)):
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
+@router.delete("/reposts/from_post/{post_id}", tags=["Reposts"])
+async def api_delete_respost_from_post(post_id: int, token: str = Header(...)):
+    """
+    Deletes a repost of the post_id made by the user.
+    """
+    try:
+        user = await get_user_from_token(token)
+        delete_users_repost_from_post(post_id, user.get("id"))
+        return {"message": "Repost deleted successfully"}
+    except PostNotFound as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except UserWithouPermission as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
+
+
 @router.delete("/reposts/{repost_id}", tags=["Reposts"])
 async def api_delete_respost(repost_id: int, token: str = Header(...)):
     """
