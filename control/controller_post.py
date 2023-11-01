@@ -4,8 +4,6 @@
 from datetime import datetime
 from fastapi import HTTPException, Header, APIRouter, Query
 
-from fastapi.responses import JSONResponse
-
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_posts import *
 
@@ -136,9 +134,13 @@ async def api_get_feed(oldest_date_str: str, amount: int, token: str = Header(..
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
-@router.get("/posts/statistics/from_date/{from_date_str}/to_date/{to_date_str}",
-    tags=["Posts"],)
-async def api_get_statistics(from_date_str: str, to_date_str: str, token: str = Header(...)):
+@router.get(
+    "/posts/statistics/from_date/{from_date_str}/to_date/{to_date_str}",
+    tags=["Posts"],
+)
+async def api_get_statistics(
+    from_date_str: str, to_date_str: str, token: str = Header(...)
+):
     """
     Gets all posts from user visited as user visitor
 
@@ -156,7 +158,6 @@ async def api_get_statistics(from_date_str: str, to_date_str: str, token: str = 
         raise HTTPException(status_code=404, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
-
 
 
 ## ------- PUT ---------

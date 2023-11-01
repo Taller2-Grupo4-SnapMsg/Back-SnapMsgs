@@ -290,7 +290,7 @@ def get_reposts_of_users_content(user_id):
     """
     query = (
         session.query(Post)
-        #Only keep the reposts of the content created by the user_id
+        # Only keep the reposts of the content created by the user_id
         .filter(Post.user_creator_id == user_id, Post.user_poster_id != user_id)
     )
     return query
@@ -302,11 +302,13 @@ def get_likes_of_users_content(user_id):
     """
     query = (
         session.query(Like)
-        #Keep the likes of the content created by the user_id
-        .join(Post, Post.content_id == Like.content_id)
-        .filter(Post.user_creator_id == user_id)
+        # Keep the likes of the content created by the user_id
+        .join(Post, Post.content_id == Like.content_id).filter(
+            Post.user_creator_id == user_id
+        )
     )
     return query
+
 
 def get_statistics(user_id, from_date, to_date):
     """
@@ -315,25 +317,27 @@ def get_statistics(user_id, from_date, to_date):
     """
 
     query_posts = get_posts_and_reposts(user_id)
-    query_only_my_posts = (
-        query_posts.filter(Post.user_creator_id == Post.user_poster_id, Post.user_poster_id == user_id)
-            .filter(from_date <= Post.created_at, Post.created_at <= to_date)
-    )
+    query_only_my_posts = query_posts.filter(
+        Post.user_creator_id == Post.user_poster_id, Post.user_poster_id == user_id
+    ).filter(from_date <= Post.created_at, Post.created_at <= to_date)
 
-    query_only_my_reposts = (
-        query_posts.filter(Post.user_creator_id != Post.user_poster_id, Post.user_poster_id == user_id)
-            .filter(from_date <= Post.created_at, Post.created_at <= to_date)
-    )
+    query_only_my_reposts = query_posts.filter(
+        Post.user_creator_id != Post.user_poster_id, Post.user_poster_id == user_id
+    ).filter(from_date <= Post.created_at, Post.created_at <= to_date)
 
     results_my_posts = query_only_my_posts.all()
     results_my_reposts = query_only_my_reposts.all()
     if not results_my_posts and not results_my_reposts:
         raise UserDoesntHavePosts()
 
-    query_others_reposts = get_reposts_of_users_content(user_id).filter(from_date <= Post.created_at, Post.created_at <= to_date)
+    query_others_reposts = get_reposts_of_users_content(user_id).filter(
+        from_date <= Post.created_at, Post.created_at <= to_date
+    )
     results_others_reposts = query_others_reposts.all()
 
-    query_likes = get_likes_of_users_content(user_id).filter(from_date <= Like.created_at, Like.created_at <= to_date)
+    query_likes = get_likes_of_users_content(user_id).filter(
+        from_date <= Like.created_at, Like.created_at <= to_date
+    )
     results_likes = query_likes.all()
 
     my_posts_count = len(results_my_posts)
@@ -342,10 +346,10 @@ def get_statistics(user_id, from_date, to_date):
     likes_count = len(results_likes) if results_likes is not None else 0
 
     statistics = {
-        'my_posts_count': my_posts_count,
-        'my_reposts_count': my_reposts_count,
-        'others_reposts_count': others_reposts_count,
-        'likes_count': likes_count
+        "my_posts_count": my_posts_count,
+        "my_reposts_count": my_reposts_count,
+        "others_reposts_count": others_reposts_count,
+        "likes_count": likes_count,
     }
 
     return statistics
