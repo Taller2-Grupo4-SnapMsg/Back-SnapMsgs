@@ -7,7 +7,6 @@ from fastapi import HTTPException, Header, APIRouter, Query
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_posts import *
 
-
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_get import *
 
@@ -129,6 +128,32 @@ async def api_get_feed(oldest_date_str: str, amount: int, token: str = Header(..
         return posts
     except UserIsPrivate as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
+    except UserDoesntHavePosts as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
+
+
+@router.get(
+    "/posts/statistics/from_date/{from_date_str}/to_date/{to_date_str}",
+    tags=["Posts"],
+)
+async def api_get_statistics(
+    from_date_str: str, to_date_str: str, token: str = Header(...)
+):
+    """
+    Gets all posts from user visited as user visitor
+
+    Returns: All posts and reposts made by that user
+    """
+    try:
+        from_date = datetime.datetime.strptime(from_date_str, "%Y-%m-%d_%H:%M:%S")
+        to_date = datetime.datetime.strptime(to_date_str, "%Y-%m-%d_%H:%M:%S")
+        user = await get_user_from_token(token)
+
+        statistics = get_statistics(int(user.get("id")), from_date, to_date)
+
+        return statistics
     except UserDoesntHavePosts as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
     except Exception as error:

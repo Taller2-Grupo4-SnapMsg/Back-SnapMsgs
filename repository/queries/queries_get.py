@@ -27,7 +27,7 @@ PERCENTAGE_FOLLOWED = 0.7
 def get_posts_and_reposts(user_id):
     """
     Returns query that gets all posts and reposts (with their respective info)
-    made by this user
+    and if this user liked or reposted the post
     """
     subquery_likes_count = create_subquery_likes_count()
     how_many_lies = create_how_many_likes(subquery_likes_count)
@@ -279,3 +279,77 @@ def get_posts_and_reposts_feed(user_id, oldest_date, amount):
     )
 
     return list(posts)
+
+
+def get_reposts_of_users_content(user_id):
+    """
+    Gets all the reposts of all the posts made by this user
+
+    It doesnt contain all the regular info that the other queries return.
+    It only returns the post info (no user or content info)
+    """
+    query = (
+        session.query(Post)
+        # Only keep the reposts of the content created by the user_id
+        .filter(Post.user_creator_id == user_id, Post.user_poster_id != user_id)
+    )
+    return query
+
+
+def get_likes_of_users_content(user_id):
+    """
+    Gets all the likes from all the contents made by this user
+    """
+    query = (
+        session.query(Like)
+        # Keep the likes of the content created by the user_id
+        .join(Post, Post.content_id == Like.content_id).filter(
+            Post.user_creator_id == user_id
+        )
+    )
+    return query
+
+
+def get_statistics(user_id, from_date, to_date):
+    """
+    Get the statistics info of all the posts made by this user from the from_date
+    to the to_date. If no posts are found, an exception will be launched.
+    """
+
+    query_posts = get_posts_and_reposts(user_id)
+    query_only_my_posts = query_posts.filter(
+        Post.user_creator_id == Post.user_poster_id, Post.user_poster_id == user_id
+    ).filter(from_date <= Post.created_at, Post.created_at <= to_date)
+
+    query_only_my_reposts = query_posts.filter(
+        Post.user_creator_id != Post.user_poster_id, Post.user_poster_id == user_id
+    ).filter(from_date <= Post.created_at, Post.created_at <= to_date)
+
+    results_my_posts = query_only_my_posts.all()
+    results_my_reposts = query_only_my_reposts.all()
+    if not results_my_posts and not results_my_reposts:
+        raise UserDoesntHavePosts()
+
+    query_others_reposts = get_reposts_of_users_content(user_id).filter(
+        from_date <= Post.created_at, Post.created_at <= to_date
+    )
+    results_others_reposts = query_others_reposts.all()
+
+    query_likes = get_likes_of_users_content(user_id).filter(
+        from_date <= Like.created_at, Like.created_at <= to_date
+    )
+    results_likes = query_likes.all()
+
+    my_posts_count = len(results_my_posts)
+    my_reposts_count = len(results_my_reposts)
+    others_reposts_count = len(results_others_reposts)
+    likes_count = len(results_likes) if results_likes is not None else 0
+
+    statistics = {
+        "my_posts_count": my_posts_count,
+        "my_reposts_count": my_reposts_count,
+        "others_reposts_count": others_reposts_count,
+        "likes_count": likes_count,
+    }
+
+    return statistics
