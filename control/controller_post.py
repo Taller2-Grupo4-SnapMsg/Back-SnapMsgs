@@ -160,6 +160,76 @@ async def api_get_statistics(
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
+@router.get(
+    "/posts/search/hashtags/{hashtags}",
+    tags=["Posts"],
+)
+async def api_get_posts_by_hashtags(
+    hashtags: str,
+    offset=Query(0, title="offset", description="offset for pagination"),
+    amount=Query(10, title="ammount", description="max ammount of users to return"),
+    token: str = Header(...),
+):
+    """
+    This fuction gets all posts that have the hashtags passed as parameter
+    :param hashtags: The hashtags to search for
+    :param offset: The offset for pagination
+    :param amount: The max amount of posts to return
+    :param token: The authentication token.
+    :return: A list of posts
+    """
+    try:
+        hashtag_list = hashtags.split(",")
+
+        user = await get_user_from_token(token)
+
+        posts_db = get_posts_by_hashtags(
+            int(user.get("id")), hashtag_list, offset, amount
+        )
+        posts = generate_response_posts_from_db(posts_db)
+
+        return posts
+    except UserIsPrivate as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except UserDoesntHavePosts as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
+
+
+@router.get(
+    "/posts/search/text/{text}",
+    tags=["Posts"],
+)
+async def api_get_posts_by_text(
+    text: str,
+    offset=Query(0, title="offset", description="offset for pagination"),
+    amount=Query(10, title="ammount", description="max ammount of users to return"),
+    token: str = Header(...),
+):
+    """
+    This fuction gets all posts that have the hashtags passed as parameter
+    :param text: The text to search for
+    :param offset: The offset for pagination
+    :param amount: The max amount of posts to return
+    :param token: The authentication token.
+    :return: A list of posts
+    """
+    try:
+        user = await get_user_from_token(token)
+
+        posts_db = get_posts_by_text(int(user.get("id")), text, offset, amount)
+        posts = generate_response_posts_from_db(posts_db)
+
+        return posts
+    except UserIsPrivate as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except UserDoesntHavePosts as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
+
+
 ## ------- PUT ---------
 
 
