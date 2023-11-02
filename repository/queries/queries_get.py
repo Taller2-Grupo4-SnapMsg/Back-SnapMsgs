@@ -353,3 +353,27 @@ def get_statistics(user_id, from_date, to_date):
     }
 
     return statistics
+
+
+def get_posts_by_hashtags(user_id, hashtags, offset, amount):
+    """
+    This fuction gets all posts that have the hashtags passed as parameter
+    :param hashtags: The hashtags to search for
+    :param offset: The offset for pagination
+    :param amount: The max amount of posts to return
+    :param token: The authentication token.
+    :return: A list of posts
+    """
+    query_posts = get_posts_and_reposts(user_id)
+    subquery_hashtags = create_subquery_from_search_by_hashtags(hashtags)
+
+    query_final = (
+        query_posts.filter(Content.content_id.in_(subquery_hashtags)).filter(
+            Post.user_poster_id == Post.user_creator_id
+        )
+        # pylint: disable=C0121
+        .filter(User.is_public == True)
+    )
+
+    results = query_final.offset(offset).limit(amount)
+    return results

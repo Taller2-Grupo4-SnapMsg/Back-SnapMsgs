@@ -149,3 +149,15 @@ def create_subquery_posts_from_followd(user_id):
         .distinct()
         .subquery()
     )
+
+
+def create_subquery_from_search_by_hashtags(hashtags):
+    """
+    Create subquery that returns all the contents ids
+    """
+    return (
+        session.query(Hashtag.content_id)
+        .filter(Hashtag.hashtag.in_(hashtags))
+        .distinct()
+        .subquery()
+    )
