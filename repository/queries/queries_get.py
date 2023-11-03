@@ -42,6 +42,7 @@ def get_posts_and_reposts(user_id):
     did_i_repost_column = create_did_i_repost_column(subquery_my_reposts_count)
 
     hashtags_subquery = create_subquery_hashtags()
+    mentions_subquery = create_subquery_mentions(user_id)
 
     # pylint: disable=C0103
     # "Variable name "User2" doesn't conform to snake_case naming style"
@@ -53,6 +54,7 @@ def get_posts_and_reposts(user_id):
             User,
             User2,
             hashtags_subquery.c.hashtags,
+            mentions_subquery.c.mentions,
             how_many_lies,
             how_many_reposts,
             did_i_like_column,
@@ -84,6 +86,11 @@ def get_posts_and_reposts(user_id):
         .join(
             hashtags_subquery,
             Post.content_id == hashtags_subquery.c.content_id,
+            isouter=True,
+        )
+        .join(
+            mentions_subquery,
+            Post.content_id == mentions_subquery.c.content_id,
             isouter=True,
         )
     )

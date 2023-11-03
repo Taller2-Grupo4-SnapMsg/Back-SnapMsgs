@@ -85,6 +85,21 @@ def create_subquery_hashtags():
     )
 
 
+def create_subquery_mentions(user_id):
+    """
+    Create a subquery that retrieves mentions per 'content_id'.
+    """
+    subquery = (
+        session.query(Mention.content_id, array_agg(User.username).label("mentions"))
+        .join(User, Mention.user_mention_id == User.id)
+        .join(Following, Following.user_id == User.id)
+        .filter(Following.following_id == user_id)
+        .group_by(Mention.content_id)
+        .subquery()
+    )
+    return subquery
+
+
 def create_did_i_like_column(subquery_user_like_count):
     """
     Create a subquery that checks if the value in the user_like_count
