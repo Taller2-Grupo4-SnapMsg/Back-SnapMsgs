@@ -37,7 +37,9 @@ async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
             raise HTTPException(
                 status_code=400, detail="Content too long. Max 1000 chars"
             )
-        create_post(int(user.get("id")), post.content, post.image, post.hashtags)
+        create_post(
+            int(user.get("id")), post.content, post.image, post.hashtags, post.mentions
+        )
         return {"message": "Post created successfully"}
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
@@ -248,6 +250,7 @@ async def api_update_post(
             post_data.content,
             post_data.image,
             post_data.hashtags,
+            post_data.mentions,
         )
         return {"message": "Post updated successfully"}
     except UserIsPrivate as error:

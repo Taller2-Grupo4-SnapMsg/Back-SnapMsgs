@@ -27,6 +27,7 @@ class PostCreateRequest(BaseModel):
     content: str
     image: str
     hashtags: List[str]
+    mentions: List[str]
 
 
 class UserResponse(BaseModel):
@@ -57,6 +58,7 @@ class PostResponse(BaseModel):
     number_likes: int
     number_reposts: int
     hashtags: List[str]
+    mentions: List[str]
     did_i_like: bool
     did_i_repost: bool
 
@@ -79,6 +81,7 @@ def generate_post_from_db(
     user_poster_info,
     user_creator_info,
     hashtags,
+    mentions,
     likes_count,
     reposts_count,
     did_i_like,
@@ -98,6 +101,7 @@ def generate_post_from_db(
         number_likes=likes_count,
         number_reposts=reposts_count,
         hashtags=hashtags,
+        mentions=mentions,
         did_i_like=did_i_like,
         did_i_repost=did_i_repost,
     )
@@ -130,6 +134,7 @@ def generate_post(post_db):
         user_poster_info,
         user_creator_info,
         hashtags,
+        mentions,
         likes_count,
         reposts_count,
         did_i_like,
@@ -142,6 +147,8 @@ def generate_post(post_db):
         reposts_count = 0
     if hashtags is None:
         hashtags = []
+    if mentions is None:
+        mentions = []
 
     return generate_post_from_db(
         post_info,
@@ -149,6 +156,7 @@ def generate_post(post_db):
         user_poster_info,
         user_creator_info,
         hashtags,
+        mentions,
         likes_count,
         reposts_count,
         did_i_like,

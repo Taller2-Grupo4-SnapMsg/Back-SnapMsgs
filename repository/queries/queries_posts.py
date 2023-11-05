@@ -8,6 +8,7 @@ from repository.queries.common_setup import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_hashtags import *
+from repository.queries.queries_mentions import *
 from repository.queries.queries_likes import *
 from repository.queries.queries_reposts import *
 
@@ -22,7 +23,7 @@ from repository.errors import (
 from repository.tables.posts import Post, Content
 
 
-def create_post(user_id, text, image, hashtags):
+def create_post(user_id, text, image, hashtags, mentions):
     """
     Create a post made by the user_id, with that content and image
     """
@@ -43,13 +44,15 @@ def create_post(user_id, text, image, hashtags):
         # similar lines
         # pylint: disable=R0801
         create_hashtags(content.content_id, hashtags)
+        create_mentions(content.content_id, mentions)
         session.commit()
     except IntegrityError as error:
         session.rollback()
         raise DatabaseError from error
 
 
-def update_post(post_id, user_id, text, image, hashtags):
+# pylint: disable=R0913
+def update_post(post_id, user_id, text, image, hashtags, mentions):
     """
     Updates posts contents, image and hashtags
     """
@@ -69,6 +72,9 @@ def update_post(post_id, user_id, text, image, hashtags):
         )
         content.text = text
         content.image = image
+
+        delete_mentions_for_content(content.content_id)
+        create_mentions(content.content_id, mentions)
 
         delete_hashtags_for_content(content.content_id)
         create_hashtags(content.content_id, hashtags)
