@@ -13,6 +13,7 @@ from repository.queries.queries_notifications import *
 
 router = APIRouter()
 
+
 @router.post("/notifications/save/{device_token}", tags=["Notifications"])
 async def api_save_device_token(device_token: str, token: str = Header(...)):
     """
