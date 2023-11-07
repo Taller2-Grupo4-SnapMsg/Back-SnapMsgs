@@ -134,3 +134,20 @@ class Mention(Base):
     def __init__(self, content_id, user_mention_id):
         self.content_id = content_id
         self.user_mention_id = user_mention_id
+
+class DeviceToken(Base):
+    """
+    Class that represents the device tokens table on the db
+    """
+
+    __tablename__ = "device_tokens"
+
+    user_id = create_users_foreign_key(True)
+    device_token = Column(String(500), nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    _table_args__ = (UniqueConstraint("user_id", "device_token"),)
+
+    def __init__(self, user_id, device_token):
+        self.user_id = user_id
+        self.device_token = device_token

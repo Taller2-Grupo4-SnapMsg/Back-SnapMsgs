@@ -73,6 +73,22 @@ class PostResponse(BaseModel):
         orm_mode = True
         from_attributes = True
 
+class NotificationRequest(BaseModel):
+    """ This class is a Pydantic model for the request body. """
+    
+    mensaje: str
+    usuario_destino: str
+    # I disable it since it's a pydantic configuration
+    # pylint: disable=too-few-public-methods
+    class Config:
+        """
+        This is a pydantic configuration so I can cast
+        orm_objects into pydantic models.
+        """
+
+        orm_mode = True
+        from_attributes = True
+
 
 # pylint: disable=R0913
 def generate_post_from_db(
