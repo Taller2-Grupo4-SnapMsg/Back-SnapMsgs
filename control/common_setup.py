@@ -3,10 +3,11 @@ Clases for the response bodies of the posts and likes controller.
 There are also functions to generate the correct classes from the db objects
 and from the json objects.
 """
-from typing import List
+from typing import List, Optional
 from fastapi import HTTPException
 from pydantic import BaseModel
 import httpx
+import requests
 
 POST_NOT_FOUND = 404
 USER_NOT_FOUND = 404
@@ -62,22 +63,6 @@ class PostResponse(BaseModel):
     did_i_like: bool
     did_i_repost: bool
 
-    # I disable it since it's a pydantic configuration
-    # pylint: disable=too-few-public-methods
-    class Config:
-        """
-        This is a pydantic configuration so I can cast
-        orm_objects into pydantic models.
-        """
-
-        orm_mode = True
-        from_attributes = True
-
-class NotificationRequest(BaseModel):
-    """ This class is a Pydantic model for the request body. """
-    
-    mensaje: str
-    usuario_destino: str
     # I disable it since it's a pydantic configuration
     # pylint: disable=too-few-public-methods
     class Config:
@@ -213,6 +198,66 @@ class LikeCreateRequest(BaseModel):
         orm_mode = True
         from_attributes = True
 
+# ------------------------------------------ NOTIFICATIONS ------------------------------------------
+    
+class NotificationRequest(BaseModel):
+    """ This class is a Pydantic model for the request body. """
+    
+    user_ids_that_receive: List[int]
+    title: str
+    body: str
+    #sound: Optional[str]
+    #badge: Optional[int]
+    #data: Optional[dict]
+
+
+    # I disable it since it's a pydantic configuration
+    # pylint: disable=too-few-public-methods
+    class Config:
+        """
+        This is a pydantic configuration so I can cast
+        orm_objects into pydantic models.
+        """
+
+        orm_mode = True
+        from_attributes = True
+
+url = "https://exp.host/--/api/v2/push/send"
+
+headers = {
+    "host": "exp.host",
+    "accept": "application/json",
+    "accept-encoding": "gzip, deflate",
+    "content-type": "application/json",
+}
+
+def send_push_notification(token, notificacionRequest):
+    """
+    This function send a push notification to the user
+    """
+    data = {
+        "to": token,
+        "title": notificacionRequest.title,
+        "body": notificacionRequest.body,
+        "sound": "default",
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()
+
+    except requests.exceptions.RequestException as e:
+        print("Error al enviar la notificación:", str(e))
+
+
+def send_push_notifications(tokens_db, notificacionRequest):
+    """
+    This function sends a push notification to the users
+    """
+    device_tokens = [token.device_token for token in tokens_db]
+    for device_token in device_tokens:
+        send_push_notification(device_token, notificacionRequest)
+
 
 # ----------------- Common functions -----------------
 
@@ -234,3 +279,4 @@ async def get_user_from_token(token):
             raise HTTPException(status_code=400, detail={"Unknown error"})
 
         return response.json()
+    
