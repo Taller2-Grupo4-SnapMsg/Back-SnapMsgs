@@ -13,11 +13,6 @@ from repository.queries.queries_notifications import *
 
 router = APIRouter()
 
-
-# Falta hacer:
-# En el header ademas de recibir el token del usuario
-# deberia recibir el token de expo para poder ver
-# si tiene permisos para enviar notificaciones
 @router.post("/notifications/save/{device_token}", tags=["Notifications"])
 async def api_save_device_token(device_token: str, token: str = Header(...)):
     """
