@@ -135,6 +135,7 @@ class Mention(Base):
         self.content_id = content_id
         self.user_mention_id = user_mention_id
 
+
 class DeviceToken(Base):
     """
     Class that represents the device tokens table on the db

@@ -6,7 +6,6 @@ from sqlalchemy.exc import IntegrityError
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.common_setup import *
-from repository.queries.queries_global import execute_delete_query
 
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.errors import (
@@ -45,6 +44,7 @@ def get_device_tokens(users_id: List[int]):
     tokens = session.query(DeviceToken).filter(DeviceToken.user_id.in_(users_id)).all()
     return tokens
 
+
 # ----- DELETE ------
 
 
@@ -54,9 +54,7 @@ def delete_device_token(user_id: int):
     """
     try:
         device_tokens = (
-            session.query(DeviceToken)
-            .filter(DeviceToken.user_id == user_id)
-            .first()
+            session.query(DeviceToken).filter(DeviceToken.user_id == user_id).first()
         )
         if device_tokens is None:
             raise UserNotFound()
@@ -67,4 +65,3 @@ def delete_device_token(user_id: int):
     except IntegrityError as error:
         session.rollback()
         raise DatabaseError from error
-    
