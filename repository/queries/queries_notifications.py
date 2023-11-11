@@ -44,6 +44,7 @@ def get_device_tokens(users_id: List[int]):
     tokens = session.query(DeviceToken).filter(DeviceToken.user_id.in_(users_id)).all()
     return tokens
 
+
 def get_users_ids_by_emails(emails: List[str]):
     """
     Gets all users ids by a list of emails

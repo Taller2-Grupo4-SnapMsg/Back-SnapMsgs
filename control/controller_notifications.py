@@ -62,7 +62,9 @@ async def api_send_notificacion(
     try:
         _ = await get_user_from_token(token)
         print(notificacion_request.user_emails_that_receive)
-        users_ids_db = get_users_ids_by_emails(notificacion_request.user_emails_that_receive)
+        users_ids_db = get_users_ids_by_emails(
+            notificacion_request.user_emails_that_receive
+        )
         users_ids = [user.id for user in users_ids_db]
         tokens_db = get_device_tokens(users_ids)
         send_push_notifications(tokens_db, notificacion_request)
