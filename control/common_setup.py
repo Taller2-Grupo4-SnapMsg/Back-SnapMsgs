@@ -256,7 +256,7 @@ class LikeCreateRequest(BaseModel):
 class NotificationRequest(BaseModel):
     """This class is a Pydantic model for the request body."""
 
-    user_ids_that_receive: List[int]
+    user_emails_that_receive: List[str]
     title: str
     body: str
     # sound: Optional[str]
