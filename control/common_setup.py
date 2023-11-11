@@ -3,6 +3,7 @@ Clases for the response bodies of the posts and likes controller.
 There are also functions to generate the correct classes from the db objects
 and from the json objects.
 """
+from os import getenv
 from typing import List
 from fastapi import HTTPException
 from pydantic import BaseModel
@@ -14,7 +15,8 @@ USER_NOT_FOUND = 404
 LIKE_NOT_FOUND = 404
 BAD_REQUEST = 400
 
-API_BASE_URL = "https://gateway-api-service-merok23.cloud.okteto.net"
+MAX_AMMOUNT = 25
+TIMEOUT = 5
 
 
 # ------------------------------------------ POSTS ------------------------------------------
@@ -60,8 +62,8 @@ class PostResponse(BaseModel):
     number_reposts: int
     hashtags: List[str]
     mentions: List[str]
-    did_i_like: bool
-    did_i_repost: bool
+    did_i_like: bool = False
+    did_i_repost: bool = False
 
     # I disable it since it's a pydantic configuration
     # pylint: disable=too-few-public-methods
@@ -165,7 +167,44 @@ def generate_post(post_db):
     )
 
 
-# listo
+def generate_post_for_admin(post_db):
+    """
+    This utility function returns a post that is going to be used by admins
+    """
+    (
+        post_info,
+        content_info,
+        user_poster_info,
+        user_creator_info,
+        hashtags,
+        mentions,
+        likes_count,
+        reposts_count,
+    ) = post_db
+
+    if likes_count is None:
+        likes_count = 0
+    if reposts_count is None:
+        reposts_count = 0
+    if hashtags is None:
+        hashtags = []
+    if mentions is None:
+        mentions = []
+
+    return PostResponse(
+        post_id=post_info.post_id,
+        user_poster=generate_user_from_db(user_poster_info),
+        user_creator=generate_user_from_db(user_creator_info),
+        created_at=str(post_info.created_at),
+        text=content_info.text,
+        image=content_info.image,
+        number_likes=likes_count,
+        number_reposts=reposts_count,
+        hashtags=hashtags,
+        mentions=mentions,
+    )
+
+
 def generate_response_posts_from_db(posts_db):
     """
     This function casts the orm_object into a pydantic model.
@@ -173,6 +212,18 @@ def generate_response_posts_from_db(posts_db):
     response = []
     for post_db in posts_db:
         post = generate_post(post_db)
+        response.append(post)
+
+    return response
+
+
+def generate_response_posts_from_db_for_admin(posts_db):
+    """
+    This function casts the orm_object into a pydantic model.
+    """
+    response = []
+    for post_db in posts_db:
+        post = generate_post_for_admin(post_db)
         response.append(post)
 
     return response
@@ -265,20 +316,38 @@ def send_push_notifications(tokens_db, notificacion_request):
 # ----------------- Common functions -----------------
 
 
-async def get_user_from_token(token):
+def create_headers_token(token):
     """
-    This function gets the user from the token.
+    Creates a header with a token for the requests.
     """
-    headers = {
+    return {
         "Content-Type": "application/json;charset=utf-8",
         "accept": "application/json",
         "token": token,
     }
 
+
+async def get_user_from_token(token):
+    """
+    This function gets the user from the token.
+    """
+    headers = create_headers_token(token)
+
     async with httpx.AsyncClient() as client:
-        response = await client.get(f"{API_BASE_URL}/user", headers=headers)
+        url = getenv("API_BASE_URL") + "/user"
+        response = await client.get(url, headers=headers)
 
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail={"Unknown error"})
 
         return response.json()
+
+
+async def token_is_admin(token: str):
+    """
+    This function checks if the token given is an admin.
+    """
+    headers_request = create_headers_token(token)
+    url = getenv("API_BASE_URL") + "/admin/is_admin"
+    response = requests.get(url, headers=headers_request, timeout=TIMEOUT)
+    return response.status_code == 200

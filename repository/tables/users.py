@@ -41,7 +41,6 @@ class User(Base):
     name = Column(String(50), nullable=False)
     surname = Column(String(50), nullable=False)
     password = Column(String(200), nullable=False)
-    admin = Column(Boolean, default=False)
     date_of_birth = Column(DateTime, nullable=False)
     bio = Column(String(500), nullable=False)
     avatar = Column(String(), nullable=False)
@@ -61,7 +60,6 @@ class User(Base):
         date_of_birth=datetime.datetime(666, 6, 6),
         bio="",
         avatar="",
-        admin=False,
         location="",
         blocked=False,
         is_public=True,
@@ -75,7 +73,6 @@ class User(Base):
         self.date_of_birth = date_of_birth
         self.bio = bio
         self.avatar = avatar
-        self.admin = admin
         self.location = location
         self.blocked = blocked
         self.is_public = is_public

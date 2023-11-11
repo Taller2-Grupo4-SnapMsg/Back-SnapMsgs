@@ -19,7 +19,7 @@ from repository.tables.posts import *
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.tables.users import *
 
-from repository.errors import UserIsPrivate, UserDoesntHavePosts, DatabaseError
+from repository.errors import UserIsPrivate, UserDoesntHavePosts
 
 PERCENTAGE_FOLLOWED = 0.7
 
@@ -30,7 +30,7 @@ def get_posts_and_reposts(user_id):
     and if this user liked or reposted the post
     """
     subquery_likes_count = create_subquery_likes_count()
-    how_many_lies = create_how_many_likes(subquery_likes_count)
+    how_many_likes = create_how_many_likes(subquery_likes_count)
 
     subquery_repost_count = create_subquery_resposts_count()
     how_many_reposts = create_how_many_reposts(subquery_repost_count)
@@ -42,7 +42,7 @@ def get_posts_and_reposts(user_id):
     did_i_repost_column = create_did_i_repost_column(subquery_my_reposts_count)
 
     hashtags_subquery = create_subquery_hashtags()
-    mentions_subquery = create_subquery_mentions(user_id)
+    mentions_subquery = create_subquery_mentions()
 
     # pylint: disable=C0103
     # "Variable name "User2" doesn't conform to snake_case naming style"
@@ -55,7 +55,7 @@ def get_posts_and_reposts(user_id):
             User2,
             hashtags_subquery.c.hashtags,
             mentions_subquery.c.mentions,
-            how_many_lies,
+            how_many_likes,
             how_many_reposts,
             did_i_like_column,
             did_i_repost_column,
