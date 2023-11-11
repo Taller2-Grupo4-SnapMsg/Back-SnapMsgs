@@ -19,7 +19,7 @@ from repository.tables.posts import *
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.tables.users import *
 
-from repository.errors import UserIsPrivate, UserDoesntHavePosts, DatabaseError
+from repository.errors import UserIsPrivate, UserDoesntHavePosts
 
 PERCENTAGE_FOLLOWED = 0.7
 
@@ -42,7 +42,7 @@ def get_posts_and_reposts(user_id):
     did_i_repost_column = create_did_i_repost_column(subquery_my_reposts_count)
 
     hashtags_subquery = create_subquery_hashtags()
-    mentions_subquery = create_subquery_mentions(user_id)
+    mentions_subquery = create_subquery_mentions()
 
     # pylint: disable=C0103
     # "Variable name "User2" doesn't conform to snake_case naming style"
@@ -406,15 +406,3 @@ def get_posts_by_text(user_id, text, offset, amount):
     )
     results = query_final.offset(offset).limit(amount)
     return results
-
-
-def get_posts_and_reposts_for_admin_user_id(user_id, start, ammount):
-    """
-    Get all the posts and reposts for the admin
-    """
-    try:
-        posts = get_posts_and_reposts(user_id)
-        return posts.offset(start).limit(ammount).all()
-    except IntegrityError as error:
-        session.rollback()
-        raise DatabaseError from error

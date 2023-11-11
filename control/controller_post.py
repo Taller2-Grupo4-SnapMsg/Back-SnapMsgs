@@ -11,6 +11,9 @@ from repository.queries.queries_posts import *
 from repository.queries.queries_get import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
+from repository.queries.queries_admin import *
+
+# pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_hashtags import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
@@ -164,7 +167,7 @@ async def api_get_statistics(
 
 @router.get("/posts/admin/user", tags=["Posts"])
 async def api_get_posts_for_admin_user_id(
-    user_id: int,
+    email: str,
     start: int = Query(0, title="start", description="start for pagination"),
     ammount: int = Query(10, title="ammount", description="ammount of posts"),
     admin_token: str = Header(...),
@@ -185,39 +188,40 @@ async def api_get_posts_for_admin_user_id(
             raise HTTPException(status_code=400, detail="Max ammount is 25")
         if not await token_is_admin(admin_token):
             raise HTTPException(status_code=403, detail="Invalid token")
+        user_id = get_user_id_from_email(email)
         posts_db = get_posts_and_reposts_for_admin_user_id(user_id, start, ammount)
         return generate_response_posts_from_db(posts_db)
     except UserDoesntHavePosts as error:
-        raise HTTPException(status_code=404, detail=str(error)) from error
+        raise HTTPException(status_code=BAD_REQUEST, detail=str(error)) from error
+    except UserNotFound as error:
+        raise HTTPException(status_code=BAD_REQUEST, detail=str(error)) from error
+
+
+@router.get("/posts/admin", tags=["Posts"])
+async def api_get_posts_for_admin(
+    start: int = Query(0, title="start", description="start for pagination"),
+    ammount: int = Query(10, title="ammount", description="ammount of posts"),
+    admin_token: str = Header(...),
+):
+    """
+    This endpoint is used for admins, and is used to retrieve posts in a paginated way.
+
+    param: start: The starting point of the pagination
+    param: offset: The offset of the pagination
+
+    return: A list of posts with no filters
+    """
+    try:
+        if ammount > MAX_AMMOUNT:
+            raise HTTPException(status_code=400, detail="Max ammount is 25")
+        if not await token_is_admin(admin_token):
+            raise HTTPException(status_code=403, detail="Invalid token")
+        posts_db = get_posts_and_reposts_for_admin(start, ammount)
+        return generate_response_posts_from_db_for_admin(posts_db)
+    except UserDoesntHavePosts as error:
+        raise HTTPException(status_code=BAD_REQUEST, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
-
-
-# Como hago esto?
-# @router.get('/posts/admin', tags=["Posts"])
-# async def api_get_posts_for_admin(
-#   start: int = Query(0, title="start", description="start for pagination"),
-#   ammount: int = Query(10, title="ammount", description="ammount of posts"),
-#   admin_token: str = Header(...)):
-#     """
-#     This endpoint is used for admins, and is used to retrieve posts in a paginated way.
-
-#     param: start: The starting point of the pagination
-#     param: offset: The offset of the pagination
-
-#     return: A list of posts with no filters
-#     """
-#     try:
-#         if ammount > MAX_AMMOUNT:
-#             raise HTTPException(status_code=400, detail="Max ammount is 25")
-#         if not await token_is_admin(admin_token):
-#             raise HTTPException(status_code=403, detail="Invalid token")
-#         posts_db = get_posts_and_reposts_for_admin(start, ammount)
-#         return generate_response_posts_from_db(posts_db)
-#     except UserDoesntHavePosts as error:
-#         raise HTTPException(status_code=404, detail=str(error)) from error
-#     except Exception as error:
-#         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
 @router.get(

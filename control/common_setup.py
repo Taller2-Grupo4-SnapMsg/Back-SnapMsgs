@@ -62,8 +62,8 @@ class PostResponse(BaseModel):
     number_reposts: int
     hashtags: List[str]
     mentions: List[str]
-    did_i_like: bool
-    did_i_repost: bool
+    did_i_like: bool = False
+    did_i_repost: bool = False
 
     # I disable it since it's a pydantic configuration
     # pylint: disable=too-few-public-methods
@@ -167,7 +167,44 @@ def generate_post(post_db):
     )
 
 
-# listo
+def generate_post_for_admin(post_db):
+    """
+    This utility function returns a post that is going to be used by admins
+    """
+    (
+        post_info,
+        content_info,
+        user_poster_info,
+        user_creator_info,
+        hashtags,
+        mentions,
+        likes_count,
+        reposts_count,
+    ) = post_db
+
+    if likes_count is None:
+        likes_count = 0
+    if reposts_count is None:
+        reposts_count = 0
+    if hashtags is None:
+        hashtags = []
+    if mentions is None:
+        mentions = []
+
+    return PostResponse(
+        post_id=post_info.post_id,
+        user_poster=generate_user_from_db(user_poster_info),
+        user_creator=generate_user_from_db(user_creator_info),
+        created_at=str(post_info.created_at),
+        text=content_info.text,
+        image=content_info.image,
+        number_likes=likes_count,
+        number_reposts=reposts_count,
+        hashtags=hashtags,
+        mentions=mentions,
+    )
+
+
 def generate_response_posts_from_db(posts_db):
     """
     This function casts the orm_object into a pydantic model.
@@ -175,6 +212,18 @@ def generate_response_posts_from_db(posts_db):
     response = []
     for post_db in posts_db:
         post = generate_post(post_db)
+        response.append(post)
+
+    return response
+
+
+def generate_response_posts_from_db_for_admin(posts_db):
+    """
+    This function casts the orm_object into a pydantic model.
+    """
+    response = []
+    for post_db in posts_db:
+        post = generate_post_for_admin(post_db)
         response.append(post)
 
     return response
