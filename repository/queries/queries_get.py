@@ -30,7 +30,7 @@ def get_posts_and_reposts(user_id):
     and if this user liked or reposted the post
     """
     subquery_likes_count = create_subquery_likes_count()
-    how_many_lies = create_how_many_likes(subquery_likes_count)
+    how_many_likes = create_how_many_likes(subquery_likes_count)
 
     subquery_repost_count = create_subquery_resposts_count()
     how_many_reposts = create_how_many_reposts(subquery_repost_count)
@@ -55,7 +55,7 @@ def get_posts_and_reposts(user_id):
             User2,
             hashtags_subquery.c.hashtags,
             mentions_subquery.c.mentions,
-            how_many_lies,
+            how_many_likes,
             how_many_reposts,
             did_i_like_column,
             did_i_repost_column,
@@ -406,3 +406,15 @@ def get_posts_by_text(user_id, text, offset, amount):
     )
     results = query_final.offset(offset).limit(amount)
     return results
+
+
+def get_posts_and_reposts_for_admin_user_id(user_id, start, ammount):
+    """
+    Get all the posts and reposts for the admin
+    """
+    try:
+        posts = get_posts_and_reposts(user_id)
+        return posts.offset(start).limit(ammount).all()
+    except IntegrityError as error:
+        session.rollback()
+        raise DatabaseError from error
