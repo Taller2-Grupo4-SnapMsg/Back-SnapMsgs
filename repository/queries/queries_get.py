@@ -19,7 +19,7 @@ from repository.tables.posts import *
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.tables.users import *
 
-from repository.errors import UserIsPrivate, UserDoesntHavePosts
+from repository.errors import UserIsPrivate, UserDoesntHavePosts, PostNotFound
 
 PERCENTAGE_FOLLOWED = 0.7
 
@@ -413,4 +413,6 @@ def get_post_by_id(user_id, post_id):
     get post by id
     """
     post = get_posts_and_reposts(user_id).filter(Post.post_id == post_id).all()
+    if post is None:
+        raise PostNotFound()
     return post

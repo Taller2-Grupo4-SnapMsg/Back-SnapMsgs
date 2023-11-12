@@ -104,9 +104,7 @@ async def api_get_post_by_id(
         post_db = get_post_by_id(int(user.get("id")), post_id)
         post = generate_response_posts_from_db(post_db)
         return post
-    except UserIsPrivate as error:
-        raise HTTPException(status_code=403, detail=str(error)) from error
-    except UserDoesntHavePosts as error:
+    except PostNotFound as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
