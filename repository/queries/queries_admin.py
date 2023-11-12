@@ -92,7 +92,7 @@ def get_posts_and_reposts_for_admin_user_id(user_id, start, ammount):
         posts = get_posts_and_reposts(user_id).filter(
             and_(User.id == user_id, Post.user_creator_id == user_id)
         )
-        return posts.offset(start).limit(ammount).all()
+        return posts.order_by(Post.created_at.desc()).offset(start).limit(ammount).all()
     except IntegrityError as error:
         session.rollback()
         raise DatabaseError from error
@@ -104,7 +104,7 @@ def get_posts_and_reposts_for_admin(start, ammount):
     """
     try:
         posts = get_posts_and_reposts_for_admin_subquery()
-        return posts.offset(start).limit(ammount).all()
+        return posts.order_by(Post.created_at.desc()).offset(start).limit(ammount).all()
     except IntegrityError as error:
         session.rollback()
         raise DatabaseError from error
