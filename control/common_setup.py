@@ -294,6 +294,7 @@ def send_push_notification(token, notificacion_request):
         "title": notificacion_request.title,
         "body": notificacion_request.body,
         "sound": "default",
+        #"icon": None,
     }
 
     try:
