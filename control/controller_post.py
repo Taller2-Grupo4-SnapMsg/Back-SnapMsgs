@@ -188,6 +188,34 @@ async def api_get_statistics(
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
+@router.get("/posts/admin/all", tags=["Posts"])
+async def api_get_posts_for_admin(
+    start: int = Query(0, title="start", description="start for pagination"),
+    ammount: int = Query(10, title="ammount", description="ammount of posts"),
+    token: str = Header(...),
+):
+    """
+    This endpoint is used for admins, and is used to retrieve posts in a paginated way.
+
+    param: start: The starting point of the pagination
+    param: offset: The offset of the pagination
+    param: token: The token of the ADMIN.
+
+    return: A list of posts with no filters
+    """
+    try:
+        if ammount > MAX_AMMOUNT:
+            raise HTTPException(status_code=400, detail="Max ammount is 25")
+        if not await token_is_admin(token):
+            raise HTTPException(status_code=403, detail="Invalid token")
+        posts_db = get_posts_and_reposts_for_admin(start, ammount)
+        return generate_response_posts_from_db_for_admin(posts_db)
+    except UserDoesntHavePosts as error:
+        raise HTTPException(status_code=BAD_REQUEST, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
+
+
 @router.get("/posts/admin/user", tags=["Posts"])
 async def api_get_posts_for_admin_user_id(
     email: str,
@@ -218,34 +246,6 @@ async def api_get_posts_for_admin_user_id(
         raise HTTPException(status_code=BAD_REQUEST, detail=str(error)) from error
     except UserNotFound as error:
         raise HTTPException(status_code=BAD_REQUEST, detail=str(error)) from error
-
-
-@router.get("/posts/admin", tags=["Posts"])
-async def api_get_posts_for_admin(
-    start: int = Query(0, title="start", description="start for pagination"),
-    ammount: int = Query(10, title="ammount", description="ammount of posts"),
-    token: str = Header(...),
-):
-    """
-    This endpoint is used for admins, and is used to retrieve posts in a paginated way.
-
-    param: start: The starting point of the pagination
-    param: offset: The offset of the pagination
-    param: token: The token of the ADMIN.
-
-    return: A list of posts with no filters
-    """
-    try:
-        if ammount > MAX_AMMOUNT:
-            raise HTTPException(status_code=400, detail="Max ammount is 25")
-        if not await token_is_admin(token):
-            raise HTTPException(status_code=403, detail="Invalid token")
-        posts_db = get_posts_and_reposts_for_admin(start, ammount)
-        return generate_response_posts_from_db_for_admin(posts_db)
-    except UserDoesntHavePosts as error:
-        raise HTTPException(status_code=BAD_REQUEST, detail=str(error)) from error
-    except Exception as error:
-        raise HTTPException(status_code=500, detail=str(error)) from error
 
 
 @router.get(
