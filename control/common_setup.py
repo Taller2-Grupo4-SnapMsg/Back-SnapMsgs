@@ -4,7 +4,7 @@ There are also functions to generate the correct classes from the db objects
 and from the json objects.
 """
 from os import getenv
-from typing import List
+from typing import List, Dict
 from fastapi import HTTPException
 from pydantic import BaseModel
 import httpx
@@ -259,6 +259,7 @@ class NotificationRequest(BaseModel):
     user_emails_that_receive: List[str]
     title: str
     body: str
+    data: Dict[str, str]
     # sound: Optional[str]
     # badge: Optional[int]
     # data: Optional[dict]
@@ -294,7 +295,7 @@ def send_push_notification(token, notificacion_request):
         "title": notificacion_request.title,
         "body": notificacion_request.body,
         "sound": "default",
-        "icon": None,
+        "data": notificacion_request.data,
     }
 
     try:
