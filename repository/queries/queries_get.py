@@ -406,3 +406,11 @@ def get_posts_by_text(user_id, text, offset, amount):
     )
     results = query_final.offset(offset).limit(amount)
     return results
+
+
+def get_post_by_id(user_id, post_id):
+    """
+    get post by id
+    """
+    post = get_posts_and_reposts(user_id).filter(Post.post_id == post_id).all()
+    return post

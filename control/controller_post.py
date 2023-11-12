@@ -87,6 +87,31 @@ async def api_get_posts_and_reposts_from_user_visited(
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
+# pylint: disable=C0103, W0622
+@router.get(
+    "/posts/{post_id}",
+    tags=["Posts"],
+)
+async def api_get_post_by_id(
+    post_id: int,
+    token: str = Header(...),
+):
+    """
+    Get post by id
+    """
+    try:
+        user = await get_user_from_token(token)
+        post_db = get_post_by_id(int(user.get("id")), post_id)
+        post = generate_response_posts_from_db(post_db)
+        return post
+    except UserIsPrivate as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except UserDoesntHavePosts as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=500, detail=str(error)) from error
+
+
 @router.get(
     "/posts/profile/{user_visited_email}",
     tags=["Posts"],
