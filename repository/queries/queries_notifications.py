@@ -22,15 +22,25 @@ from repository.tables.users import User
 
 def create_device_token(user_id: int, device_token: str):
     """
-    Creates a device token for a user
+    Creates a device token for a user if it doesn't exist already
     """
     try:
+        existing_token = (
+            session.query(DeviceToken)
+            .filter(
+                DeviceToken.user_id == user_id, DeviceToken.device_token == device_token
+            )
+            .first()
+        )
+        if existing_token:
+            return
+
         user = session.query(User).filter(User.id == user_id).first()
         if user is None:
             raise UserNotFound()
-        device_token = DeviceToken(user_id, device_token)
-        session.add(device_token)
-        # pylint: disable=R0801
+
+        new_device_token = DeviceToken(user_id, device_token)
+        session.add(new_device_token)
         session.commit()
     except IntegrityError as error:
         session.rollback()
