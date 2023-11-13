@@ -386,6 +386,27 @@ def get_posts_by_hashtags(user_id, hashtags, offset, amount):
     return results
 
 
+def get_posts_by_text_admin(text, offset, amount):
+    """
+    This fuction gets all posts that have the text passed as parameter
+    :param text: The text to search for
+    :param offset: The offset for pagination
+    :param amount: The max amount of posts to return
+    :return: A list of posts
+    """
+    query_posts = get_posts_and_reposts(0)
+
+    query_final = (
+        query_posts.filter(Post.user_poster_id == Post.user_creator_id)
+        # pylint: disable=C0121
+        .filter(User.is_public == True).filter(
+            Content.text.ilike(f"%{text}%"),
+        )
+    )
+    results = query_final.offset(offset).limit(amount)
+    return results
+
+
 def get_posts_by_text(user_id, text, offset, amount):
     """
     This fuction gets all posts that have the text passed as parameter
