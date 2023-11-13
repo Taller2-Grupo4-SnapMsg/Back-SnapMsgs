@@ -188,7 +188,7 @@ async def api_get_statistics(
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
-@router.get("/posts/admin/all", tags=["Posts"])
+@router.get("/posts/admin/all", tags=["Posts-admin"])
 async def api_get_posts_for_admin(
     start: int = Query(0, title="start", description="start for pagination"),
     ammount: int = Query(10, title="ammount", description="ammount of posts"),
@@ -216,7 +216,7 @@ async def api_get_posts_for_admin(
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
-@router.get("/posts/admin/user", tags=["Posts"])
+@router.get("/posts/admin/user", tags=["Posts-admin"])
 async def api_get_posts_for_admin_user_id(
     email: str,
     start: int = Query(0, title="start", description="start for pagination"),
@@ -246,6 +246,31 @@ async def api_get_posts_for_admin_user_id(
         raise HTTPException(status_code=BAD_REQUEST, detail=str(error)) from error
     except UserNotFound as error:
         raise HTTPException(status_code=BAD_REQUEST, detail=str(error)) from error
+
+
+@router.get("/posts/admin/search/{text}", tags=["Posts-admin"])
+async def api_get_posts_for_admin_search(
+    text: str,
+    offset=Query(0, title="offset", description="offset for pagination"),
+    amount=Query(10, title="ammount", description="max ammount of users to return"),
+    token: str = Header(...),
+):
+    """
+    Endpoint used by admins to search for posts by text
+
+    param: text: The text to search for
+    param: offset: The offset for pagination
+    param: amount: The max amount of posts to return
+    param: token: The token of the admin.
+    return: posts that contain the text
+    """
+    if not await token_is_admin(token):
+        raise HTTPException(status_code=403, detail="Invalid token")
+    try:
+        posts_db = get_posts_by_text_admin(text, offset, amount)
+        return generate_response_posts_from_db(posts_db)
+    except Exception as error:
+        raise HTTPException(status_code=500, detail="Internal server error") from error
 
 
 @router.get(
@@ -296,7 +321,7 @@ async def api_get_posts_by_text(
     token: str = Header(...),
 ):
     """
-    This fuction gets all posts that have the hashtags passed as parameter
+    This fuction gets all posts that have the text passed as parameter on it's body.
     :param text: The text to search for
     :param offset: The offset for pagination
     :param amount: The max amount of posts to return
