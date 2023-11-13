@@ -40,10 +40,10 @@ async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
             raise HTTPException(
                 status_code=400, detail="Content too long. Max 1000 chars"
             )
-        create_post(
+        post_id = create_post(
             int(user.get("id")), post.content, post.image, post.hashtags, post.mentions
         )
-        return {"message": "Post created successfully"}
+        return {"message": "Post created successfully", "post_id": post_id}
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
 

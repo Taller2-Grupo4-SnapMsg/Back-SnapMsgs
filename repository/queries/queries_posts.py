@@ -46,6 +46,7 @@ def create_post(user_id, text, image, hashtags, mentions):
         create_hashtags(content.content_id, hashtags)
         create_mentions(content.content_id, mentions)
         session.commit()
+        return post.post_id
     except IntegrityError as error:
         session.rollback()
         raise DatabaseError from error
