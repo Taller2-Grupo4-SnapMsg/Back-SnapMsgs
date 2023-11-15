@@ -55,7 +55,9 @@ def get_device_tokens(users_id: List[int]):
     dt_alias = aliased(DeviceToken)
 
     tokens = (
-        session.query(DeviceToken.user_id, DeviceToken.device_token, DeviceToken.created_at)
+        session.query(
+            DeviceToken.user_id, DeviceToken.device_token, DeviceToken.created_at
+        )
         .join(dt_alias, DeviceToken.user_id == dt_alias.user_id)
         .filter(DeviceToken.user_id.in_(users_id))
         .group_by(DeviceToken.user_id, DeviceToken.device_token, DeviceToken.created_at)
