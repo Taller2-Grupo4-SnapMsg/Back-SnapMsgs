@@ -3,6 +3,7 @@ Queries for creating and deleting likes
 """
 from typing import List
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import aliased
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.common_setup import *
@@ -51,7 +52,16 @@ def get_device_tokens(users_id: List[int]):
     """
     Gets all device tokens for a list of users
     """
-    tokens = session.query(DeviceToken).filter(DeviceToken.user_id.in_(users_id)).all()
+    dt_alias = aliased(DeviceToken)
+
+    tokens = (
+        session.query(DeviceToken.user_id, DeviceToken.device_token, DeviceToken.created_at)
+        .join(dt_alias, DeviceToken.user_id == dt_alias.user_id)
+        .filter(DeviceToken.user_id.in_(users_id))
+        .group_by(DeviceToken.user_id, DeviceToken.device_token, DeviceToken.created_at)
+        .all()
+    )
+
     return tokens
 
 
