@@ -105,6 +105,7 @@ def delete_post(post_id, user_id):
         delete_reposts_for_content(original_post.content_id)
         delete_hashtags_for_content(original_post.content_id)
         delete_likes_for_content(original_post.content_id)
+        delete_mentions_for_content(original_post.content_id)
 
         content_to_delete = (
             session.query(Content)
