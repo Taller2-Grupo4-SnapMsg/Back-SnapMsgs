@@ -64,6 +64,7 @@ class PostResponse(BaseModel):
     mentions: List[str]
     did_i_like: bool = False
     did_i_repost: bool = False
+    did_i_put_favorite: bool = False
 
     # I disable it since it's a pydantic configuration
     # pylint: disable=too-few-public-methods
@@ -89,6 +90,7 @@ def generate_post_from_db(
     reposts_count,
     did_i_like,
     did_i_repost,
+    did_i_put_favorite,
 ):
     """
     This function casts the orm_object into a pydantic model.
@@ -107,6 +109,7 @@ def generate_post_from_db(
         mentions=mentions,
         did_i_like=did_i_like,
         did_i_repost=did_i_repost,
+        did_i_put_favorite=did_i_put_favorite,
     )
 
 
@@ -142,6 +145,7 @@ def generate_post(post_db):
         reposts_count,
         did_i_like,
         did_i_repost,
+        did_i_put_favorite,
     ) = post_db
 
     if likes_count is None:
@@ -164,6 +168,7 @@ def generate_post(post_db):
         reposts_count,
         did_i_like,
         did_i_repost,
+        did_i_put_favorite,
     )
 
 
@@ -260,9 +265,6 @@ class NotificationRequest(BaseModel):
     title: str
     body: str
     data: Dict[str, str]
-    # sound: Optional[str]
-    # badge: Optional[int]
-    # data: Optional[dict]
 
     # I disable it since it's a pydantic configuration
     # pylint: disable=too-few-public-methods
@@ -313,6 +315,118 @@ def send_push_notifications(tokens_db, notificacion_request):
     device_tokens = [token.device_token for token in tokens_db]
     for device_token in device_tokens:
         send_push_notification(device_token, notificacion_request)
+
+
+# ------------------------ RECOMMENDED USERS --------------------------------
+
+
+class RecommendedUser(BaseModel):
+    """This class is a Pydantic model for the request body."""
+
+    user: UserResponse
+    location_in_common: int
+    mutual_friends: int
+    posts_that_match_my_interests: int
+    interactions_that_match_my_interests: int
+
+    # I disable it since it's a pydantic configuration
+    # pylint: disable=too-few-public-methods
+    class Config:
+        """
+        This is a pydantic configuration so I can cast
+        orm_objects into pydantic models.
+        """
+
+        orm_mode = True
+        from_attributes = True
+
+
+def generate_recommended_user(recommended_user_db):
+    """
+    This function casts the orm_object into a pydantic model.
+    """
+    (
+        user_info,
+        location_in_common,
+        mutual_friends,
+        posts_that_match_my_interests,
+        interactions_that_match_my_interests,
+    ) = recommended_user_db
+
+    if mutual_friends is None:
+        mutual_friends = 0
+    if posts_that_match_my_interests is None:
+        posts_that_match_my_interests = 0
+    if interactions_that_match_my_interests is None:
+        interactions_that_match_my_interests = 0
+
+    return RecommendedUser(
+        user=generate_user_from_db(user_info),
+        location_in_common=location_in_common,
+        mutual_friends=mutual_friends,
+        posts_that_match_my_interests=posts_that_match_my_interests,
+        interactions_that_match_my_interests=interactions_that_match_my_interests,
+    )
+
+
+def generate_response_recommended_users_from_db(recommended_users_db):
+    """
+    This function casts the orm_object into a pydantic model.
+    """
+    response = []
+    for recommended_user_db in recommended_users_db:
+        user = generate_recommended_user(recommended_user_db)
+        response.append(user)
+
+    return response
+
+
+class RecommendedUser2(BaseModel):
+    """This class is a Pydantic model for the request body."""
+
+    user: UserResponse
+    factor: int
+
+    # I disable it since it's a pydantic configuration
+    # pylint: disable=too-few-public-methods
+    class Config:
+        """
+        This is a pydantic configuration so I can cast
+        orm_objects into pydantic models.
+        """
+
+        orm_mode = True
+        from_attributes = True
+
+
+def generate_recommended_user2(recommended_user_db):
+    """
+    This function casts the orm_object into a pydantic model.
+    """
+    (
+        user_info,
+        factor,
+    ) = recommended_user_db
+
+    if factor is None:
+        factor = 0
+
+    return RecommendedUser2(
+        user=generate_user_from_db(user_info),
+        factor=factor,
+    )
+
+
+def generate_response_recommended_users_from_db2(recommended_users_db):
+    """
+    This function casts the orm_object into a pydantic model.
+    """
+    response = []
+    for recommended_user_db in recommended_users_db:
+        user = generate_recommended_user2(recommended_user_db)
+        response.append(user)
+
+    return response
 
 
 # ----------------- Common functions -----------------

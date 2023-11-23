@@ -111,3 +111,12 @@ class LikeNotFound(Exception):
 
     def __init__(self):
         super().__init__("Like not found")
+
+
+class FavoriteNotFound(Exception):
+    """
+    Exception raised when favorite not found.
+    """
+
+    def __init__(self):
+        super().__init__("Favorite not found")
