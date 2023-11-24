@@ -41,6 +41,11 @@ def get_posts_and_reposts(user_id):
     subquery_my_reposts_count = create_subquery_my_reposts_count(user_id)
     did_i_repost_column = create_did_i_repost_column(subquery_my_reposts_count)
 
+    subquery_my_favorites_count = create_subquery_my_favorites_count(user_id)
+    did_i_put_favorite_column = create_did_i_put_favorite_column(
+        subquery_my_favorites_count
+    )
+
     hashtags_subquery = create_subquery_hashtags()
     mentions_subquery = create_subquery_mentions()
 
@@ -59,6 +64,7 @@ def get_posts_and_reposts(user_id):
             how_many_reposts,
             did_i_like_column,
             did_i_repost_column,
+            did_i_put_favorite_column,
         )
         .join(Content, Post.content_id == Content.content_id)
         .join(User, User.id == Post.user_poster_id)
@@ -81,6 +87,11 @@ def get_posts_and_reposts(user_id):
         .join(
             subquery_my_reposts_count,
             Post.content_id == subquery_my_reposts_count.c.content_id,
+            isouter=True,
+        )
+        .join(
+            subquery_my_favorites_count,
+            Post.content_id == subquery_my_favorites_count.c.content_id,
             isouter=True,
         )
         .join(
@@ -119,6 +130,7 @@ def get_posts_and_reposts_from_users(
         .subquery()
     )
     query_final = (
+        # pylint: disable=R0801
         query_posts.filter(Post.post_id.in_(posts_id))
         .filter(
             or_(
@@ -178,6 +190,7 @@ def get_amount_posts_from_users(user_visitor_id, user_visited_id):
         .distinct()
         .subquery()
     )
+    # pylint: disable=R0801
     query_final = (
         query_posts.filter(Post.post_id.in_(posts_id))
         .filter(
@@ -437,3 +450,66 @@ def get_post_by_id(user_id, post_id):
     if post is None:
         raise PostNotFound()
     return post
+
+
+def get_recommended_accounts_for_a_user(user_id, offset, amount):
+    """
+    Get the recommended accounts for a user
+    """
+    subquery_following = create_subquery_followings(user_id)
+    subquery_interests = create_subquery_get_interests(user_id)
+    location_shared_case = create_subquery_get_shared_location(user_id)
+    followed_subquery = create_subquery_get_followed_users(user_id)
+
+    subquery_followings_of_my_followings = create_subquery_followings_of_my_followings(
+        subquery_following
+    )
+    subquery_interest_posts = create_subquery_get_posts_that_match_my_interests(
+        subquery_interests
+    )
+    subquery_interest_likes = create_subquery_get_likes_that_match_my_interests(
+        subquery_interests
+    )
+
+    subquery_followings = create_subquery_common_followings_count(
+        user_id, subquery_followings_of_my_followings
+    )
+    subquery_interest_posts_count = (
+        create_subquery_get_posts_that_match_my_interests_count(
+            user_id, subquery_interest_posts
+        )
+    )
+    subquery_interest_likes_count = (
+        create_subquery_get_likes_that_match_my_interests_count(
+            user_id, subquery_interest_likes
+        )
+    )
+
+    recommended_users = (
+        session.query(
+            User,
+            location_shared_case.label("location_shared"),
+            subquery_followings.c.friend_of_friend_count,
+            subquery_interest_posts_count.c.interest_posts_count,
+            subquery_interest_likes_count.c.interest_likes,
+        )
+        .outerjoin(subquery_followings, User.id == subquery_followings.c.id)
+        .outerjoin(
+            subquery_interest_posts_count, User.id == subquery_interest_posts_count.c.id
+        )
+        .outerjoin(
+            subquery_interest_likes_count, User.id == subquery_interest_likes_count.c.id
+        )
+        .order_by(
+            subquery_followings.c.friend_of_friend_count.desc(),
+            location_shared_case.desc(),
+            subquery_interest_posts_count.c.interest_posts_count.desc(),
+            subquery_interest_likes_count.c.interest_likes.desc(),
+        )
+        .filter(User.id != user_id)
+        .filter(~User.id.in_(followed_subquery))
+        .limit(amount)
+        .offset(offset)
+        .all()
+    )
+    return recommended_users

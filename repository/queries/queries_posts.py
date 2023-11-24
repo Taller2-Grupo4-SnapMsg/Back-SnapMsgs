@@ -11,10 +11,10 @@ from repository.queries.queries_hashtags import *
 from repository.queries.queries_mentions import *
 from repository.queries.queries_likes import *
 from repository.queries.queries_reposts import *
+from repository.queries.queries_favorites import *
 
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.errors import (
-    PostNotFound,
     DatabaseError,
     UserWithouPermission,
 )
@@ -105,6 +105,8 @@ def delete_post(post_id, user_id):
         delete_reposts_for_content(original_post.content_id)
         delete_hashtags_for_content(original_post.content_id)
         delete_likes_for_content(original_post.content_id)
+        delete_mentions_for_content(original_post.content_id)
+        delete_favorites_for_content(original_post.content_id)
 
         content_to_delete = (
             session.query(Content)

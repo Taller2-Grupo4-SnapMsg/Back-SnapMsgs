@@ -152,3 +152,39 @@ class DeviceToken(Base):
     def __init__(self, user_id, device_token):
         self.user_id = user_id
         self.device_token = device_token
+
+
+class Favorite(Base):
+    """
+    Class that represents the favorite relation on the data base.
+    """
+
+    __tablename__ = "favorites"
+
+    content_id = create_content_foreign_key(True)
+    user_id = create_users_foreign_key(True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    _table_args__ = (UniqueConstraint("user_id", "content_id"),)
+
+    def __init__(self, content_id, user_id):
+        self.content_id = content_id
+        self.user_id = user_id
+
+
+class RecentWord(Base):
+    """
+    Class that represents the recent words table on the db
+    """
+
+    __tablename__ = "recent_words"
+
+    post_id = create_content_foreign_key(True)
+    recent_word = Column(String(200), nullable=False, primary_key=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    _table_args__ = (UniqueConstraint("post_id", "recent_word"),)
+
+    def __init__(self, post_id, recent_word):
+        self.post_id = post_id
+        self.recent_word = recent_word
