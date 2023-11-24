@@ -380,55 +380,6 @@ def generate_response_recommended_users_from_db(recommended_users_db):
 
     return response
 
-
-class RecommendedUser2(BaseModel):
-    """This class is a Pydantic model for the request body."""
-
-    user: UserResponse
-    factor: int
-
-    # I disable it since it's a pydantic configuration
-    # pylint: disable=too-few-public-methods
-    class Config:
-        """
-        This is a pydantic configuration so I can cast
-        orm_objects into pydantic models.
-        """
-
-        orm_mode = True
-        from_attributes = True
-
-
-def generate_recommended_user2(recommended_user_db):
-    """
-    This function casts the orm_object into a pydantic model.
-    """
-    (
-        user_info,
-        factor,
-    ) = recommended_user_db
-
-    if factor is None:
-        factor = 0
-
-    return RecommendedUser2(
-        user=generate_user_from_db(user_info),
-        factor=factor,
-    )
-
-
-def generate_response_recommended_users_from_db2(recommended_users_db):
-    """
-    This function casts the orm_object into a pydantic model.
-    """
-    response = []
-    for recommended_user_db in recommended_users_db:
-        user = generate_recommended_user2(recommended_user_db)
-        response.append(user)
-
-    return response
-
-
 # ----------------- Common functions -----------------
 
 
