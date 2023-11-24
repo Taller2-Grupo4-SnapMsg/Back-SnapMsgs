@@ -12,6 +12,7 @@ from repository.queries.queries_mentions import *
 from repository.queries.queries_likes import *
 from repository.queries.queries_reposts import *
 from repository.queries.queries_favorites import *
+from repository.queries.queries_trending_topics import *
 
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.errors import (
@@ -45,6 +46,11 @@ def create_post(user_id, text, image, hashtags, mentions):
         # pylint: disable=R0801
         create_hashtags(content.content_id, hashtags)
         create_mentions(content.content_id, mentions)
+
+        ### TODO: deberia ser solo si el usuario es publico
+        # o capaz no, pero cuando se aprieta el detalla no mostrarse
+        create_recent_words(post.post_id, text)
+
         session.commit()
         return post.post_id
     except IntegrityError as error:
