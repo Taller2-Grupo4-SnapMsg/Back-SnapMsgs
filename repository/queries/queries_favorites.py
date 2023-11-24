@@ -23,7 +23,6 @@ from repository.tables.users import Following
 # ----- CREATE ------
 
 
-###QUEDA PROBAR
 def create_favorite(post_id: int, content_id: int, user_id: int):
     """
     Creates a favorite from post
@@ -45,10 +44,9 @@ def create_favorite(post_id: int, content_id: int, user_id: int):
 # ----- DELETE ------
 
 
-###QUEDA PROBAR
 def delete_favorite(content_id: int, user_id: int):
     """
-    Deletes all favorites from that particular content_id
+    Deletes a favorite from post
     """
     try:
         favorite = (
@@ -68,25 +66,24 @@ def delete_favorite(content_id: int, user_id: int):
         raise DatabaseError from error
 
 
-###QUEDA PROBAR
 def delete_favorites_for_content(content_id):
     """
-    Deletes all hashtags from that particular content_id
+    Deletes all favorites from that particular content_id
     """
     delete_favorites_query = Delete(Favorite).where(Favorite.content_id == content_id)
     execute_delete_query(delete_favorites_query)
 
 
-###QUEDA PROBAR
 def get_favorites_from_user(user_visitor_id, user_visited_id, oldest_date, amount):
     """
-    Get posts and reposts, with all their info, where the first
-    id is the user that is
+    Gets all favorites posts from user visited as user visitor
     """
     query_posts = get_posts_and_reposts(user_visitor_id)
-
     query_final = (
-        query_posts.filter(Favorite.user_id == user_visited_id)
+        query_posts.filter(Post.user_creator_id == Post.user_poster_id)
+        .join(Favorite, Favorite.content_id == Post.content_id)
+        .filter(Favorite.user_id == user_visited_id)
+        # pylint: disable=R0801
         .filter(
             or_(
                 user_visited_id == user_visitor_id,

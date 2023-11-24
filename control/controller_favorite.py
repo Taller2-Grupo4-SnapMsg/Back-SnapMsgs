@@ -14,7 +14,7 @@ from control.common_setup import *
 
 router = APIRouter()
 
-###QUEDA PROBAR
+
 @router.post("/favorites/{post_id}", tags=["Favorites"])
 async def api_create_favorite(post_id: int, token: str = Header(...)):
     """
@@ -35,7 +35,6 @@ async def api_create_favorite(post_id: int, token: str = Header(...)):
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
-###QUEDA PROBAR
 @router.delete("/favorites/{post_id}", tags=["Favorites"])
 async def api_delete_favorite(post_id: int, token: str = Header(...)):
     """
@@ -52,7 +51,6 @@ async def api_delete_favorite(post_id: int, token: str = Header(...)):
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
-###QUEDA PROBAR
 # pylint: disable=C0103, W0622
 @router.get(
     "/favorites/profile/{user_visited_email}/oldest_date/{oldest_date_str}"

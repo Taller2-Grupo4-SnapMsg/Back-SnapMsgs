@@ -130,6 +130,7 @@ def get_posts_and_reposts_from_users(
         .subquery()
     )
     query_final = (
+        # pylint: disable=R0801
         query_posts.filter(Post.post_id.in_(posts_id))
         .filter(
             or_(
@@ -189,6 +190,7 @@ def get_amount_posts_from_users(user_visitor_id, user_visited_id):
         .distinct()
         .subquery()
     )
+    # pylint: disable=R0801
     query_final = (
         query_posts.filter(Post.post_id.in_(posts_id))
         .filter(

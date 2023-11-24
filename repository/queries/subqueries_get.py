@@ -55,6 +55,7 @@ def create_subquery_my_like_count_by_user(user_id):
         .subquery()
     )
 
+
 def create_subquery_my_favorites_count(user_id):
     """
     To check if the user favorited the content or not
@@ -122,6 +123,7 @@ def create_did_i_like_column(subquery_user_like_count):
     return case(
         (subquery_user_like_count.c.user_like_count != 0, True), else_=False
     ).label("did_I_like")
+
 
 def create_did_i_put_favorite_column(subquery_user_favorite_count):
     """
