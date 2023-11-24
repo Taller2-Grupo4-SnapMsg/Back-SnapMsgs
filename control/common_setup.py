@@ -380,6 +380,7 @@ def generate_response_recommended_users_from_db(recommended_users_db):
 
     return response
 
+
 # ----------------- Common functions -----------------
 
 
