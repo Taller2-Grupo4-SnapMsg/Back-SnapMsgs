@@ -501,8 +501,8 @@ def get_recommended_accounts_for_a_user(user_id, offset, amount):
             subquery_interest_likes_count, User.id == subquery_interest_likes_count.c.id
         )
         .order_by(
-            location_shared_case.desc(),
             subquery_followings.c.friend_of_friend_count.desc(),
+            location_shared_case.desc(),
             subquery_interest_posts_count.c.interest_posts_count.desc(),
             subquery_interest_likes_count.c.interest_likes.desc(),
         )
