@@ -1,13 +1,6 @@
 """
 Set up for the app class
 """
-import threading
-import threading
-import time
-import schedule
-
-from control.periodic_task import perform_periodic_task
-
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 from control.controller_like import router as router_like
@@ -44,12 +37,3 @@ app.include_router(router_repost, prefix="")
 app.include_router(router_notifications, prefix="")
 app.include_router(router_favorites, prefix="")
 app.include_router(router_recommended_users, prefix="")
-
-def background_thread():
-    schedule.every(1).hours.do(perform_periodic_task)
-
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
-
-threading.Thread(target=background_thread, daemon=True).start()

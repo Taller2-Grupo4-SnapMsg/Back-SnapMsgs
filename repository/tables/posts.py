@@ -176,6 +176,7 @@ class RecentWord(Base):
     """
     Class that represents the recent words table on the db
     """
+
     __tablename__ = "recent_words"
 
     post_id = create_content_foreign_key(True)
