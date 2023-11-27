@@ -381,6 +381,51 @@ def generate_response_recommended_users_from_db(recommended_users_db):
     return response
 
 
+# ------------------------ TRENDING TOPICS --------------------------------
+
+
+class TrendingTopic(BaseModel):
+    """This class is a Pydantic model for the request body."""
+
+    trending_topic: str
+    number_of_posts: int
+
+    # I disable it since it's a pydantic configuration
+    # pylint: disable=too-few-public-methods
+    class Config:
+        """
+        This is a pydantic configuration so I can cast
+        orm_objects into pydantic models.
+        """
+
+        orm_mode = True
+        from_attributes = True
+
+
+def generate_trending_topic_from_db(trending_topic_db):
+    """
+    This function casts the orm_object into a pydantic model.
+    """
+    (trending_topic, number_of_posts) = trending_topic_db
+
+    if number_of_posts is None:
+        number_of_posts = 0
+
+    return TrendingTopic(trending_topic=trending_topic, number_of_posts=number_of_posts)
+
+
+def generate_response_trending_topics_from_db(trending_topics_db):
+    """
+    This function casts the orm_object into a pydantic model.
+    """
+    response = []
+    for trending_topic_db in trending_topics_db:
+        trending_topic = generate_trending_topic_from_db(trending_topic_db)
+        response.append(trending_topic)
+
+    return response
+
+
 # ----------------- Common functions -----------------
 
 
