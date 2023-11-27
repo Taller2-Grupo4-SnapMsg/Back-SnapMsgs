@@ -9,6 +9,7 @@ from control.controller_repost import router as router_repost
 from control.controller_notifications import router as router_notifications
 from control.controller_favorite import router as router_favorites
 from control.controller_recommended_user import router as router_recommended_users
+from control.controller_trending_topic import router as router_trending_topic
 
 tags_metadata = [
     {"name": "Likes", "description": "Endpoints Likes"},
@@ -17,6 +18,7 @@ tags_metadata = [
     {"name": "Notifications", "description": "Endpoints Notifications"},
     {"name": "Favorites", "description": "Endpoints Favorites"},
     {"name": "Recommended users", "description": "Recommended users"},
+    {"name": "Trending topics", "description": "Endpoints Trending topics"},
 ]
 
 origins = ["*"]
@@ -37,3 +39,4 @@ app.include_router(router_repost, prefix="")
 app.include_router(router_notifications, prefix="")
 app.include_router(router_favorites, prefix="")
 app.include_router(router_recommended_users, prefix="")
+app.include_router(router_trending_topic, prefix="")

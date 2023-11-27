@@ -24,7 +24,6 @@ from control.common_setup import *
 router = APIRouter()
 
 
-### HAY QUE PASARLO AL BACK DE USERS
 @router.get(
     "/users/recommended",
     tags=["Recommended users"],
