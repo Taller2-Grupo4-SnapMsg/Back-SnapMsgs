@@ -1,6 +1,6 @@
 # controller_admin.py
 """
-Fast API for the likes controller
+Router dedicated to the admin endpoints
 """
 from fastapi import APIRouter, Header, Query
 from fastapi.exceptions import HTTPException
