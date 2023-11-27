@@ -38,7 +38,7 @@ def get_service_health_and_description():
     return {
         "status": "ok",
         "description": description,
-        "creation_date": "2023-09-27",
+        "creation_date": "27-09-2023",
     }
 
 
