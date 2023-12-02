@@ -6,10 +6,11 @@ from fastapi import APIRouter, Header
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_reposts import *
 
+from repository.errors import ThisUserIsBlocked
+
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
 
-from repository.errors import ThisUserIsBlocked
 
 router = APIRouter()
 
@@ -38,6 +39,8 @@ async def api_create_repost(post_id: int, token: str = Header(...)):
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
+# pylint: disable=R0801
+# I disable the "Similar lines in 2 files"
 @router.delete("/reposts/from_post/{post_id}", tags=["Reposts"])
 async def api_delete_respost_from_post(post_id: int, token: str = Header(...)):
     """
