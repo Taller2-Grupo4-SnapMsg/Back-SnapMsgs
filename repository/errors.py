@@ -58,6 +58,22 @@ class UserWithouPermission(Exception):
     def __init__(self):
         super().__init__("User doesnt have permissions to do that action.")
 
+class ThisUserIsBlocked(Exception):
+    """
+    Exception raised when this user is blocked. Error code 403 should be raised.
+    """
+
+    def __init__(self):
+        super().__init__("This user is blocked.")
+
+
+class OtherUserIsBlocked(Exception):
+    """
+    Exception raised when the user another user is trying to access is blocked. Error code 405 should be raised.
+    """
+
+    def __init__(self):
+        super().__init__("The other user is blocked.")
 
 class UserDoesntHavePosts(Exception):
     """

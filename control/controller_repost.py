@@ -9,6 +9,8 @@ from repository.queries.queries_reposts import *
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
 
+from repository.errors import ThisUserIsBlocked
+
 router = APIRouter()
 
 
@@ -28,6 +30,8 @@ async def api_create_repost(post_id: int, token: str = Header(...)):
         ) from db_error
     except UserWithouPermission as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except RepostAlreadyMade as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
     except Exception as error:
@@ -45,6 +49,8 @@ async def api_delete_respost_from_post(post_id: int, token: str = Header(...)):
         return {"message": "Repost deleted successfully"}
     except PostNotFound as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except UserWithouPermission as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:
@@ -62,6 +68,8 @@ async def api_delete_respost(repost_id: int, token: str = Header(...)):
         return {"message": "Repost deleted successfully"}
     except PostNotFound as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except UserWithouPermission as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:

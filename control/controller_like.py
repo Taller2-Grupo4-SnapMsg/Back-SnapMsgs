@@ -26,6 +26,8 @@ async def api_create_like(post_id: int, token: str = Header(...)):
         return {"message": "Like created successfully"}
     except PostNotFound as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except DatabaseError as db_error:
         raise HTTPException(
             status_code=400, detail="Post doesnt exist or like already exists"
@@ -46,5 +48,7 @@ async def api_delete_like(post_id: int, token: str = Header(...)):
         return {"message": "Like deleted successfully"}
     except LikeNotFound as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
