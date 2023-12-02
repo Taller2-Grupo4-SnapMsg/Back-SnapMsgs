@@ -22,5 +22,8 @@ ENV DB_URI="postgresql://cwfvbvxl:jtsNDRjbVqGeBgYcYvxGps3LLlX_t-P5@berry.db.elep
 # Gateway URL:
 ENV API_BASE_URL="https://gateway-api-service-merok23.cloud.okteto.net"
 
+# Uptrace URL:
+ENV UPTRACE_DSN="https://SAe6OtAs8ysrYmkJmM8t-Q@api.uptrace.dev?grpc=4317"
+
 # Command to run the FastAPI application
 CMD ["uvicorn", "control.app:app", "--host", "0.0.0.0", "--port", "8000"]

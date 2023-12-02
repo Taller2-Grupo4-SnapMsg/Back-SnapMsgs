@@ -2,6 +2,7 @@
 Module for the notifications controller
 """
 from fastapi import APIRouter, HTTPException, Header
+from control.utils.tracer import tracer
 from control.common_setup import (
     NotificationRequest,
     get_user_from_token,
@@ -15,6 +16,7 @@ router = APIRouter()
 
 
 @router.post("/notifications/save/{device_token}", tags=["Notifications"])
+@tracer.start_as_current_span("Save a device token")
 async def api_save_device_token(device_token: str, token: str = Header(...)):
     """
     Save the device token of the user
@@ -34,6 +36,7 @@ async def api_save_device_token(device_token: str, token: str = Header(...)):
 
 
 @router.delete("/notifications/{device_token}", tags=["Notifications"])
+@tracer.start_as_current_span("Delete a device token")
 async def api_delete_device_token(token: str = Header(...)):
     """
     Delete the device token of the user
@@ -53,6 +56,7 @@ async def api_delete_device_token(token: str = Header(...)):
 
 
 @router.post("/notifications/push", tags=["Notifications"])
+@tracer.start_as_current_span("Send a notification")
 async def api_send_notificacion(
     notificacion_request: NotificationRequest, token: str = Header(...)
 ):

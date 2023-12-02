@@ -20,6 +20,7 @@ from repository.queries.queries_hashtags import *
 from repository.queries.queries_global import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
+from control.utils.tracer import tracer
 from control.common_setup import *
 
 router = APIRouter()
@@ -28,6 +29,7 @@ router = APIRouter()
 
 
 @router.post("/posts", tags=["Posts"])
+@tracer.start_as_current_span("Create a post")
 async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
     """
     Create a post with its image uploaded to Firebase and hashtags created accordingly.
@@ -55,6 +57,7 @@ async def api_create_post(post: PostCreateRequest, token: str = Header(...)):
     "/amount/{amount}/only_reposts/",
     tags=["Posts"],
 )
+@tracer.start_as_current_span("Get posts and reposts from user visited")
 async def api_get_posts_and_reposts_from_user_visited(
     user_visited_email: str,
     oldest_date_str: str,
@@ -92,6 +95,7 @@ async def api_get_posts_and_reposts_from_user_visited(
     "/posts/{post_id}",
     tags=["Posts"],
 )
+@tracer.start_as_current_span("Get post by id")
 async def api_get_post_by_id(
     post_id: int,
     token: str = Header(...),
@@ -114,6 +118,7 @@ async def api_get_post_by_id(
     "/posts/profile/{user_visited_email}",
     tags=["Posts"],
 )
+@tracer.start_as_current_span("Get posts from user visited")
 async def api_get_amount_posts_from_user_visited(
     user_visited_email: str,
     token: str = Header(...),
@@ -140,6 +145,7 @@ async def api_get_amount_posts_from_user_visited(
     "/posts/feed/oldest_date/{oldest_date_str}/amount/{amount}",
     tags=["Posts"],
 )
+@tracer.start_as_current_span("Get Feed")
 async def api_get_feed(oldest_date_str: str, amount: int, token: str = Header(...)):
     """
     Gets all posts from user visited as user visitor
@@ -166,6 +172,7 @@ async def api_get_feed(oldest_date_str: str, amount: int, token: str = Header(..
     "/posts/statistics/from_date/{from_date_str}/to_date/{to_date_str}",
     tags=["Posts"],
 )
+@tracer.start_as_current_span("Get statistics")
 async def api_get_statistics(
     from_date_str: str, to_date_str: str, token: str = Header(...)
 ):
@@ -192,6 +199,7 @@ async def api_get_statistics(
     "/posts/search/hashtags/{hashtags}",
     tags=["Posts"],
 )
+@tracer.start_as_current_span("Get posts by hashtags")
 async def api_get_posts_by_hashtags(
     hashtags: str,
     offset=Query(0, title="offset", description="offset for pagination"),
@@ -229,6 +237,7 @@ async def api_get_posts_by_hashtags(
     "/posts/search/text/{text}",
     tags=["Posts"],
 )
+@tracer.start_as_current_span("Get posts by text")
 async def api_get_posts_by_text(
     text: str,
     offset=Query(0, title="offset", description="offset for pagination"),
@@ -262,6 +271,7 @@ async def api_get_posts_by_text(
 
 
 @router.put("/posts/{post_id}", tags=["Posts"])
+@tracer.start_as_current_span("Update post")
 async def api_update_post(
     post_id: int, post_data: PostCreateRequest, token: str = Header(...)
 ):
@@ -291,6 +301,7 @@ async def api_update_post(
 
 
 @router.delete("/posts/{post_id}", tags=["Posts"])
+@tracer.start_as_current_span("Delete post")
 async def api_delete_post(post_id: int, token: str = Header(...)):
     """
     Deletes the post with the id
