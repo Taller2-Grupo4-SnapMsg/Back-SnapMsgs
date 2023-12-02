@@ -27,6 +27,8 @@ async def api_create_favorite(post_id: int, token: str = Header(...)):
         return {"message": "Favorite created successfully"}
     except PostNotFound as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except DatabaseError as db_error:
         raise HTTPException(
             status_code=400, detail="Post doesnt exist or favorite already exists"
@@ -47,6 +49,8 @@ async def api_delete_favorite(post_id: int, token: str = Header(...)):
         return {"message": "Favorite deleted successfully"}
     except FavoriteNotFound as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
 
@@ -77,6 +81,10 @@ async def api_get_favorites_from_user_visited(
         return posts
     except UserIsPrivate as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except OtherUserIsBlocked as error:
+        raise HTTPException(status_code=405, detail=str(error)) from error
     except UserDoesntHavePosts as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
     except Exception as error:

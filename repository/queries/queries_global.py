@@ -2,7 +2,12 @@
 Global queries and functions that could be reused in other queries
 """
 from psycopg2 import IntegrityError
-from repository.errors import PostNotFound, DatabaseError, UserNotFound
+from repository.errors import (
+    PostNotFound,
+    DatabaseError,
+    UserNotFound,
+    OtherUserIsBlocked,
+)
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.common_setup import *
@@ -63,6 +68,9 @@ def get_user_id_from_email(email):
     user = session.query(User).filter(User.email == email).first()
     if user is None:
         raise UserNotFound()
+
+    if user.blocked is True:
+        raise OtherUserIsBlocked()
     return user.id
 
 

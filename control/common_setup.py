@@ -10,6 +10,8 @@ from pydantic import BaseModel
 import httpx
 import requests
 
+from repository.errors import ThisUserIsBlocked
+
 POST_NOT_FOUND = 404
 USER_NOT_FOUND = 404
 LIKE_NOT_FOUND = 404
@@ -113,7 +115,6 @@ def generate_post_from_db(
     )
 
 
-# listo
 def generate_user_from_db(user_info):
     """
     This function casts the orm_object into a pydantic model.
@@ -129,7 +130,6 @@ def generate_user_from_db(user_info):
     )
 
 
-# listo
 def generate_post(post_db):
     """
     This function casts the orm_object into a pydantic model.
@@ -450,6 +450,8 @@ async def get_user_from_token(token):
         url = getenv("API_BASE_URL") + "/user"
         response = await client.get(url, headers=headers)
 
+        if response.status_code == 403:
+            raise ThisUserIsBlocked()
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail={"Unknown error"})
 
