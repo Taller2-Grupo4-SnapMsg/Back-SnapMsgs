@@ -17,12 +17,12 @@ router = APIRouter()
 
 @router.post("/notifications/save/{device_token}", tags=["Notifications"])
 @tracer.start_as_current_span("Save a device token")
-async def api_save_device_token(device_token: str, token: str = Header(...)):
+def api_save_device_token(device_token: str, token: str = Header(...)):
     """
     Save the device token of the user
     """
     try:
-        user = await get_user_from_token(token)
+        user = get_user_from_token(token)
         create_device_token(int(user.get("id")), device_token)
         return {"mensaje": "token stored successfully"}
     except UserNotFound as error:
@@ -37,12 +37,12 @@ async def api_save_device_token(device_token: str, token: str = Header(...)):
 
 @router.delete("/notifications/{device_token}", tags=["Notifications"])
 @tracer.start_as_current_span("Delete a device token")
-async def api_delete_device_token(token: str = Header(...)):
+def api_delete_device_token(token: str = Header(...)):
     """
     Delete the device token of the user
     """
     try:
-        user = await get_user_from_token(token)
+        user = get_user_from_token(token)
         delete_device_token(int(user.get("id")))
         return {"mensaje": "token delete successfully"}
     except UserNotFound as error:
@@ -57,14 +57,14 @@ async def api_delete_device_token(token: str = Header(...)):
 
 @router.post("/notifications/push", tags=["Notifications"])
 @tracer.start_as_current_span("Send a notification")
-async def api_send_notificacion(
+def api_send_notificacion(
     notificacion_request: NotificationRequest, token: str = Header(...)
 ):
     """
     Send a notification to the users
     """
     try:
-        _ = await get_user_from_token(token)
+        _ = get_user_from_token(token)
         users_ids_db = get_users_ids_by_emails(
             notificacion_request.user_emails_that_receive
         )

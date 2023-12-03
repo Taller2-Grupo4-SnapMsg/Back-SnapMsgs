@@ -15,12 +15,12 @@ router = APIRouter()
 
 @router.post("/reposts/{post_id}", tags=["Reposts"])
 @tracer.start_as_current_span("Create a repost")
-async def api_create_repost(post_id: int, token: str = Header(...)):
+def api_create_repost(post_id: int, token: str = Header(...)):
     """
     Creates a new repost.
     """
     try:
-        user = await get_user_from_token(token)
+        user = get_user_from_token(token)
         create_repost(post_id, user.get("id"))
         return {"message": "Repost created successfully"}
 
@@ -38,12 +38,12 @@ async def api_create_repost(post_id: int, token: str = Header(...)):
 
 @router.delete("/reposts/from_post/{post_id}", tags=["Reposts"])
 @tracer.start_as_current_span("Remove a repost from a post")
-async def api_delete_respost_from_post(post_id: int, token: str = Header(...)):
+def api_delete_respost_from_post(post_id: int, token: str = Header(...)):
     """
     Deletes a repost of the post_id made by the user.
     """
     try:
-        user = await get_user_from_token(token)
+        user = get_user_from_token(token)
         delete_users_repost_from_post(post_id, user.get("id"))
         return {"message": "Repost deleted successfully"}
     except PostNotFound as error:
@@ -56,12 +56,12 @@ async def api_delete_respost_from_post(post_id: int, token: str = Header(...)):
 
 @router.delete("/reposts/{repost_id}", tags=["Reposts"])
 @tracer.start_as_current_span("Remove a repost")
-async def api_delete_respost(repost_id: int, token: str = Header(...)):
+def api_delete_respost(repost_id: int, token: str = Header(...)):
     """
     Deletes a repost given by the user to a specific post.
     """
     try:
-        user = await get_user_from_token(token)
+        user = get_user_from_token(token)
         delete_repost(repost_id, user.get("id"))
         return {"message": "Repost deleted successfully"}
     except PostNotFound as error:
