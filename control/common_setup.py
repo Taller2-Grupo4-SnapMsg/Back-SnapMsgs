@@ -441,7 +441,7 @@ def create_headers_token(token):
 
 def get_user_from_token(token: str):
     """
-    This function checks if the token given is an admin.
+    This function gets the user from the token.
     """
     headers_request = {
         "accept": "application/json",
