@@ -14,6 +14,7 @@ from tests.mock_functions import *
 from repository.tables.posts import *
 from fastapi import Header
 
+
 def test_get_post_by_id():
     """
     This function tests if you can get a post by id.
@@ -32,13 +33,17 @@ def test_get_post_by_id():
     def get_user_from_token_mock(token: str = Header(None)):
         return json.loads(generate_user_from_db(user_1).json())
 
-    result = api_get_post_by_id(post_id=post_1.post_id, token="fake_token", get_user_func=get_user_from_token_mock)
+    result = api_get_post_by_id(
+        post_id=post_1.post_id,
+        token="fake_token",
+        get_user_func=get_user_from_token_mock,
+    )
 
     assert result[0].post_id == post_1.post_id
     assert result[0].user_creator.id == post_1.user_creator_id
     assert result[0].user_poster.id == post_1.user_poster_id
     assert result[0].text == TEXT
     assert result[0].image == IMAGE
-    
+
     post_delete(post_1)
     user_delete(user_1)

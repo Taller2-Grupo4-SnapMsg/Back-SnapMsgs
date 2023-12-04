@@ -44,6 +44,7 @@ USER_CREATOR_ID = 1
 
 # ------------------ Save from bdd ------------------
 
+
 def create_user(username=USERNAME_1, email=EMAIL_1, is_public=True):
     """
     Creates a user with the given parameters
@@ -65,12 +66,15 @@ def create_user(username=USERNAME_1, email=EMAIL_1, is_public=True):
     session.commit()
     return new_user
 
-def create_post(content=TEXT, 
-                image=IMAGE, 
-                hashtags=HASHTAGS, 
-                mentions=MENTIONS, 
-                user_poster_id=USER_POSTER_ID, 
-                user_creator_id=USER_CREATOR_ID):
+
+def create_post(
+    content=TEXT,
+    image=IMAGE,
+    hashtags=HASHTAGS,
+    mentions=MENTIONS,
+    user_poster_id=USER_POSTER_ID,
+    user_creator_id=USER_CREATOR_ID,
+):
     """
     Creates a post with the given parameters
 
@@ -81,7 +85,7 @@ def create_post(content=TEXT,
     - user_poster_id: id of the user that posted the post
     - user_creator_id: id of the user that created the post
     """
-    
+
     new_content = Content(
         text=content,
         image=image,
@@ -115,6 +119,7 @@ def create_post(content=TEXT,
 
     return new_post
 
+
 def follow_save(user_id, following_id):
     new_follow = Following(
         user_id=user_id,
@@ -138,25 +143,33 @@ def interest_save(user_id, interest):
 
     return new_interest
 
+
 # ------------------ Delete from bdd ------------------
+
 
 def user_delete(user):
     session.delete(user)
     session.commit()
 
+
 def delete_content_by_content_id(content_id: int):
-    content_to_delete = session.query(Content).filter(Content.content_id == content_id).first()
-    
+    content_to_delete = (
+        session.query(Content).filter(Content.content_id == content_id).first()
+    )
+
     if content_to_delete:
         session.delete(content_to_delete)
         session.commit()
         return True
     else:
         return False
-    
+
+
 def delete_hashtags_by_content_id(content_id: int):
-    hashtags_to_delete = session.query(Hashtag).filter(Hashtag.content_id == content_id).all()
-    
+    hashtags_to_delete = (
+        session.query(Hashtag).filter(Hashtag.content_id == content_id).all()
+    )
+
     for hashtag in hashtags_to_delete:
         if hashtag:
             session.delete(hashtag)
@@ -164,10 +177,11 @@ def delete_hashtags_by_content_id(content_id: int):
             return True
         else:
             return False
-        
+
+
 def delete_posts_by_content_id(content_id: int):
     posts_to_delete = session.query(Post).filter(Post.content_id == content_id).all()
-    
+
     for post in posts_to_delete:
         if post:
             session.delete(post)
@@ -175,10 +189,13 @@ def delete_posts_by_content_id(content_id: int):
             return True
         else:
             return False
-        
+
+
 def delete_mentions_by_content_id(content_id: int):
-    mentions_to_delete = session.query(Mention).filter(Mention.content_id == content_id).all()
-    
+    mentions_to_delete = (
+        session.query(Mention).filter(Mention.content_id == content_id).all()
+    )
+
     for mention in mentions_to_delete:
         if mention:
             session.delete(mention)
@@ -187,14 +204,12 @@ def delete_mentions_by_content_id(content_id: int):
         else:
             return False
 
+
 def post_delete(post):
-    if (post.user_creator_id == post.user_poster_id):
+    if post.user_creator_id == post.user_poster_id:
         delete_mentions_by_content_id(post.content_id)
         delete_hashtags_by_content_id(post.content_id)
         delete_posts_by_content_id(post.content_id)
         delete_content_by_content_id(post.content_id)
     else:
         delete_posts_by_content_id(post.content_id)
-
-
-    

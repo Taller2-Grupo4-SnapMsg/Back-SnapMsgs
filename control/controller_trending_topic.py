@@ -9,7 +9,8 @@ from repository.queries.queries_get import *
 from repository.queries.queries_hashtags import *
 from repository.queries.queries_global import *
 from control.common_setup import *
-#from control.utils.tracer import tracer
+
+# from control.utils.tracer import tracer
 
 router = APIRouter()
 
@@ -18,7 +19,7 @@ router = APIRouter()
     "/trending_topics",
     tags=["Trending topics"],
 )
-#@tracer.start_as_current_span("Get trending topics")
+# @tracer.start_as_current_span("Get trending topics")
 def api_get_trending_topics(
     offset=Query(0, title="offset", description="offset for pagination"),
     amount=Query(10, title="ammount", description="max ammount of users to return"),
@@ -26,12 +27,12 @@ def api_get_trending_topics(
         7, title="days", description="to take into account the posts of the last x days"
     ),
     token: str = Header(...),
+    user: callable = Depends(get_user_from_token),
 ):
     """
     Get trending topics
     """
     try:
-        _ = get_user_from_token(token)
         trending_topics_db = get_trending_topics_with_count(
             int(offset), int(amount), int(days)
         )
@@ -45,18 +46,18 @@ def api_get_trending_topics(
     "/posts/trending_topic/{hashtag}",
     tags=["Trending topics"],
 )
-#@tracer.start_as_current_span("Get posts on a trending topic")
+# @tracer.start_as_current_span("Get posts on a trending topic")
 def api_get_posts_on_a_trending_topic(
     hashtag: str,
     offset=Query(0, title="offset", description="offset for pagination"),
     amount=Query(10, title="ammount", description="max ammount of users to return"),
     token: str = Header(...),
+    user: callable = Depends(get_user_from_token),
 ):
     """
     Get posts on a trending topic
     """
     try:
-        user = get_user_from_token(token)
         posts_db = get_posts_on_a_trending_topic(
             int(user.get("id")), hashtag, offset, amount
         )

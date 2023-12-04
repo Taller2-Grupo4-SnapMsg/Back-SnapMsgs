@@ -34,7 +34,8 @@ services:
     container_name: fastapi_app_container
     working_dir: /app
     environment:
-      DB_URI: postgresql://admin:admin123@postgres:5432/test-back-posts3
+      #postgresql://admin:admin123@postgres:5432/test-back-posts3
+      DB_URI: postgresql://cwfvbvxl:jtsNDRjbVqGeBgYcYvxGps3LLlX_t-P5@berry.db.elephantsql.com:5432/cwfvbvxl
       API_BASE_URL: https://gateway-api-service-merok23.cloud.okteto.net
     ports:
       - "8080:8080"
