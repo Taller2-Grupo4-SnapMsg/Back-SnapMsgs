@@ -5,7 +5,7 @@ and from the json objects.
 """
 from os import getenv
 from typing import List, Dict
-from fastapi import HTTPException, Header, Depends
+from fastapi import HTTPException, Header
 from pydantic import BaseModel
 import requests
 
@@ -443,21 +443,16 @@ def get_user_from_token(token: str = Header(None)):
     """
     This function gets the user from the token.
     """
-    print("llega 1.1")
     headers_request = {
         "accept": "application/json",
         "content-type": "application/json",
         "token": token,
     }
-    print("llega 1.2")
     url = getenv("API_BASE_URL") + "/user"
     response = requests.get(url, headers=headers_request, timeout=TIMEOUT)
-    print("llega 1.3")
-    print(response)
     if response.status_code != 200:
         raise HTTPException(status_code=400, detail={"Unknown error"})
-    print("llega 1.4")
-    print(response.json())
+
     return response.json()
 
 

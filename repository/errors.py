@@ -120,3 +120,21 @@ class FavoriteNotFound(Exception):
 
     def __init__(self):
         super().__init__("Favorite not found")
+
+
+class EmptyPostError(Exception):
+    """
+    Exception raised when post is empty.
+    """
+
+    def __init__(self, message="Both text and image are empty."):
+        super().__init__(message)
+
+
+class TextTooLongError(Exception):
+    """
+    Exception raised when text is too long.
+    """
+
+    def __init__(self, message="Text exceeds maximum length of 1000 characters."):
+        super().__init__(message)

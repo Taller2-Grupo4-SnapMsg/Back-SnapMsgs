@@ -1,7 +1,7 @@
 """
     Fast API Controller for Posts
 """
-from fastapi import HTTPException, Header, APIRouter, Query
+from fastapi import HTTPException, APIRouter, Query, Depends
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_posts import *
@@ -34,7 +34,6 @@ router = APIRouter()
 def api_get_recommended_users(
     offset=Query(0, title="offset", description="offset for pagination"),
     amount=Query(10, title="ammount", description="max ammount of users to return"),
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """

@@ -41,7 +41,7 @@ jobs:
     - name: Run Tests with Coverage
       run: |
         export DB_URI="postgresql://admin:admin123@localhost:5432/test-back-posts3"
-        coverage run -m pytest tests/*
+        coverage run -m pytest -p no:warnings tests/*
 
     - name: Generate Coverage Report
       run: |

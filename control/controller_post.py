@@ -2,7 +2,7 @@
     Fast API Controller for Posts
 """
 from datetime import datetime
-from fastapi import HTTPException, Header, APIRouter, Query, Depends
+from fastapi import HTTPException, APIRouter, Query, Depends
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_posts import *
@@ -20,6 +20,9 @@ from repository.queries.queries_hashtags import *
 from repository.queries.queries_global import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
+from repository.errors import *
+
+# pylint: disable=C0114, W0401, W0614, E0602, E0401
 # from control.utils.tracer import tracer
 from control.common_setup import *
 
@@ -32,7 +35,6 @@ router = APIRouter()
 # @tracer.start_as_current_span("Create a post")
 def api_create_post(
     post: PostCreateRequest,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
@@ -41,14 +43,16 @@ def api_create_post(
     """
     try:
         # pylint: disable=E1121, R0913
-        if not valid_content(post.content):
-            raise HTTPException(
-                status_code=400, detail="Content too long. Max 1000 chars"
-            )
+        validate_that_there_is_at_least_text_or_image(post.content, post.image)
+        valid_content(post.content)
         post_id = create_post(
             int(user.get("id")), post.content, post.image, post.hashtags, post.mentions
         )
         return {"message": "Post created successfully", "post_id": post_id}
+    except EmptyPostError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    except TextTooLongError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
 
@@ -66,7 +70,6 @@ def api_get_posts_and_reposts_from_user_visited(
     oldest_date_str: str,
     amount: int,
     only_reposts: bool = Query(...),
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
@@ -101,15 +104,12 @@ def api_get_posts_and_reposts_from_user_visited(
 # @tracer.start_as_current_span("Get post by id")
 def api_get_post_by_id(
     post_id: int,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
-    print("llega1")
     """
     Get post by id
     """
     try:
-        print("llega2")
         post_db = get_post_by_id(int(user.get("id")), post_id)
         post = generate_response_posts_from_db(post_db)
         return post
@@ -126,7 +126,6 @@ def api_get_post_by_id(
 # @tracer.start_as_current_span("Get posts from user visited")
 def api_get_amount_posts_from_user_visited(
     user_visited_email: str,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
@@ -154,7 +153,6 @@ def api_get_amount_posts_from_user_visited(
 def api_get_feed(
     oldest_date_str: str,
     amount: int,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
@@ -185,7 +183,6 @@ def api_get_feed(
 def api_get_statistics(
     from_date_str: str,
     to_date_str: str,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
@@ -215,7 +212,6 @@ def api_get_posts_by_hashtags(
     hashtags: str,
     offset=Query(0, title="offset", description="offset for pagination"),
     amount=Query(10, title="ammount", description="max ammount of users to return"),
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
@@ -228,7 +224,6 @@ def api_get_posts_by_hashtags(
     """
     try:
         hashtag_list = hashtags.split(",")
-
 
         posts_db = get_posts_by_hashtags(
             int(user.get("id")), hashtag_list, offset, amount
@@ -253,7 +248,6 @@ def api_get_posts_by_text(
     text: str,
     offset=Query(0, title="offset", description="offset for pagination"),
     amount=Query(10, title="ammount", description="max ammount of users to return"),
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
@@ -265,7 +259,6 @@ def api_get_posts_by_text(
     :return: A list of posts
     """
     try:
-
         posts_db = get_posts_by_text(int(user.get("id")), text, offset, amount)
         posts = generate_response_posts_from_db(posts_db)
 
@@ -286,7 +279,6 @@ def api_get_posts_by_text(
 def api_update_post(
     post_id: int,
     post_data: PostCreateRequest,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
@@ -317,7 +309,6 @@ def api_update_post(
 # @tracer.start_as_current_span("Delete post")
 def api_delete_post(
     post_id: int,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """

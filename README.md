@@ -49,7 +49,6 @@ Si te esta fallando un test en particular, podes probar con:
 sudo lsof -i :<puerto>
 sudo kill -9 pid
 
-#export DB_URI=postgresql://admin:admin123@postgres:5432/test-back-posts3
 
 sudo chmod -R 777 .
 

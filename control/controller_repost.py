@@ -1,7 +1,7 @@
 """
 This file contains the controller for the reposts.
 """
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Depends
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_reposts import *
@@ -18,7 +18,6 @@ router = APIRouter()
 # @tracer.start_as_current_span("Create a repost")
 def api_create_repost(
     post_id: int,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
@@ -44,7 +43,6 @@ def api_create_repost(
 # @tracer.start_as_current_span("Remove a repost from a post")
 def api_delete_respost_from_post(
     post_id: int,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
@@ -65,7 +63,6 @@ def api_delete_respost_from_post(
 # @tracer.start_as_current_span("Remove a repost")
 def api_delete_respost(
     repost_id: int,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """

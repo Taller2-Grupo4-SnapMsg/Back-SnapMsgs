@@ -1,17 +1,16 @@
 """
 Module for the notifications controller
 """
-from fastapi import APIRouter, HTTPException, Header
-from control.common_setup import *
+from fastapi import APIRouter, HTTPException, Depends
 
 # from control.utils.tracer import tracer
+# pylint: disable=C0114, W0401, W0614, E0602, E0401
+from control.common_setup import *
 from control.common_setup import (
     NotificationRequest,
     get_user_from_token,
     send_push_notifications,
 )
-
-# pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_notifications import *
 
 router = APIRouter()
@@ -21,7 +20,6 @@ router = APIRouter()
 # @tracer.start_as_current_span("Save a device token")
 def api_save_device_token(
     device_token: str,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
@@ -43,7 +41,6 @@ def api_save_device_token(
 @router.delete("/notifications/{device_token}", tags=["Notifications"])
 # @tracer.start_as_current_span("Delete a device token")
 def api_delete_device_token(
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
@@ -66,8 +63,7 @@ def api_delete_device_token(
 # @tracer.start_as_current_span("Send a notification")
 def api_send_notificacion(
     notificacion_request: NotificationRequest,
-    token: str = Header(...),
-    user: callable = Depends(get_user_from_token),
+    _: callable = Depends(get_user_from_token),
 ):
     """
     Send a notification to the users

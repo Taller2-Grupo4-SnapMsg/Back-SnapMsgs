@@ -2,7 +2,7 @@
 """
 Fast API for the likes controller
 """
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Depends
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_likes import *
@@ -20,7 +20,6 @@ router = APIRouter()
 # @tracer.start_as_current_span("Like a post")
 def api_create_like(
     post_id: int,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
@@ -44,7 +43,6 @@ def api_create_like(
 # @tracer.start_as_current_span("Remove a like from a post")
 def api_delete_like(
     post_id: int,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """

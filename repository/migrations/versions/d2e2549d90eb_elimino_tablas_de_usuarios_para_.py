@@ -1,3 +1,4 @@
+# pylint: skip-file
 """elimino tablas de usuarios para restablecer mi bdd local
 
 Revision ID: d2e2549d90eb

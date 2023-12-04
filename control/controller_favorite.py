@@ -2,7 +2,7 @@
 """
 Fast API for the favorites controller
 """
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Depends
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_favorites import *
@@ -21,7 +21,6 @@ router = APIRouter()
 # @tracer.start_as_current_span("Add a favorite to a post")
 def api_create_favorite(
     post_id: int,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
@@ -45,7 +44,6 @@ def api_create_favorite(
 # @tracer.start_as_current_span("Remove a favorite from a post")
 def api_delete_favorite(
     post_id: int,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
@@ -72,7 +70,6 @@ def api_get_favorites_from_user_visited(
     user_visited_email: str,
     oldest_date_str: str,
     amount: int,
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """

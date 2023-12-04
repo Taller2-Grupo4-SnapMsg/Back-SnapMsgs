@@ -1,7 +1,7 @@
 """
     Fast API Controller for Trending Topics
 """
-from fastapi import HTTPException, Header, APIRouter, Query
+from fastapi import HTTPException, APIRouter, Query, Depends
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_trending_topic import *
@@ -26,8 +26,7 @@ def api_get_trending_topics(
     days=Query(
         7, title="days", description="to take into account the posts of the last x days"
     ),
-    token: str = Header(...),
-    user: callable = Depends(get_user_from_token),
+    _: callable = Depends(get_user_from_token),
 ):
     """
     Get trending topics
@@ -51,7 +50,6 @@ def api_get_posts_on_a_trending_topic(
     hashtag: str,
     offset=Query(0, title="offset", description="offset for pagination"),
     amount=Query(10, title="ammount", description="max ammount of users to return"),
-    token: str = Header(...),
     user: callable = Depends(get_user_from_token),
 ):
     """
