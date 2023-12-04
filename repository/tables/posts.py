@@ -1,4 +1,4 @@
-# tables.py
+# posts.py
 
 """
 This module represents the tables on the database of the users' microservice 
@@ -6,19 +6,7 @@ This module represents the tables on the database of the users' microservice
 
 import datetime
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, UniqueConstraint
-from repository.tables.users import Base
-
-
-def create_users_foreign_key(is_primary_key):
-    """
-    This function creates a column with user_id as a foregin key.
-    """
-    return Column(
-        Integer,
-        ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-        primary_key=is_primary_key,
-    )
+from repository.tables.users import Base, create_users_foreign_key
 
 
 def create_content_foreign_key(is_primary_key):
@@ -48,7 +36,6 @@ class Post(Base):
     content_id = create_content_foreign_key(False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
-    # pylint: disable=too-many-arguments
     def __init__(self, user_poster_id, user_creator_id, content_id):
         self.user_poster_id = user_poster_id
         self.user_creator_id = user_creator_id
@@ -170,21 +157,3 @@ class Favorite(Base):
     def __init__(self, content_id, user_id):
         self.content_id = content_id
         self.user_id = user_id
-
-
-class RecentWord(Base):
-    """
-    Class that represents the recent words table on the db
-    """
-
-    __tablename__ = "recent_words"
-
-    post_id = create_content_foreign_key(True)
-    recent_word = Column(String(200), nullable=False, primary_key=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-
-    _table_args__ = (UniqueConstraint("post_id", "recent_word"),)
-
-    def __init__(self, post_id, recent_word):
-        self.post_id = post_id
-        self.recent_word = recent_word
