@@ -1,5 +1,6 @@
 """
-This module tests the function get_posts_and_reposts_from_user_visited from the controller_post.py file
+This module tests the function get_posts_and_reposts_from_
+user_visited from the controller_post.py file
 """
 import datetime
 import json
@@ -55,7 +56,7 @@ def test_get_the_right_amount_posts_and_reposts_from_user_visited():
 
 
 ### VER, NO SE ESTA TIRANDO LA EXCEPCION
-def test_get_posts_if_the_user_is_private_and_I_dont_follow_them():
+def test_get_posts_if_the_user_is_private_and_i_dont_follow_them():
     """
     This function tests if you can get posts and reposts from a user.
     """
@@ -87,7 +88,7 @@ def test_get_posts_if_the_user_is_private_and_I_dont_follow_them():
         user_delete(user_visitor)
 
 
-def test_get_posts_if_the_user_is_private_and_I_follow_them():
+def test_get_posts_if_the_user_is_private_and_i_follow_them():
     """
     This function tests if you can get posts and reposts from a user.
     """
@@ -137,7 +138,8 @@ def test_get_posts_if_the_user_is_private_and_I_follow_them():
 
 #     result = api_get_posts_and_reposts_from_user_visited(
 #         user_visited_email=user_visited.email,
-#         oldest_date_str=(datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%d_%H:%M:%S"),
+#         oldest_date_str=(datetime.datetime.now() +
+# datetime.timedelta(days=1)).strftime("%Y-%m-%d_%H:%M:%S"),
 #         amount=AMOUNT_DEFAULT,
 #         only_reposts=True,
 #         user=get_user_from_token_mock(token=TOKEN_FAKE),
@@ -173,7 +175,8 @@ def test_get_posts_if_the_user_is_private_and_I_follow_them():
 #     #with pytest.raises(UserIsPrivate) as error:
 #     result = api_get_posts_and_reposts_from_user_visited(
 #         user_visited_email=user_visited.email,
-#         oldest_date_str=(datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%d_%H:%M:%S"),
+#         oldest_date_str=(datetime.datetime.now()
+# + datetime.timedelta(days=1)).strftime("%Y-%m-%d_%H:%M:%S"),
 #         amount=AMOUNT_DEFAULT,
 #         only_reposts=False,
 #         user=get_user_from_token_mock(token=TOKEN_FAKE),
