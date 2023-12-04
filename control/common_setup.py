@@ -5,7 +5,7 @@ and from the json objects.
 """
 from os import getenv
 from typing import List, Dict
-from fastapi import HTTPException
+from fastapi import HTTPException, Header
 from pydantic import BaseModel
 import requests
 
@@ -439,7 +439,7 @@ def create_headers_token(token):
     }
 
 
-def get_user_from_token(token: str):
+def get_user_from_token(token: str = Header(None)):
     """
     This function gets the user from the token.
     """

@@ -5,7 +5,7 @@ Router dedicated to the admin endpoints
 from fastapi import APIRouter, Header, Query
 from fastapi.exceptions import HTTPException
 
-from control.utils.tracer import tracer
+#from control.utils.tracer import tracer
 from control.common_setup import (
     token_is_admin,
     BAD_REQUEST,
@@ -30,7 +30,7 @@ router = APIRouter()
 
 
 @router.get("/admin/health", tags=["Admin"])
-@tracer.start_as_current_span("Health Check")
+#@tracer.start_as_current_span("Health Check")
 def get_service_health_and_description():
     """
     Returns the health of the service
@@ -45,7 +45,7 @@ def get_service_health_and_description():
 
 
 @router.get("/posts/admin/all", tags=["Admin"])
-@tracer.start_as_current_span("Get all posts - Admin")
+#@tracer.start_as_current_span("Get all posts - Admin")
 def api_get_posts_for_admin(
     start: int = Query(0, title="start", description="start for pagination"),
     ammount: int = Query(10, title="ammount", description="ammount of posts"),
@@ -74,7 +74,7 @@ def api_get_posts_for_admin(
 
 
 @router.get("/posts/admin/user", tags=["Admin"])
-@tracer.start_as_current_span("Get posts from user - Admin")
+#@tracer.start_as_current_span("Get posts from user - Admin")
 def api_get_posts_for_admin_user_id(
     email: str,
     start: int = Query(0, title="start", description="start for pagination"),
@@ -107,7 +107,7 @@ def api_get_posts_for_admin_user_id(
 
 
 @router.get("/posts/admin/search/{text}", tags=["Admin"])
-@tracer.start_as_current_span("Get posts by text - Admin")
+#@tracer.start_as_current_span("Get posts by text - Admin")
 def api_get_posts_for_admin_search(
     text: str,
     offset=Query(0, title="offset", description="offset for pagination"),

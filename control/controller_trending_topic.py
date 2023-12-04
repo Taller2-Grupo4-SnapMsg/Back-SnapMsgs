@@ -9,7 +9,7 @@ from repository.queries.queries_get import *
 from repository.queries.queries_hashtags import *
 from repository.queries.queries_global import *
 from control.common_setup import *
-from control.utils.tracer import tracer
+#from control.utils.tracer import tracer
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ router = APIRouter()
     "/trending_topics",
     tags=["Trending topics"],
 )
-@tracer.start_as_current_span("Get trending topics")
+#@tracer.start_as_current_span("Get trending topics")
 def api_get_trending_topics(
     offset=Query(0, title="offset", description="offset for pagination"),
     amount=Query(10, title="ammount", description="max ammount of users to return"),
@@ -45,7 +45,7 @@ def api_get_trending_topics(
     "/posts/trending_topic/{hashtag}",
     tags=["Trending topics"],
 )
-@tracer.start_as_current_span("Get posts on a trending topic")
+#@tracer.start_as_current_span("Get posts on a trending topic")
 def api_get_posts_on_a_trending_topic(
     hashtag: str,
     offset=Query(0, title="offset", description="offset for pagination"),
