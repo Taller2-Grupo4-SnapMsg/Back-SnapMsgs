@@ -468,6 +468,6 @@ def token_is_admin(token: str):
         "content-type": "application/json",
         "token": token,
     }
-    url = getenv("GATEWAY_URL") + "/admin/is_admin"
+    url = getenv("API_BASE_URL") + "/admin/is_admin"
     response = requests.get(url, headers=headers_request, timeout=TIMEOUT)
     return response.status_code == 200
