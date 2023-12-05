@@ -18,10 +18,12 @@ from repository.queries.queries_hashtags import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_global import *
+from repository.errors import ThisUserIsBlocked, OtherUserIsBlocked
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.utils.tracer import tracer
 from control.common_setup import *
+
 
 router = APIRouter()
 
@@ -46,6 +48,8 @@ def api_create_post(post: PostCreateRequest, token: str = Header(...)):
             int(user.get("id")), post.content, post.image, post.hashtags, post.mentions
         )
         return {"message": "Post created successfully", "post_id": post_id}
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
 
@@ -84,6 +88,10 @@ def api_get_posts_and_reposts_from_user_visited(
 
     except UserIsPrivate as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except OtherUserIsBlocked as error:
+        raise HTTPException(status_code=405, detail=str(error)) from error
     except UserDoesntHavePosts as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
     except Exception as error:
@@ -108,6 +116,8 @@ def api_get_post_by_id(
         post_db = get_post_by_id(int(user.get("id")), post_id)
         post = generate_response_posts_from_db(post_db)
         return post
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except PostNotFound as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
     except Exception as error:
@@ -135,6 +145,10 @@ def api_get_amount_posts_from_user_visited(
 
     except UserIsPrivate as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except OtherUserIsBlocked as error:
+        raise HTTPException(status_code=405, detail=str(error)) from error
     except UserDoesntHavePosts as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
     except Exception as error:
@@ -162,6 +176,8 @@ def api_get_feed(oldest_date_str: str, amount: int, token: str = Header(...)):
         return posts
     except UserIsPrivate as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except UserDoesntHavePosts as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
     except Exception as error:
@@ -187,6 +203,8 @@ def api_get_statistics(from_date_str: str, to_date_str: str, token: str = Header
         statistics = get_statistics(int(user.get("id")), from_date, to_date)
 
         return statistics
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except UserDoesntHavePosts as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
     except Exception as error:
@@ -223,6 +241,8 @@ def api_get_posts_by_hashtags(
         posts = generate_response_posts_from_db(posts_db)
 
         return posts
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except UserIsPrivate as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
     except UserDoesntHavePosts as error:
@@ -257,6 +277,8 @@ def api_get_posts_by_text(
         posts = generate_response_posts_from_db(posts_db)
 
         return posts
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except UserIsPrivate as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
     except UserDoesntHavePosts as error:
@@ -287,6 +309,8 @@ def api_update_post(
             post_data.mentions,
         )
         return {"message": "Post updated successfully"}
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except UserIsPrivate as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
     except UserDoesntHavePosts as error:
@@ -308,6 +332,8 @@ def api_delete_post(post_id: int, token: str = Header(...)):
         user = get_user_from_token(token)
         delete_post(post_id, user.get("id"))
         return {"message": "Post deleted successfully"}
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except UserWithouPermission as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
     except UserDoesntHavePosts as error:

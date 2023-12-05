@@ -12,6 +12,8 @@ from control.common_setup import (
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_notifications import *
 
+from repository.errors import ThisUserIsBlocked
+
 router = APIRouter()
 
 
@@ -29,6 +31,8 @@ def api_save_device_token(device_token: str, token: str = Header(...)):
         raise HTTPException(
             status_code=404, detail=f"Error saving token: {str(error)}"
         ) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except DatabaseError as db_error:
         raise HTTPException(
             status_code=400, detail="User and token doesnt already exists"
@@ -49,6 +53,8 @@ def api_delete_device_token(token: str = Header(...)):
         raise HTTPException(
             status_code=404, detail=f"Error saving token: {str(error)}"
         ) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except DatabaseError as db_error:
         raise HTTPException(
             status_code=400, detail="User and token doesnt already exists"
@@ -76,6 +82,8 @@ def api_send_notificacion(
         raise HTTPException(
             status_code=404, detail=f"Error saving token: {str(error)}"
         ) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except DatabaseError as db_error:
         raise HTTPException(
             status_code=400, detail="User and token doesnt already exists"

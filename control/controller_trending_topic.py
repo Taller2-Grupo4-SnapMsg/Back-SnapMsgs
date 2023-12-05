@@ -8,6 +8,7 @@ from repository.queries.queries_trending_topic import *
 from repository.queries.queries_get import *
 from repository.queries.queries_hashtags import *
 from repository.queries.queries_global import *
+from repository.errors import ThisUserIsBlocked
 from control.common_setup import *
 from control.utils.tracer import tracer
 
@@ -37,6 +38,10 @@ def api_get_trending_topics(
         )
         trending_topics = generate_response_trending_topics_from_db(trending_topics_db)
         return trending_topics
+    # pylint: disable=R0801
+    # I disable the "Similar lines in 2 files"
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
 
@@ -62,5 +67,7 @@ def api_get_posts_on_a_trending_topic(
         )
         posts = generate_response_posts_from_db(posts_db)
         return posts
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
