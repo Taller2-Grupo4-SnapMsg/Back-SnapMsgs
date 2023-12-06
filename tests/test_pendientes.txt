@@ -1,12 +1,8 @@
-# ---------------------- para eliminar --------------------------------
-
-delete_mentions_by_content_id(35)
-delete_hashtags_by_content_id(35)
-delete_posts_by_content_id(35)
-delete_content_by_content_id(35)
-delete_user_by_username(USERNAME_1)
 
 # ---------------------- test pendientes post ---------------------------
+
+
+#agregar algo que testee las menciones
 
 # funciones a testear
 # def api_get_posts_and_reposts_from_user_visited(
@@ -64,3 +60,41 @@ delete_user_by_username(USERNAME_1)
 #     token: str = Header(...),
 #     user: callable = Depends(get_user_from_token),
 # )
+
+
+# --------------------- pendiente ---------------------
+
+## ESTA EN OTRA RAMA
+# def test_get_posts_if_the_user_is_blocked():
+#     """
+#     This function tests if you can get posts and reposts from a user.
+#     """
+#     delete_all_posts()
+#     delete_user_by_username(USERNAME_1)
+#     delete_user_by_username(USERNAME_2)
+
+#     user_visited = create_user(USERNAME_1, EMAIL_1, True, True)
+#     user_visitor = create_user(USERNAME_2, EMAIL_2, True, False)
+#     post_1, content_id = create_post(user_visited.id)
+
+#     def get_user_from_token_mock(_: str = Header(None)):
+#         return json.loads(generate_user_from_db(user_visitor).json())
+
+#     #with pytest.raises(UserIsPrivate) as error:
+#     result = api_get_posts_and_reposts_from_user_visited(
+#         user_visited_email=user_visited.email,
+#         oldest_date_str=(datetime.datetime.now()
+# + datetime.timedelta(days=1)).strftime("%Y-%m-%d_%H:%M:%S"),
+#         amount=AMOUNT_DEFAULT,
+#         only_reposts=False,
+#         user=get_user_from_token_mock(token=TOKEN_FAKE),
+#     )
+#     #assert str(error.value) == "User is private"
+#     assert len(result) == 0
+
+#     post_delete(post_1)
+#     user_delete(user_visited)
+#     user_delete(user_visitor)
+
+
+# solo se puede repostear de usuarios publicos

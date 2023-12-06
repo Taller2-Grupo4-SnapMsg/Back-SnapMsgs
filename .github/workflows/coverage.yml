@@ -43,6 +43,7 @@ jobs:
         export DB_URI="postgresql://admin:admin123@localhost:5432/test-back-users"
         alembic -c repository/alembic.ini  upgrade head
         coverage run -m pytest -p no:warnings tests/*
+        coverage report -m --omit "/usr/*"
 
     - name: Generate Coverage Report
       run: |

@@ -1,3 +1,4 @@
+# pylint: disable=R0801
 """
 This module tests the function create_post from the controller_post.py file
 """
@@ -11,6 +12,10 @@ from control.common_setup import *
 from tests.mock_functions import *
 from repository.tables.posts import *
 from repository.errors import *
+
+
+def test_delete_all():
+    delete_all()
 
 
 def test_create_post():
@@ -39,8 +44,7 @@ def test_create_post():
         assert response.get("post_id") is not None
         assert response.get("message") == "Post created successfully"
     finally:
-        post_delete_by_id(response.get("post_id"))
-        user_delete(user_1)
+        delete_all()
 
 
 def test_create_a_post_without_text_and_image():
@@ -49,15 +53,13 @@ def test_create_a_post_without_text_and_image():
     """
     user_1 = create_user(USERNAME_1, EMAIL_1, True)
 
-    response = None
-
     try:
 
         def get_user_from_token_mock(_: str = Header(None)):
             return json.loads(generate_user_from_db(user_1).json())
 
         with pytest.raises(HTTPException) as error_info:
-            response = api_create_post(
+            api_create_post(
                 post=PostCreateRequest(
                     content="",
                     image="",
@@ -70,9 +72,7 @@ def test_create_a_post_without_text_and_image():
         error = error_info.value
         assert str(error.detail) == "Both text and image are empty."
     finally:
-        if response and response.get("post_id"):
-            post_delete_by_id(response.get("post_id"))
-        user_delete(user_1)
+        delete_all()
 
 
 def test_create_a_post_with_text_of_more_than_1000_characters():
@@ -81,15 +81,13 @@ def test_create_a_post_with_text_of_more_than_1000_characters():
     """
     user_1 = create_user(USERNAME_1, EMAIL_1, True)
 
-    response = None
-
     try:
 
         def get_user_from_token_mock(_: str = Header(None)):
             return json.loads(generate_user_from_db(user_1).json())
 
         with pytest.raises(HTTPException) as error_info:
-            response = api_create_post(
+            api_create_post(
                 post=PostCreateRequest(
                     content=LONG_TEXT,
                     image=IMAGE,
@@ -102,6 +100,4 @@ def test_create_a_post_with_text_of_more_than_1000_characters():
         error = error_info.value
         assert str(error.detail) == "Text exceeds maximum length of 1000 characters."
     finally:
-        if response and response.get("post_id"):
-            post_delete_by_id(response.get("post_id"))
-        user_delete(user_1)
+        delete_all()

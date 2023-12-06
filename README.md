@@ -37,14 +37,14 @@ find . -type f -name "*.py" | xargs pylint
 
 `export PYTHONPATH=.
 
-#export DB_URI=postgresql://admin:admin123@localhost:5432/test-back-posts3
+#export DB_URI=postgresql://admin:admin123@localhost:5432/test-back-users
 
 `coverage run -m pytest`
 
 `coverage report -m`
 
 Si te esta fallando un test en particular, podes probar con:
-`pytest -k "nombre_test" tests/*`
+`pytest -k "test_delete_all" tests/*`
 
 sudo lsof -i :<puerto>
 sudo kill -9 pid
@@ -53,3 +53,5 @@ sudo kill -9 pid
 sudo chmod -R 777 .
 
 docker exec -it postgres_taller2 psql -U admin -d postgres -c "CREATE DATABASE \"test-back-posts3\";"
+
+coverage report -m --omit "/usr/*"

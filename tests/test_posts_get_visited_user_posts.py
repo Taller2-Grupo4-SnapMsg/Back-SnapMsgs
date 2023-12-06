@@ -1,3 +1,4 @@
+# pylint: disable=R0801
 """
 This module tests the function get_posts_and_reposts_from_
 user_visited from the controller_post.py file
@@ -20,14 +21,13 @@ def test_get_the_right_amount_posts_and_reposts_from_user_visited():
     """
     user_visited = create_user(USERNAME_1, EMAIL_1, True)
     user_visitor = create_user(USERNAME_2, EMAIL_2, True)
-    post_1 = create_post(user_visited.id)
-    post_2 = create_post(user_visited.id)
-    post_3 = create_post(user_visited.id)
+    create_post(user_visited.id)
+    create_post(user_visited.id)
+    create_post(user_visited.id)
 
     try:
 
         def get_user_from_token_mock(_: str = Header(None)):
-            print(json.loads(generate_user_from_db(user_visitor).json()))
             return json.loads(generate_user_from_db(user_visitor).json())
 
         result = api_get_posts_and_reposts_from_user_visited(
@@ -42,11 +42,7 @@ def test_get_the_right_amount_posts_and_reposts_from_user_visited():
 
         assert len(result) == 3
     finally:
-        post_delete(post_1)
-        post_delete(post_2)
-        post_delete(post_3)
-        user_delete(user_visited)
-        user_delete(user_visitor)
+        delete_all()
 
 
 ### TEST PENDIENTE
@@ -62,7 +58,7 @@ def test_get_posts_if_the_user_is_private_and_i_dont_follow_them():
     """
     user_visited = create_user(USERNAME_1, EMAIL_1, False)
     user_visitor = create_user(USERNAME_2, EMAIL_2, True)
-    post_1 = create_post(user_visited.id)
+    create_post(user_visited.id)
 
     try:
 
@@ -70,6 +66,7 @@ def test_get_posts_if_the_user_is_private_and_i_dont_follow_them():
             return json.loads(generate_user_from_db(user_visitor).json())
 
         # with pytest.raises(HTTPException) as error_info:
+        # pylint disable=R0801
         result = api_get_posts_and_reposts_from_user_visited(
             user_visited_email=user_visited.email,
             oldest_date_str=(
@@ -83,9 +80,7 @@ def test_get_posts_if_the_user_is_private_and_i_dont_follow_them():
         # assert str(error.detail) == "User is private"
         assert len(result) == 0
     finally:
-        post_delete(post_1)
-        user_delete(user_visited)
-        user_delete(user_visitor)
+        delete_all()
 
 
 def test_get_posts_if_the_user_is_private_and_i_follow_them():
@@ -95,7 +90,7 @@ def test_get_posts_if_the_user_is_private_and_i_follow_them():
     user_visited = create_user(USERNAME_1, EMAIL_1, False)
     user_visitor = create_user(USERNAME_2, EMAIL_2, True)
     create_follow(user_visitor.id, user_visited.id)
-    post_1 = create_post(user_visited.id)
+    create_post(user_visited.id)
 
     try:
 
@@ -114,79 +109,67 @@ def test_get_posts_if_the_user_is_private_and_i_follow_them():
 
         assert len(result) == 1
     finally:
-        post_delete(post_1)
-        delete_follow(user_visitor.id, user_visited.id)
-        user_delete(user_visited)
-        user_delete(user_visitor)
+        delete_all()
 
 
-# #tengo que hacer el create de repost
-# def test_get_only_the_ones_that_are_repost():
-#     """
-#     This function tests if you can get posts and reposts from a user.
-#     """
-#     user_visited = create_user(USERNAME_1, EMAIL_1, True)
-#     user_visitor = create_user(USERNAME_2, EMAIL_2, True)
-#     create_repost(1, user_visitor.id)
-#     post_1 = create_post(user_visited.id)
-#     post_2 = create_post(user_visited.id)
-#     post_3 = create_post(user_visited.id)
+def test_get_only_the_ones_that_are_repost():
+    """
+    This function tests if you can get posts and reposts from a user.
+    """
+    user_visited = create_user(USERNAME_1, EMAIL_1, True)
+    user_visitor = create_user(USERNAME_2, EMAIL_2, True)
 
-#     def get_user_from_token_mock(_: str = Header(None)):
-#         print(json.loads(generate_user_from_db(user_visitor).json()))
-#         return json.loads(generate_user_from_db(user_visitor).json())
+    # El usuario visitado hace un respost de un post del usuario visitante
+    _, content_id = create_post(user_visitor.id)
+    create_repost(user_visited.id, user_visitor.id, content_id)
 
-#     result = api_get_posts_and_reposts_from_user_visited(
-#         user_visited_email=user_visited.email,
-#         oldest_date_str=(datetime.datetime.now() +
-# datetime.timedelta(days=1)).strftime("%Y-%m-%d_%H:%M:%S"),
-#         amount=AMOUNT_DEFAULT,
-#         only_reposts=True,
-#         user=get_user_from_token_mock(token=TOKEN_FAKE),
-#     )
+    # El usuario visitado crea un post
+    _, content_id = create_post(user_visited.id)
 
-#     assert len(result) == 3
+    try:
 
-#     post_delete(post_1)
-#     post_delete(post_2)
-#     post_delete(post_3)
-#     user_delete(user_visited)
-#     user_delete(user_visitor)
+        def get_user_from_token_mock(_: str = Header(None)):
+            return json.loads(generate_user_from_db(user_visitor).json())
 
+        result = api_get_posts_and_reposts_from_user_visited(
+            user_visited_email=user_visited.email,
+            oldest_date_str=(
+                datetime.datetime.now() + datetime.timedelta(days=1)
+            ).strftime("%Y-%m-%d_%H:%M:%S"),
+            amount=AMOUNT_DEFAULT,
+            only_reposts=True,
+            user=get_user_from_token_mock(),
+        )
 
-# --------------------- pendiente ---------------------
-
-# ## NO FUNCIONA, VER, NO SE ESTA TIRANDO LA EXCEPCION, CREO QUE ESTA EN OTRA RAMA
-# def test_get_posts_if_the_user_is_blocked():
-#     """
-#     This function tests if you can get posts and reposts from a user.
-#     """
-#     delete_all_posts()
-#     delete_user_by_username(USERNAME_1)
-#     delete_user_by_username(USERNAME_2)
-
-#     user_visited = create_user(USERNAME_1, EMAIL_1, True, True)
-#     user_visitor = create_user(USERNAME_2, EMAIL_2, True, False)
-#     post_1 = create_post(user_visited.id)
-
-#     def get_user_from_token_mock(_: str = Header(None)):
-#         return json.loads(generate_user_from_db(user_visitor).json())
-
-#     #with pytest.raises(UserIsPrivate) as error:
-#     result = api_get_posts_and_reposts_from_user_visited(
-#         user_visited_email=user_visited.email,
-#         oldest_date_str=(datetime.datetime.now()
-# + datetime.timedelta(days=1)).strftime("%Y-%m-%d_%H:%M:%S"),
-#         amount=AMOUNT_DEFAULT,
-#         only_reposts=False,
-#         user=get_user_from_token_mock(token=TOKEN_FAKE),
-#     )
-#     #assert str(error.value) == "User is private"
-#     assert len(result) == 0
-
-#     post_delete(post_1)
-#     user_delete(user_visited)
-#     user_delete(user_visitor)
+        assert len(result) == 1
+    finally:
+        delete_all()
 
 
-# # solo se puede repostear de usuarios publicos
+def test_get_amount_posts_from_user_visited():
+    """
+    This function tests if you can get amount posts from a user.
+    """
+    user_visited = create_user(USERNAME_1, EMAIL_1, True)
+    user_visitor = create_user(USERNAME_2, EMAIL_2, True)
+
+    # El usuario visitado hace un respost de un post del usuario visitante
+    _, content_id = create_post(user_visitor.id)
+    create_repost(user_visited.id, user_visitor.id, content_id)
+
+    # El usuario visitado crea un post
+    _, content_id = create_post(user_visited.id)
+
+    try:
+
+        def get_user_from_token_mock(_: str = Header(None)):
+            return json.loads(generate_user_from_db(user_visitor).json())
+
+        result = api_get_amount_posts_from_user_visited(
+            user_visited_email=user_visited.email,
+            user=get_user_from_token_mock(),
+        )
+
+        assert result == 1
+    finally:
+        delete_all()

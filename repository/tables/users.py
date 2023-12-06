@@ -125,6 +125,7 @@ class BiometricToken(Base):
     """
     Class that represents the biometric tokens table on the db
     """
+
     __tablename__ = "biometric_tokens"
 
     user_id = create_users_foreign_key(True)

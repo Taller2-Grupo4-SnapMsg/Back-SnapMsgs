@@ -456,7 +456,7 @@ def get_user_from_token(token: str = Header(None)):
     return response.json()
 
 
-def token_is_admin(token: str):
+def token_is_admin(token: str = Header(None)):
     """
     This function checks if the token given is an admin.
     """

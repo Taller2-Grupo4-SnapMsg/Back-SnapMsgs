@@ -9,13 +9,24 @@ No checks of verifications are made.
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.common_setup import *
 from repository.tables.users import User, Following, Interests
-from repository.tables.posts import Post, Content, Hashtag, Mention
+from repository.tables.posts import (
+    Post,
+    Content,
+    Hashtag,
+    Mention,
+    Favorite,
+    Like,
+    DeviceToken,
+)
 import datetime
 
 # -------------------- Parameters -------------------
 
 TOKEN_FAKE = "fake_token"
+DEVICE_TOKEN = "device_token"
 AMOUNT_DEFAULT = 10
+OFFSET_DEFAULT = 0
+DAYS_DEFAULT = 7
 
 # ---------------- Parameters user 1 ----------------
 
@@ -36,6 +47,10 @@ PASSWORD = "1234"
 LOCATION = "Location"
 AVATAR = "path_to_avatar"
 DATE_OF_BIRTH = datetime.datetime(1990, 1, 1)
+INTEREST_1 = "interest_1"
+INTEREST_2 = "interest_2"
+HASHTAG_1 = "hashtag_1"
+HASHTAG_2 = "hashtag_2"
 
 # ---------------- default parameters posts ----------------
 
@@ -45,6 +60,12 @@ HASHTAGS = []
 MENTIONS = []
 USER_POSTER_ID = 1
 USER_CREATOR_ID = 1
+
+# ---------------- notification data request ---------------
+
+TITLE = "title"
+BODY = "body"
+DATA = {}
 
 # ----------------------- others ---------------------------
 
@@ -124,7 +145,7 @@ def create_post(
 
     session.commit()
 
-    return new_post
+    return [new_post, new_content.content_id]
 
 
 def create_repost(user_poster_id, user_creator_id, content_id):
@@ -172,119 +193,133 @@ def create_interest(user_id, interest):
     return new_interest
 
 
-# ------------------ Delete from bdd ------------------
+def create_favorite(user_id, content_id):
+    new_favorite = Favorite(
+        user_id=user_id,
+        content_id=content_id,
+    )
 
-
-def user_delete(user):
-    session.delete(user)
+    session.add(new_favorite)
     session.commit()
 
+    return new_favorite
 
-def delete_content_by_content_id(content_id: int):
-    content_to_delete = (
-        session.query(Content).filter(Content.content_id == content_id).first()
+
+def create_like(user_id, content_id):
+    new_like = Like(
+        user_id=user_id,
+        content_id=content_id,
     )
 
-    if content_to_delete:
-        session.delete(content_to_delete)
-        session.commit()
-        return True
-    else:
-        return False
+    session.add(new_like)
+    session.commit()
+
+    return new_like
 
 
-def delete_hashtags_by_content_id(content_id: int):
-    hashtags_to_delete = (
-        session.query(Hashtag).filter(Hashtag.content_id == content_id).all()
+def save_device_token(user_id, token):
+    new_token = DeviceToken(
+        user_id=user_id,
+        device_token=token,
     )
 
-    for hashtag in hashtags_to_delete:
-        if hashtag:
-            session.delete(hashtag)
-            session.commit()
-            return True
-        else:
-            return False
+    session.add(new_token)
+    session.commit()
+
+    return new_token
 
 
-def delete_posts_by_content_id(content_id: int):
-    posts_to_delete = session.query(Post).filter(Post.content_id == content_id).all()
-
-    for post in posts_to_delete:
-        if post:
-            session.delete(post)
-            session.commit()
-            return True
-        else:
-            return False
-
-
-def delete_mentions_by_content_id(content_id: int):
-    mentions_to_delete = (
-        session.query(Mention).filter(Mention.content_id == content_id).all()
-    )
-
-    for mention in mentions_to_delete:
-        if mention:
-            session.delete(mention)
-            session.commit()
-            return True
-        else:
-            return False
-
-
-def post_delete(post):
-    if post.user_creator_id == post.user_poster_id:
-        delete_mentions_by_content_id(post.content_id)
-        delete_hashtags_by_content_id(post.content_id)
-        delete_posts_by_content_id(post.content_id)
-        delete_content_by_content_id(post.content_id)
-    else:
-        delete_posts_by_content_id(post.content_id)
-
-
-def post_delete_by_id(post_id: int):
-    post_to_delete = session.query(Post).filter(Post.post_id == post_id).first()
-
-    if post_to_delete:
-        post_delete(post_to_delete)
-        return True
-    else:
-        return False
+# ------------------ Delete from bdd ------------------
 
 
 def delete_all_posts():
     posts_to_delete = session.query(Post).all()
 
     for post in posts_to_delete:
-        post_delete(post)
-
-
-def delete_follow(user_id: int, following_id: int):
-    follow_to_delete = (
-        session.query(Following)
-        .filter(Following.user_id == user_id)
-        .filter(Following.following_id == following_id)
-        .first()
-    )
-
-    if follow_to_delete:
-        session.delete(follow_to_delete)
+        session.delete(post)
         session.commit()
-        return True
-    else:
-        return False
 
 
-# ---------- Solo debug ----------
+def delete_all_contents():
+    contents_to_delete = session.query(Content).all()
 
-
-def delete_user_by_username(username: str):
-    user_to_delete = session.query(User).filter(User.username == username).first()
-
-    if user_to_delete:
-        session.delete(user_to_delete)
+    for content in contents_to_delete:
+        session.delete(content)
         session.commit()
-        return True
-    else:
-        return False
+
+
+def delete_all_favorites():
+    favorites_to_delete = session.query(Favorite).all()
+
+    for favorite in favorites_to_delete:
+        session.delete(favorite)
+        session.commit()
+
+
+def delete_all_likes():
+    likes_to_delete = session.query(Like).all()
+
+    for like in likes_to_delete:
+        session.delete(like)
+        session.commit()
+
+
+def delete_all_follows():
+    follows_to_delete = session.query(Following).all()
+
+    for follow in follows_to_delete:
+        session.delete(follow)
+        session.commit()
+
+
+def delete_all_users():
+    users_to_delete = session.query(User).all()
+
+    for user in users_to_delete:
+        session.delete(user)
+        session.commit()
+
+
+def delete_all_device_tokens():
+    device_tokens_to_delete = session.query(DeviceToken).all()
+
+    for device_token in device_tokens_to_delete:
+        session.delete(device_token)
+        session.commit()
+
+
+def delete_all_interests():
+    interests_to_delete = session.query(Interests).all()
+
+    for interest in interests_to_delete:
+        session.delete(interest)
+        session.commit()
+
+
+def delete_all_hashtags():
+    hashtags_to_delete = session.query(Hashtag).all()
+
+    for hashtag in hashtags_to_delete:
+        session.delete(hashtag)
+        session.commit()
+
+
+def delete_all_mentions():
+    mentions_to_delete = session.query(Mention).all()
+
+    for mention in mentions_to_delete:
+        session.delete(mention)
+        session.commit()
+
+
+def delete_all():
+    delete_all_favorites()
+    delete_all_likes()
+    delete_all_mentions()
+    delete_all_hashtags()
+    delete_all_posts()
+    delete_all_contents()
+    delete_all_follows()
+    delete_all_device_tokens()
+    delete_all_interests()
+    delete_all_users()

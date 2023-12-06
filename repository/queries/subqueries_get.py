@@ -2,7 +2,7 @@
 Queries for getting posts, reposts, and all their info
 """
 
-from sqlalchemy import case, func
+from sqlalchemy import case, func, or_
 from sqlalchemy.dialects.postgresql import array_agg
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
@@ -178,14 +178,21 @@ def create_subquery_hashtags_interests(user_id):
     )
 
 
+### chequear, la acabo de cambiar
 def create_subquery_posts_from_followd(user_id):
     """
     Create subquery that returns all the posts from users that the user_id follows
     """
     return (
         session.query(Post.post_id)
-        .join(Following, Following.following_id == Post.user_poster_id)
-        .filter(Following.user_id == user_id)
+        .outerjoin(
+            Following,
+            or_(
+                Following.following_id == Post.user_poster_id,
+                Post.user_poster_id == user_id,
+            ),
+        )
+        .filter(or_(Following.user_id == user_id, Post.user_poster_id == user_id))
         .distinct()
         .subquery()
     )
