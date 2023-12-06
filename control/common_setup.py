@@ -5,7 +5,7 @@ and from the json objects.
 """
 from os import getenv
 from typing import List, Dict
-from fastapi import HTTPException
+from fastapi import HTTPException, Header
 from pydantic import BaseModel
 import requests
 
@@ -439,7 +439,7 @@ def create_headers_token(token):
     }
 
 
-def get_user_from_token(token: str):
+def get_user_from_token(token: str = Header(None)):
     """
     This function gets the user from the token.
     """
@@ -450,7 +450,6 @@ def get_user_from_token(token: str):
     }
     url = getenv("API_BASE_URL") + "/user"
     response = requests.get(url, headers=headers_request, timeout=TIMEOUT)
-
     if response.status_code == 403:
         raise ThisUserIsBlocked()
     if response.status_code != 200:
@@ -459,7 +458,7 @@ def get_user_from_token(token: str):
     return response.json()
 
 
-def token_is_admin(token: str):
+def token_is_admin(token: str = Header(None)):
     """
     This function checks if the token given is an admin.
     """

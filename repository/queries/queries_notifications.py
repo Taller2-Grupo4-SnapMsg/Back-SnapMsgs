@@ -1,20 +1,15 @@
 """
 Queries for creating and deleting likes
 """
+# pylint: disable=C0114, W0401, W0614, E0602, E0401, W0614
 from typing import List
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
-
-# pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.common_setup import *
-
-# pylint: disable=C0114, W0401, W0614, E0401
 from repository.errors import (
     DatabaseError,
     UserNotFound,
 )
-
-# pylint: disable=C0114, W0401, W0614, E0401
 from repository.tables.posts import DeviceToken
 from repository.tables.users import User
 

@@ -2,7 +2,7 @@
 """
 Router dedicated to the admin endpoints
 """
-from fastapi import APIRouter, Header, Query
+from fastapi import APIRouter, Query, Depends
 from fastapi.exceptions import HTTPException
 
 from control.utils.tracer import tracer
@@ -49,7 +49,7 @@ def get_service_health_and_description():
 def api_get_posts_for_admin(
     start: int = Query(0, title="start", description="start for pagination"),
     ammount: int = Query(10, title="ammount", description="ammount of posts"),
-    token: str = Header(...),
+    is_admin: callable = Depends(token_is_admin),
 ):
     """
     This endpoint is used for admins, and is used to retrieve posts in a paginated way.
@@ -63,7 +63,7 @@ def api_get_posts_for_admin(
     try:
         if ammount > MAX_AMMOUNT:
             raise HTTPException(status_code=400, detail="Max ammount is 25")
-        if not token_is_admin(token):
+        if not is_admin:
             raise HTTPException(status_code=403, detail="Invalid token")
         posts_db = get_posts_and_reposts_for_admin(start, ammount)
         return generate_response_posts_from_db_for_admin(posts_db)
@@ -79,7 +79,7 @@ def api_get_posts_for_admin_user_id(
     email: str,
     start: int = Query(0, title="start", description="start for pagination"),
     ammount: int = Query(10, title="ammount", description="ammount of posts"),
-    token: str = Header(...),
+    is_admin: callable = Depends(token_is_admin),
 ):
     """
     This endpoint is used for admins, and is used to retrieve posts from
@@ -95,7 +95,7 @@ def api_get_posts_for_admin_user_id(
     try:
         if ammount > MAX_AMMOUNT:
             raise HTTPException(status_code=400, detail="Max ammount is 25")
-        if not token_is_admin(token):
+        if not is_admin:
             raise HTTPException(status_code=403, detail="Invalid token")
         user_id = get_user_id_from_email(email)
         posts_db = get_posts_and_reposts_for_admin_user_id(user_id, start, ammount)
@@ -112,7 +112,7 @@ def api_get_posts_for_admin_search(
     text: str,
     offset=Query(0, title="offset", description="offset for pagination"),
     amount=Query(10, title="ammount", description="max ammount of users to return"),
-    token: str = Header(...),
+    is_admin: callable = Depends(token_is_admin),
 ):
     """
     Endpoint used by admins to search for posts by text
@@ -123,7 +123,7 @@ def api_get_posts_for_admin_search(
     param: token: The token of the admin.
     return: posts that contain the text
     """
-    if not token_is_admin(token):
+    if not is_admin:
         raise HTTPException(status_code=403, detail="Invalid token")
     try:
         posts_db = get_posts_by_text_admin(text, offset, amount)

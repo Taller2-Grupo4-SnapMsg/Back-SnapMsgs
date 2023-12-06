@@ -10,6 +10,7 @@ from repository.errors import (
 )
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
+from repository.errors import *
 from repository.queries.common_setup import *
 
 # pylint: disable=C0114, W0401, W0614, E0401
@@ -30,11 +31,21 @@ def get_post(post_id):
     return post
 
 
+def validate_that_there_is_at_least_text_or_image(content, image):
+    """
+    Check that there is at least text or image
+    """
+    if content == "" and image == "":
+        raise EmptyPostError()
+
+
 def valid_content(content):
     """
-    Checks if the content is longer than 1000 chars (max lenght in DB)
+    Check that both (image and content) are not null and if
+    the content is longer than 1000 chars (max lenght in DB)
     """
-    return len(content) < 1000
+    if len(content) > 1000:
+        raise TextTooLongError()
 
 
 def is_following(user_id, user_id_to_check_if_following):

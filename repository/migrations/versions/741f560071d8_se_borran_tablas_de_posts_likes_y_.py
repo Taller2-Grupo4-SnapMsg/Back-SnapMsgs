@@ -1,9 +1,9 @@
 # pylint: skip-file
-"""dropeamos tablas de posts, likes y hashtags
+"""se borran tablas de posts, likes y hashtags
 
-Revision ID: 5caf6a945f4d
+Revision ID: 741f560071d8
 Revises: fb0240b2bd48
-Create Date: 2023-10-19 23:27:04.307763
+Create Date: 2023-10-20 12:42:15.290146
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = "5caf6a945f4d"
+revision: str = "741f560071d8"
 down_revision: Union[str, None] = "fb0240b2bd48"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,6 +24,7 @@ def upgrade():
     op.drop_table("reposts")
     op.drop_table("likes")
     op.drop_table("posts")
+    pass
     # ### end Alembic commands ###
 
 

@@ -1,7 +1,7 @@
 """
     Fast API Controller for Posts
 """
-from fastapi import HTTPException, Header, APIRouter, Query
+from fastapi import HTTPException, APIRouter, Query, Depends
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_posts import *
@@ -22,6 +22,7 @@ from repository.errors import ThisUserIsBlocked
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
+
 from control.utils.tracer import tracer
 
 
@@ -36,13 +37,12 @@ router = APIRouter()
 def api_get_recommended_users(
     offset=Query(0, title="offset", description="offset for pagination"),
     amount=Query(10, title="ammount", description="max ammount of users to return"),
-    token: str = Header(...),
+    user: callable = Depends(get_user_from_token),
 ):
     """
     This function returns the recommended users for a user.
     """
     try:
-        user = get_user_from_token(token)
         recommended_users_db = get_recommended_accounts_for_a_user(
             int(user.get("id")), offset, amount
         )

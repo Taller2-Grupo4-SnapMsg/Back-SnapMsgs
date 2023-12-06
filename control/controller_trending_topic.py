@@ -1,7 +1,7 @@
 """
     Fast API Controller for Trending Topics
 """
-from fastapi import HTTPException, Header, APIRouter, Query
+from fastapi import HTTPException, APIRouter, Query, Depends
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_trending_topic import *
@@ -10,6 +10,7 @@ from repository.queries.queries_hashtags import *
 from repository.queries.queries_global import *
 from repository.errors import ThisUserIsBlocked
 from control.common_setup import *
+
 from control.utils.tracer import tracer
 
 router = APIRouter()
@@ -26,13 +27,12 @@ def api_get_trending_topics(
     days=Query(
         7, title="days", description="to take into account the posts of the last x days"
     ),
-    token: str = Header(...),
+    _: callable = Depends(get_user_from_token),
 ):
     """
     Get trending topics
     """
     try:
-        _ = get_user_from_token(token)
         trending_topics_db = get_trending_topics_with_count(
             int(offset), int(amount), int(days)
         )
@@ -55,13 +55,12 @@ def api_get_posts_on_a_trending_topic(
     hashtag: str,
     offset=Query(0, title="offset", description="offset for pagination"),
     amount=Query(10, title="ammount", description="max ammount of users to return"),
-    token: str = Header(...),
+    user: callable = Depends(get_user_from_token),
 ):
     """
     Get posts on a trending topic
     """
     try:
-        user = get_user_from_token(token)
         posts_db = get_posts_on_a_trending_topic(
             int(user.get("id")), hashtag, offset, amount
         )

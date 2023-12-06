@@ -1,9 +1,9 @@
 # pylint: skip-file
-"""agregamos tablas de posts, likes y hashtags-si va
+"""se agregan tablas de posts, content, likes y hashtags
 
-Revision ID: 698f6989f45b
-Revises: 2f5a0ebd6f23
-Create Date: 2023-10-19 23:54:38.941213
+Revision ID: 4150ca75ac2e
+Revises: 741f560071d8
+Create Date: 2023-10-20 13:50:09.385859
 
 """
 from typing import Sequence, Union
@@ -13,8 +13,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "698f6989f45b"
-down_revision: Union[str, None] = "2f5a0ebd6f23"
+revision: str = "4150ca75ac2e"
+down_revision: Union[str, None] = "741f560071d8"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -87,12 +87,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table("hashtags")
-
-    # Drop the 'likes' table
     op.drop_table("likes")
-
-    # Drop the 'posts' table
     op.drop_table("posts")
-
-    # Drop the 'contents' table
     op.drop_table("contents")

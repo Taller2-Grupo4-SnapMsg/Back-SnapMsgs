@@ -22,6 +22,9 @@ def get_trending_topics_with_count(offset, amount, days):
         # pylint: disable=E1102
         session.query(Hashtag.hashtag, func.count(Post.post_id).label("post_count"))
         .join(Post, Hashtag.content_id == Post.content_id)
+        .join(User, Post.user_poster_id == User.id)
+        # pylint: disable=C0121
+        .filter(User.is_public == True)
         .filter(Hashtag.created_at >= start_date, Hashtag.created_at <= end_date)
         .group_by(Hashtag.hashtag)
         .order_by(desc("post_count"))
