@@ -13,5 +13,7 @@ httpx
 exponent_server_sdk
 rollbar
 notifications
-nltk
 schedule
+uptrace
+opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-requests

@@ -7,7 +7,6 @@ from os import getenv
 from typing import List, Dict
 from fastapi import HTTPException
 from pydantic import BaseModel
-import httpx
 import requests
 
 from repository.errors import ThisUserIsBlocked
@@ -440,29 +439,35 @@ def create_headers_token(token):
     }
 
 
-async def get_user_from_token(token):
+def get_user_from_token(token: str):
     """
     This function gets the user from the token.
     """
-    headers = create_headers_token(token)
+    headers_request = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "token": token,
+    }
+    url = getenv("API_BASE_URL") + "/user"
+    response = requests.get(url, headers=headers_request, timeout=TIMEOUT)
 
-    async with httpx.AsyncClient() as client:
-        url = getenv("API_BASE_URL") + "/user"
-        response = await client.get(url, headers=headers)
+    if response.status_code == 403:
+        raise ThisUserIsBlocked()
+    if response.status_code != 200:
+        raise HTTPException(status_code=400, detail={"Unknown error"})
 
-        if response.status_code == 403:
-            raise ThisUserIsBlocked()
-        if response.status_code != 200:
-            raise HTTPException(status_code=400, detail={"Unknown error"})
-
-        return response.json()
+    return response.json()
 
 
-async def token_is_admin(token: str):
+def token_is_admin(token: str):
     """
     This function checks if the token given is an admin.
     """
-    headers_request = create_headers_token(token)
+    headers_request = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "token": token,
+    }
     url = getenv("API_BASE_URL") + "/admin/is_admin"
     response = requests.get(url, headers=headers_request, timeout=TIMEOUT)
     return response.status_code == 200
