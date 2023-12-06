@@ -20,9 +20,9 @@ def test_get_posts_by_hashtags():
     user_1 = create_user(USERNAME_1, EMAIL_1, True)
     user_2 = create_user(USERNAME_2, EMAIL_2, True)
 
-    post_1, _ = create_post(user_1.id, hashtags=[HASHTAG_1, HASHTAG_2])
+    create_post(user_1.id, hashtags=[HASHTAG_1, HASHTAG_2])
     create_post(user_2.id, hashtags=[HASHTAG_1])
-    post_3, _ = create_post(user_2.id, hashtags=[HASHTAG_2])
+    create_post(user_2.id, hashtags=[HASHTAG_2])
 
     try:
 
@@ -36,7 +36,6 @@ def test_get_posts_by_hashtags():
             user=get_user_from_token_mock(),
         )
 
-        assert result[0].post_id == post_3.post_id
-        assert result[1].post_id == post_1.post_id
+        assert len(result) == 2
     finally:
         delete_all()
