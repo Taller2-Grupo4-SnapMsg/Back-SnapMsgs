@@ -9,6 +9,8 @@ from fastapi import HTTPException, Header
 from pydantic import BaseModel
 import requests
 
+from repository.errors import ThisUserIsBlocked
+
 POST_NOT_FOUND = 404
 USER_NOT_FOUND = 404
 LIKE_NOT_FOUND = 404
@@ -112,7 +114,6 @@ def generate_post_from_db(
     )
 
 
-# listo
 def generate_user_from_db(user_info):
     """
     This function casts the orm_object into a pydantic model.
@@ -128,7 +129,6 @@ def generate_user_from_db(user_info):
     )
 
 
-# listo
 def generate_post(post_db):
     """
     This function casts the orm_object into a pydantic model.
@@ -450,6 +450,8 @@ def get_user_from_token(token: str = Header(None)):
     }
     url = getenv("API_BASE_URL") + "/user"
     response = requests.get(url, headers=headers_request, timeout=TIMEOUT)
+    if response.status_code == 403:
+        raise ThisUserIsBlocked()
     if response.status_code != 200:
         raise HTTPException(status_code=400, detail={"Unknown error"})
 
@@ -465,6 +467,6 @@ def token_is_admin(token: str = Header(None)):
         "content-type": "application/json",
         "token": token,
     }
-    url = getenv("GATEWAY_URL") + "/admin/is_admin"
+    url = getenv("API_BASE_URL") + "/admin/is_admin"
     response = requests.get(url, headers=headers_request, timeout=TIMEOUT)
     return response.status_code == 200

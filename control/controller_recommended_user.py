@@ -18,10 +18,13 @@ from repository.queries.queries_hashtags import *
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_global import *
 
+from repository.errors import ThisUserIsBlocked
+
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
 
 from control.utils.tracer import tracer
+
 
 router = APIRouter()
 
@@ -46,6 +49,8 @@ def api_get_recommended_users(
         users = generate_response_recommended_users_from_db(recommended_users_db)
         return users
     except UserIsPrivate as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except ThisUserIsBlocked as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error

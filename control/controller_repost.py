@@ -6,10 +6,13 @@ from fastapi import APIRouter, Depends
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from repository.queries.queries_reposts import *
 
+from repository.errors import ThisUserIsBlocked
+
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
 
 from control.utils.tracer import tracer
+
 
 router = APIRouter()
 
@@ -33,12 +36,16 @@ def api_create_repost(
         ) from db_error
     except UserWithouPermission as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except RepostAlreadyMade as error:
         raise HTTPException(status_code=409, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
+# pylint: disable=R0801
+# I disable the "Similar lines in 2 files"
 @router.delete("/reposts/from_post/{post_id}", tags=["Reposts"])
 @tracer.start_as_current_span("Remove a repost from a post")
 def api_delete_respost_from_post(
@@ -53,6 +60,8 @@ def api_delete_respost_from_post(
         return {"message": "Repost deleted successfully"}
     except PostNotFound as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except UserWithouPermission as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:
@@ -73,6 +82,8 @@ def api_delete_respost(
         return {"message": "Repost deleted successfully"}
     except PostNotFound as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
+    except ThisUserIsBlocked as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
     except UserWithouPermission as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:
