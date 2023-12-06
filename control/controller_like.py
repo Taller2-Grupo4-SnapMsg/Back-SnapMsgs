@@ -11,13 +11,13 @@ from repository.queries.queries_global import get_content_id_from_post
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
 
-# from control.utils.tracer import tracer
+from control.utils.tracer import tracer
 
 router = APIRouter()
 
 
 @router.post("/likes/{post_id}", tags=["Likes"])
-# @tracer.start_as_current_span("Like a post")
+@tracer.start_as_current_span("Like a post")
 def api_create_like(
     post_id: int,
     user: callable = Depends(get_user_from_token),
@@ -40,7 +40,7 @@ def api_create_like(
 
 
 @router.delete("/likes/{post_id}", tags=["Likes"])
-# @tracer.start_as_current_span("Remove a like from a post")
+@tracer.start_as_current_span("Remove a like from a post")
 def api_delete_like(
     post_id: int,
     user: callable = Depends(get_user_from_token),

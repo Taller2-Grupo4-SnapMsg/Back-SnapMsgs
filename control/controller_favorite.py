@@ -12,13 +12,13 @@ from repository.queries.queries_get import *
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
 
-# from control.utils.tracer import tracer
+from control.utils.tracer import tracer
 
 router = APIRouter()
 
 
 @router.post("/favorites/{post_id}", tags=["Favorites"])
-# @tracer.start_as_current_span("Add a favorite to a post")
+@tracer.start_as_current_span("Add a favorite to a post")
 def api_create_favorite(
     post_id: int,
     user: callable = Depends(get_user_from_token),
@@ -41,7 +41,7 @@ def api_create_favorite(
 
 
 @router.delete("/favorites/{post_id}", tags=["Favorites"])
-# @tracer.start_as_current_span("Remove a favorite from a post")
+@tracer.start_as_current_span("Remove a favorite from a post")
 def api_delete_favorite(
     post_id: int,
     user: callable = Depends(get_user_from_token),
@@ -65,7 +65,7 @@ def api_delete_favorite(
     "/amount/{amount}",
     tags=["Favorites"],
 )
-# @tracer.start_as_current_span("Get all favorites from user visited")
+@tracer.start_as_current_span("Get all favorites from user visited")
 def api_get_favorites_from_user_visited(
     user_visited_email: str,
     oldest_date_str: str,

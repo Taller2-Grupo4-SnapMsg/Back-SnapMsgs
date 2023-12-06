@@ -9,13 +9,13 @@ from repository.queries.queries_reposts import *
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
 
-# from control.utils.tracer import tracer
+from control.utils.tracer import tracer
 
 router = APIRouter()
 
 
 @router.post("/reposts/{post_id}", tags=["Reposts"])
-# @tracer.start_as_current_span("Create a repost")
+@tracer.start_as_current_span("Create a repost")
 def api_create_repost(
     post_id: int,
     user: callable = Depends(get_user_from_token),
@@ -40,7 +40,7 @@ def api_create_repost(
 
 
 @router.delete("/reposts/from_post/{post_id}", tags=["Reposts"])
-# @tracer.start_as_current_span("Remove a repost from a post")
+@tracer.start_as_current_span("Remove a repost from a post")
 def api_delete_respost_from_post(
     post_id: int,
     user: callable = Depends(get_user_from_token),
@@ -60,7 +60,7 @@ def api_delete_respost_from_post(
 
 
 @router.delete("/reposts/{repost_id}", tags=["Reposts"])
-# @tracer.start_as_current_span("Remove a repost")
+@tracer.start_as_current_span("Remove a repost")
 def api_delete_respost(
     repost_id: int,
     user: callable = Depends(get_user_from_token),

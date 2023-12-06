@@ -21,7 +21,7 @@ from repository.queries.queries_global import *
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
 from control.common_setup import *
 
-# from control.utils.tracer import tracer
+from control.utils.tracer import tracer
 
 router = APIRouter()
 
@@ -30,7 +30,7 @@ router = APIRouter()
     "/users/recommended",
     tags=["Recommended users"],
 )
-# @tracer.start_as_current_span("Get recommended users")
+@tracer.start_as_current_span("Get recommended users")
 def api_get_recommended_users(
     offset=Query(0, title="offset", description="offset for pagination"),
     amount=Query(10, title="ammount", description="max ammount of users to return"),

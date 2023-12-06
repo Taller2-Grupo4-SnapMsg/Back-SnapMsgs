@@ -23,7 +23,7 @@ from repository.queries.queries_global import *
 from repository.errors import *
 
 # pylint: disable=C0114, W0401, W0614, E0602, E0401
-# from control.utils.tracer import tracer
+from control.utils.tracer import tracer
 from control.common_setup import *
 
 router = APIRouter()
@@ -32,7 +32,7 @@ router = APIRouter()
 
 
 @router.post("/posts", tags=["Posts"])
-# @tracer.start_as_current_span("Create a post")
+@tracer.start_as_current_span("Create a post")
 def api_create_post(
     post: PostCreateRequest,
     user: callable = Depends(get_user_from_token),
@@ -64,7 +64,7 @@ def api_create_post(
     "/amount/{amount}/only_reposts/",
     tags=["Posts"],
 )
-# @tracer.start_as_current_span("Get posts and reposts from user visited")
+@tracer.start_as_current_span("Get posts and reposts from user visited")
 def api_get_posts_and_reposts_from_user_visited(
     user_visited_email: str,
     oldest_date_str: str,
@@ -101,7 +101,7 @@ def api_get_posts_and_reposts_from_user_visited(
     "/posts/{post_id}",
     tags=["Posts"],
 )
-# @tracer.start_as_current_span("Get post by id")
+@tracer.start_as_current_span("Get post by id")
 def api_get_post_by_id(
     post_id: int,
     user: callable = Depends(get_user_from_token),
@@ -123,7 +123,7 @@ def api_get_post_by_id(
     "/posts/profile/{user_visited_email}",
     tags=["Posts"],
 )
-# @tracer.start_as_current_span("Get posts from user visited")
+@tracer.start_as_current_span("Get posts from user visited")
 def api_get_amount_posts_from_user_visited(
     user_visited_email: str,
     user: callable = Depends(get_user_from_token),
@@ -149,7 +149,7 @@ def api_get_amount_posts_from_user_visited(
     "/posts/feed/oldest_date/{oldest_date_str}/amount/{amount}",
     tags=["Posts"],
 )
-# @tracer.start_as_current_span("Get Feed")
+@tracer.start_as_current_span("Get Feed")
 def api_get_feed(
     oldest_date_str: str,
     amount: int,
@@ -179,7 +179,7 @@ def api_get_feed(
     "/posts/statistics/from_date/{from_date_str}/to_date/{to_date_str}",
     tags=["Posts"],
 )
-# @tracer.start_as_current_span("Get statistics")
+@tracer.start_as_current_span("Get statistics")
 def api_get_statistics(
     from_date_str: str,
     to_date_str: str,
@@ -207,7 +207,7 @@ def api_get_statistics(
     "/posts/search/hashtags/{hashtags}",
     tags=["Posts"],
 )
-# @tracer.start_as_current_span("Get posts by hashtags")
+@tracer.start_as_current_span("Get posts by hashtags")
 def api_get_posts_by_hashtags(
     hashtags: str,
     offset=Query(0, title="offset", description="offset for pagination"),
@@ -243,7 +243,7 @@ def api_get_posts_by_hashtags(
     "/posts/search/text/{text}",
     tags=["Posts"],
 )
-# @tracer.start_as_current_span("Get posts by text")
+@tracer.start_as_current_span("Get posts by text")
 def api_get_posts_by_text(
     text: str,
     offset=Query(0, title="offset", description="offset for pagination"),
@@ -275,7 +275,7 @@ def api_get_posts_by_text(
 
 
 @router.put("/posts/{post_id}", tags=["Posts"])
-# @tracer.start_as_current_span("Update post")
+@tracer.start_as_current_span("Update post")
 def api_update_post(
     post_id: int,
     post_data: PostCreateRequest,
@@ -306,7 +306,7 @@ def api_update_post(
 
 
 @router.delete("/posts/{post_id}", tags=["Posts"])
-# @tracer.start_as_current_span("Delete post")
+@tracer.start_as_current_span("Delete post")
 def api_delete_post(
     post_id: int,
     user: callable = Depends(get_user_from_token),
