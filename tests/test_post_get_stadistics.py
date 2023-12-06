@@ -1,6 +1,6 @@
 # pylint: disable=R0801
 """
-This module tests the functions from the controller_like.py file
+This module tests the function api_get_statistics from the controller_post.py file
 """
 import json
 from fastapi import Header

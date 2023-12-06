@@ -1,7 +1,6 @@
 # pylint: disable=R0801
 """
-This module tests the function get_posts_and_reposts_from_
-user_visited from the controller_post.py file
+This module tests the function api_get_post_by_id from the controller_post.py file
 """
 import json
 from fastapi import Header

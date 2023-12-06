@@ -1,6 +1,6 @@
 # pylint: disable=R0801
 """
-This module tests the function api_get_feed from the controller_post.py file
+This module tests the function api_get_posts_by_hashtags from the controller_post.py file
 """
 import json
 from fastapi import Header

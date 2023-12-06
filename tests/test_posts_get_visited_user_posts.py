@@ -45,13 +45,6 @@ def test_get_the_right_amount_posts_and_reposts_from_user_visited():
         delete_all()
 
 
-### TEST PENDIENTE
-# get the right amount and with
-# the right offset of posts and
-# reposts from the visited user
-
-
-### VER, NO SE ESTA TIRANDO LA EXCEPCION
 def test_get_posts_if_the_user_is_private_and_i_dont_follow_them():
     """
     This function tests if you can get posts and reposts from a user.
@@ -65,8 +58,6 @@ def test_get_posts_if_the_user_is_private_and_i_dont_follow_them():
         def get_user_from_token_mock(_: str = Header(None)):
             return json.loads(generate_user_from_db(user_visitor).json())
 
-        # with pytest.raises(HTTPException) as error_info:
-        # pylint disable=R0801
         result = api_get_posts_and_reposts_from_user_visited(
             user_visited_email=user_visited.email,
             oldest_date_str=(
@@ -76,8 +67,7 @@ def test_get_posts_if_the_user_is_private_and_i_dont_follow_them():
             only_reposts=False,
             user=get_user_from_token_mock(),
         )
-        # error = error_info.value
-        # assert str(error.detail) == "User is private"
+
         assert len(result) == 0
     finally:
         delete_all()

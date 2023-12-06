@@ -16,7 +16,7 @@ from repository.errors import *
 
 def test_get_the_posts_for_a_user_feed_returns_my_posts_and_those_of_the_user_i_follow():
     """
-    This function tests if a user follows others their posts are returned.
+    This function tests function api_get_feed.
     """
     user_1 = create_user(USERNAME_1, EMAIL_1, True)
     user_2 = create_user(USERNAME_2, EMAIL_2, True)
@@ -51,7 +51,7 @@ def test_get_the_posts_for_a_user_feed_returns_my_posts_and_those_of_the_user_i_
 
 def test_get_posts_feed_if_user_is_private_and_i_dont_follow():
     """
-    This function tests if a user follows others their posts are returned.
+    This function tests function api_get_feed.
     """
     user_1 = create_user(USERNAME_1, EMAIL_1, True)
     user_2 = create_user(USERNAME_2, EMAIL_2, False)
@@ -82,7 +82,7 @@ def test_get_posts_feed_if_user_is_private_and_i_dont_follow():
 
 def test_get_posts_feed_if_the_user_follows_the_other_user_and_this_is_private():
     """
-    This function tests if a user follows others their posts are returned.
+    This function tests function api_get_feed.
     """
     user_1 = create_user(USERNAME_1, EMAIL_1, True)
     user_2 = create_user(USERNAME_2, EMAIL_2, False)
@@ -117,7 +117,7 @@ def test_get_posts_feed_if_the_user_follows_the_other_user_and_this_is_private()
 
 def test_get_posts_feed_if_user_is_public_i_dont_follow_and_match_my_interests():
     """
-    This function tests if a user follows others their posts are returned.
+    This function tests function api_get_feed.
     """
     user_1 = create_user(USERNAME_1, EMAIL_1, True)
     create_interest(user_1.id, INTEREST_1)
