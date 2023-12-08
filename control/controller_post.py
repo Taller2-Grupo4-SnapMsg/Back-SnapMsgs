@@ -291,7 +291,8 @@ def api_get_feed(
         raise HTTPException(status_code=403, detail=str(error)) from error
     except UserDoesntHavePosts as error:
         logger.error(
-            "User %s tried to get its own feed with %s posts since %s but user %s doesnt have any posts",
+            "User %s tried to get its own feed with %s posts since"
+            " %s but user %s doesnt have any posts",
             user.get("email"),
             amount,
             oldest_date_str,
@@ -450,7 +451,8 @@ def api_get_posts_by_text(
         posts = generate_response_posts_from_db(posts_db)
 
         logger.info(
-            "User %s got posts by text %s with offset %s and" " amount %s successfully",
+            "User %s got posts by text %s with offset %s and"
+            " amount %s successfully",
             user.get("email"),
             text,
             offset,
