@@ -21,11 +21,13 @@ from repository.errors import (
 from repository.queries.queries_get import (
     get_user_id_from_email,
 )
+
 from repository.queries.queries_admin import (
     get_posts_and_reposts_for_admin,
     get_posts_and_reposts_for_admin_user_id,
     get_posts_by_text_admin,
 )
+from repository.queries.common_setup import session
 
 router = APIRouter()
 
@@ -153,3 +155,12 @@ def api_get_posts_for_admin_search(
     except Exception as error:
         logger.error("Error in /posts/admin/search: %s", str(error))
         raise HTTPException(status_code=500, detail="Internal server error") from error
+
+
+@router.get("/rollback", tags=["DEBUG"])
+def rollback():
+    """
+    Endpoint used to rollback the database
+    """
+    session.rollback()
+    return {"message": "rollback successful"}
