@@ -452,8 +452,8 @@ def api_get_posts_by_text(
 
         logger.info(
             # Black says this has to be all in one line, or it will fail.
-            # pylint: disabled=W1404
-            "User %s got posts by text %s with offset %s and" " amount %s successfully",
+            # pylint disabled=W1404
+            "User %s got posts by text %s with offset %s and amount %s successfully",
             user.get("email"),
             text,
             offset,
