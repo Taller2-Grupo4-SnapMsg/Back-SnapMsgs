@@ -10,6 +10,7 @@ from pydantic import BaseModel
 import requests
 
 from repository.errors import ThisUserIsBlocked
+from control.utils.logger import logger
 
 POST_NOT_FOUND = 404
 USER_NOT_FOUND = 404
@@ -451,8 +452,12 @@ def get_user_from_token(token: str = Header(None)):
     url = getenv("API_BASE_URL") + "/user"
     response = requests.get(url, headers=headers_request, timeout=TIMEOUT)
     if response.status_code == 403:
+        logger.error("User with token %s is blocked", token)
         raise ThisUserIsBlocked()
     if response.status_code != 200:
+        logger.error(
+            "Unknonwn error trying to get the user from token %s from back users", token
+        )
         raise HTTPException(status_code=400, detail={"Unknown error"})
 
     return response.json()
@@ -469,4 +474,8 @@ def token_is_admin(token: str = Header(None)):
     }
     url = getenv("API_BASE_URL") + "/admin/is_admin"
     response = requests.get(url, headers=headers_request, timeout=TIMEOUT)
-    return response.status_code == 200
+    if response.status_code == 200:
+        logger.info("Admin %s was verified.", response.json().get("email"))
+        return True
+    logger.error("Token %s is not from admin", token)
+    return False

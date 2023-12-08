@@ -24,7 +24,7 @@ from repository.errors import ThisUserIsBlocked
 from control.common_setup import *
 
 from control.utils.tracer import tracer
-
+from control.utils.logger import logger
 
 router = APIRouter()
 
@@ -47,10 +47,31 @@ def api_get_recommended_users(
             int(user.get("id")), offset, amount
         )
         users = generate_response_recommended_users_from_db(recommended_users_db)
+        logger.info(
+            "User %s got recommended ussers with offset %s and amount %s successfully",
+            user.get("email"),
+            offset,
+            amount,
+        )
         return users
     except UserIsPrivate as error:
+        logger.error(
+            "User %s tried to get recommended ussers with offset"
+            " %s and amount %s but user is private",
+            user.get("email"),
+            offset,
+            amount,
+        )
         raise HTTPException(status_code=403, detail=str(error)) from error
     except ThisUserIsBlocked as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:
+        logger.error(
+            "User %s got an exception while trying to get recommended"
+            " users with offset %s and amount %s but user is private: %s",
+            user.get("email"),
+            offset,
+            amount,
+            str(error),
+        )
         raise HTTPException(status_code=500, detail=str(error)) from error

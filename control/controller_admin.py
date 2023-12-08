@@ -13,6 +13,7 @@ from control.common_setup import (
     generate_response_posts_from_db,
     generate_response_posts_from_db_for_admin,
 )
+from control.utils.logger import logger
 from repository.errors import (
     UserNotFound,
     UserDoesntHavePosts,
@@ -37,6 +38,7 @@ def get_service_health_and_description():
     """
     description = "SnapMsg's microservice handles everything"
     description += " related to the posts and their interactions"
+    logger.info("Service health and description was requested.")
     return {
         "status": "ok",
         "description": description,
@@ -62,14 +64,22 @@ def api_get_posts_for_admin(
     """
     try:
         if ammount > MAX_AMMOUNT:
-            raise HTTPException(status_code=400, detail="Max ammount is 25")
+            logger.error(
+                "Error in /posts/admin/all: amount passed is bigger than %s.",
+                MAX_AMMOUNT,
+            )
+            raise HTTPException(
+                status_code=400, detail=f"Max ammount is ${MAX_AMMOUNT}"
+            )
         if not is_admin:
             raise HTTPException(status_code=403, detail="Invalid token")
         posts_db = get_posts_and_reposts_for_admin(start, ammount)
         return generate_response_posts_from_db_for_admin(posts_db)
     except UserDoesntHavePosts as error:
+        logger.error("Error in /posts/admin/all: User doesnt have posts.")
         raise HTTPException(status_code=BAD_REQUEST, detail=str(error)) from error
     except Exception as error:
+        logger.error("Error in /posts/admin/all: %s.", str(error))
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
@@ -94,15 +104,26 @@ def api_get_posts_for_admin_user_id(
     """
     try:
         if ammount > MAX_AMMOUNT:
-            raise HTTPException(status_code=400, detail="Max ammount is 25")
+            logger.error(
+                "Error in /posts/admin/all: amount passed is bigger than %s.",
+                MAX_AMMOUNT,
+            )
+            raise HTTPException(
+                status_code=400, detail=f"Max ammount is ${MAX_AMMOUNT}"
+            )
         if not is_admin:
             raise HTTPException(status_code=403, detail="Invalid token")
         user_id = get_user_id_from_email(email)
         posts_db = get_posts_and_reposts_for_admin_user_id(user_id, start, ammount)
+
+        logger.info("Admin retrieved posts from user_id %s successfuly", user_id)
+
         return generate_response_posts_from_db(posts_db)
     except UserDoesntHavePosts as error:
+        logger.error("Error in /posts/admin/user: user %s doesnt have posts.", email)
         raise HTTPException(status_code=BAD_REQUEST, detail=str(error)) from error
     except UserNotFound as error:
+        logger.error("Error in /posts/admin/user: user %s not found.", email)
         raise HTTPException(status_code=BAD_REQUEST, detail=str(error)) from error
 
 
@@ -127,6 +148,8 @@ def api_get_posts_for_admin_search(
         raise HTTPException(status_code=403, detail="Invalid token")
     try:
         posts_db = get_posts_by_text_admin(text, offset, amount)
+        logger.info("Admin retrieved posts by text %s successfuly", text)
         return generate_response_posts_from_db(posts_db)
     except Exception as error:
+        logger.error("Error in /posts/admin/search: %s", str(error))
         raise HTTPException(status_code=500, detail="Internal server error") from error

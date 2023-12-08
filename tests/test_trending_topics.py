@@ -33,7 +33,7 @@ def test_trending_topics():
             offset=OFFSET_DEFAULT,
             amount=2,
             days=DAYS_DEFAULT,
-            _=get_user_from_token_mock(),
+            user=get_user_from_token_mock(),
         )
 
         assert len(response) == 2
@@ -66,7 +66,7 @@ def test_trending_topics_user_private():
             offset=OFFSET_DEFAULT,
             amount=2,
             days=DAYS_DEFAULT,
-            _=get_user_from_token_mock(),
+            user=get_user_from_token_mock(),
         )
 
         assert len(response) == 1
