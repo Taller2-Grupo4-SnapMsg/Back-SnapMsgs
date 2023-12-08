@@ -13,6 +13,7 @@ from repository.queries.queries_get import *
 from control.common_setup import *
 
 from control.utils.tracer import tracer
+from control.utils.logger import logger
 
 router = APIRouter()
 
@@ -29,16 +30,34 @@ def api_create_favorite(
     try:
         content_id = get_content_id_from_post(post_id)
         create_favorite(post_id, content_id, user.get("id"))
+        logger.info("User %s created a favorite of post %s", user.get("email"), post_id)
         return {"message": "Favorite created successfully"}
     except PostNotFound as error:
+        logger.error(
+            "User %s tried to get post with id %s but post not found",
+            user.get("email"),
+            post_id,
+        )
         raise HTTPException(status_code=404, detail=str(error)) from error
     except ThisUserIsBlocked as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
     except DatabaseError as db_error:
+        logger.error(
+            "User %s got Database error while trying to get post with id %s: %s",
+            user.get("email"),
+            post_id,
+            str(db_error),
+        )
         raise HTTPException(
             status_code=400, detail="Post doesnt exist or favorite already exists"
         ) from db_error
     except Exception as error:
+        logger.error(
+            "User %s got an exception while trying to get post with id %s: %s",
+            user.get("email"),
+            post_id,
+            str(error),
+        )
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
@@ -54,12 +73,24 @@ def api_delete_favorite(
     try:
         content_id = get_content_id_from_post(post_id)
         delete_favorite(content_id, user.get("id"))
+        logger.info("User %s deleted a favorite of post %s", user.get("email"), post_id)
         return {"message": "Favorite deleted successfully"}
     except FavoriteNotFound as error:
+        logger.error(
+            "User %s tried to get post with id %s but favorite not found",
+            user.get("email"),
+            post_id,
+        )
         raise HTTPException(status_code=404, detail=str(error)) from error
     except ThisUserIsBlocked as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:
+        logger.error(
+            "User %s got an exception while trying to get post with id %s: %s",
+            user.get("email"),
+            post_id,
+            str(error),
+        )
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
@@ -86,14 +117,41 @@ def api_get_favorites_from_user_visited(
             int(user.get("id")), user_visited, oldest_date, amount
         )
         posts = generate_response_posts_from_db(posts_db)
+        logger.info(
+            "User %s got %s amount of favorite posts since %s from user %s",
+            user.get("email"),
+            amount,
+            oldest_date,
+            user_visited_email,
+        )
         return posts
     except UserIsPrivate as error:
+        logger.error(
+            "User %s tried to get favorite posts from %s but %s is private",
+            user.get("email"),
+            user_visited_email,
+            user_visited_email,
+        )
         raise HTTPException(status_code=403, detail=str(error)) from error
     except ThisUserIsBlocked as error:
         raise HTTPException(status_code=403, detail=str(error)) from error
     except OtherUserIsBlocked as error:
         raise HTTPException(status_code=405, detail=str(error)) from error
     except UserDoesntHavePosts as error:
+        logger.error(
+            "User %s tried to get favorite posts from %s but %s has no posts",
+            user.get("email"),
+            user_visited_email,
+            user_visited_email,
+        )
         raise HTTPException(status_code=404, detail=str(error)) from error
     except Exception as error:
+        logger.error(
+            "User %s got an exception while trying to get %s favorite posts since %s from %s: %s",
+            user.get("email"),
+            amount,
+            oldest_date_str,
+            user_visited_email,
+            str(error),
+        )
         raise HTTPException(status_code=500, detail=str(error)) from error

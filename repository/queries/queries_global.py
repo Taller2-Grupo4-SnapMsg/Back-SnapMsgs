@@ -19,6 +19,8 @@ from repository.tables.posts import Post
 # pylint: disable=C0114, W0401, W0614, E0401
 from repository.tables.users import User, Following
 
+from control.utils.logger import logger
+
 
 def get_post(post_id):
     """
@@ -78,9 +80,11 @@ def get_user_id_from_email(email):
     """
     user = session.query(User).filter(User.email == email).first()
     if user is None:
+        logger.error("User %s was not found", email)
         raise UserNotFound()
 
     if user.blocked is True:
+        logger.error("User %s is blocked", email)
         raise OtherUserIsBlocked()
     return user.id
 

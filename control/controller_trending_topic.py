@@ -12,6 +12,7 @@ from repository.errors import ThisUserIsBlocked
 from control.common_setup import *
 
 from control.utils.tracer import tracer
+from control.utils.logger import logger
 
 router = APIRouter()
 
@@ -25,9 +26,11 @@ def api_get_trending_topics(
     offset=Query(0, title="offset", description="offset for pagination"),
     amount=Query(10, title="ammount", description="max ammount of users to return"),
     days=Query(
-        7, title="days", description="to take into account the posts of the last x days"
+        7,
+        title="days",
+        description="to take into account" " the posts of the last x days",
     ),
-    _: callable = Depends(get_user_from_token),
+    user: callable = Depends(get_user_from_token),
 ):
     """
     Get trending topics
@@ -37,12 +40,37 @@ def api_get_trending_topics(
             int(offset), int(amount), int(days)
         )
         trending_topics = generate_response_trending_topics_from_db(trending_topics_db)
+        logger.info(
+            "User %s got the trending topics with offset"
+            " %s, amount %s and days %s successfully",
+            user.get("email"),
+            offset,
+            amount,
+            days,
+        )
         return trending_topics
     # pylint: disable=R0801
     # I disable the "Similar lines in 2 files"
     except ThisUserIsBlocked as error:
+        logger.error(
+            "User %s tried to get the trending topics with"
+            " offset %s, amount %s and days %s but user is blocked",
+            user.get("email"),
+            offset,
+            amount,
+            days,
+        )
         raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:
+        logger.error(
+            "User %s got an exception while trying to get the"
+            " trending topics with offset %s, amount %s and days %s: %s",
+            user.get("email"),
+            offset,
+            amount,
+            days,
+            str(error),
+        )
         raise HTTPException(status_code=500, detail=str(error)) from error
 
 
@@ -65,8 +93,33 @@ def api_get_posts_on_a_trending_topic(
             int(user.get("id")), hashtag, offset, amount
         )
         posts = generate_response_posts_from_db(posts_db)
+        logger.info(
+            "User %s got the posts from the hashtag %s with "
+            "offset %s and amount %s successfully",
+            user.get("email"),
+            hashtag,
+            offset,
+            amount,
+        )
         return posts
     except ThisUserIsBlocked as error:
+        logger.error(
+            "User %s tried to get posts from the hashtag %s with"
+            " offset %s and amount %s but user is blocked",
+            user.get("email"),
+            hashtag,
+            offset,
+            amount,
+        )
         raise HTTPException(status_code=403, detail=str(error)) from error
     except Exception as error:
+        logger.error(
+            "User %s got an exception while trying to get posts"
+            " from the hashtag %s with offset %s and amount %s: %s",
+            user.get("email"),
+            hashtag,
+            offset,
+            amount,
+            str(error),
+        )
         raise HTTPException(status_code=500, detail=str(error)) from error
