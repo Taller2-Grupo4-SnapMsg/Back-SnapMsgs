@@ -26,8 +26,9 @@ def api_get_trending_topics(
     offset=Query(0, title="offset", description="offset for pagination"),
     amount=Query(10, title="ammount", description="max ammount of users to return"),
     days=Query(
-        7, title="days", description="to take into account"
-        " the posts of the last x days"
+        7,
+        title="days",
+        description="to take into account" " the posts of the last x days",
     ),
     user: callable = Depends(get_user_from_token),
 ):
