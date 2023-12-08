@@ -451,8 +451,9 @@ def api_get_posts_by_text(
         posts = generate_response_posts_from_db(posts_db)
 
         logger.info(
-            "User %s got posts by text %s with offset %s and"
-            " amount %s successfully",
+            #Black says this has to be all in one line, or it will fail.
+            #pylint: disabled=W1404
+            "User %s got posts by text %s with offset %s and" " amount %s successfully",
             user.get("email"),
             text,
             offset,
